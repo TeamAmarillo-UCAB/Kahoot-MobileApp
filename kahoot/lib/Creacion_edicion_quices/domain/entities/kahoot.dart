@@ -1,4 +1,4 @@
-import 'slide.dart';
+import 'quiz.dart';
 enum KahootStatus { draft, finished }
 
 extension KahootStatusX on KahootStatus {
@@ -33,15 +33,15 @@ extension KahootVisibilityX on KahootVisibility {
   final DateTime creationDate;
   final KahootStatus status;
   final KahootVisibility visibility;
-  final List<Slide> questions;
+  final List<Quiz> quiz;
 
   Kahoot({
     required this.id,
     required this.title,
     required this.description,
-    required this.questions,
     required this.status,
     required this.visibility,
+    required this.quiz,
     this.image = '',
     this.theme = '',
     DateTime? creationDate,
