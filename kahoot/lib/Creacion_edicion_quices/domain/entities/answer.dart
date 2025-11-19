@@ -1,11 +1,9 @@
-import 'question.dart';
-
 class Answer{
-  final int answerId;
+  final String answerId;
   final String image;
   final bool isCorrect;
   final String text;
-  final Question questionId;
+  final String questionId;
 
   Answer({
     required this.answerId,

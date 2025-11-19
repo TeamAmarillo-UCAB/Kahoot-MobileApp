@@ -16,11 +16,11 @@ extension QuestionTypeX on QuestionType {
 }
 
 class Question{
-  final int questionId;
+  final String questionId;
   final String title;
   final QuestionType type;
   final int points;
-  final DateTime timeLimitSeconds;
+  final int timeLimitSeconds; // seconds
   final List<Answer> answer;
 
   Question({

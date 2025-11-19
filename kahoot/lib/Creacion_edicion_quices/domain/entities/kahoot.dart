@@ -27,7 +27,7 @@ extension KahootVisibilityX on KahootVisibility {
 }
 
  class Kahoot {
-  final String id;
+  final String kahootId;
   final String title;
   final String description;
   final String image;
@@ -39,7 +39,7 @@ extension KahootVisibilityX on KahootVisibility {
   final List<Answer> answers;
 
   Kahoot({
-    required this.id,
+    required this.kahootId,
     required this.title,
     required this.description,
     required this.status,
