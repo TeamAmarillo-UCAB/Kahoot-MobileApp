@@ -15,8 +15,8 @@ extension QuestionTypeX on QuestionType {
   }
 }
 
-class Question{
-  final String questionId;
+class Question {
+  final String text;
   final String title;
   final QuestionType type;
   final int points;
@@ -24,11 +24,28 @@ class Question{
   final List<Answer> answer;
 
   Question({
-    required this.questionId,
+    required this.text,
     required this.title,
     required this.type,
     required this.points,
     required this.timeLimitSeconds,
     required this.answer,
   });
+
+  factory Question.fromJson(Map<String, dynamic> json) {
+    return Question(
+      text: json['text'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      type: QuestionTypeX.fromString(json['type'] as String? ?? 'quiz_single'),
+      points: json['points'] as int? ?? 0,
+      timeLimitSeconds: json['timeLimitSeconds'] as int? ?? 0,
+      answer: Answer.fromJsonList(json['answers'] as List<dynamic>),
+    );
+  }
+
+  static List<Question> fromJsonList(List<dynamic> jsonList) {
+    return jsonList
+        .map((json) => Question.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 }

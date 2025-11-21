@@ -7,7 +7,7 @@ class CreateKahoot {
 
   CreateKahoot(this.repository);
 
-  Future<void> call(int id, String title, String description, String image, String theme, DateTime creationDate, String status, String visibility, List<Question> question, List<Answer> answer) async {
-    return await repository.createKahoot(id, title, description, image, theme, creationDate, status, visibility, question, answer);
+  Future<void> call(String kahootId, String authorId, String title, String description, String image, String theme, String visibility, List<Question> question, List<Answer> answer) async {
+    return await repository.createKahoot(kahootId, authorId, title, description, image, visibility, theme, question, answer);
   }
 }

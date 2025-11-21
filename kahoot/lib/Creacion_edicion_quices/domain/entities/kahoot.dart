@@ -1,4 +1,3 @@
-import 'answer.dart';
 import 'question.dart';
 
 enum KahootStatus { draft, finished }
@@ -26,28 +25,43 @@ extension KahootVisibilityX on KahootVisibility {
   }
 }
 
- class Kahoot {
+class Kahoot {
   final String kahootId;
+  final String authorId;
   final String title;
   final String description;
   final String image;
   final String theme;
-  final DateTime creationDate;
-  final KahootStatus status;
   final KahootVisibility visibility;
-  final List<Question> quiz;
-  final List<Answer> answers;
+  final List<Question> question;
 
   Kahoot({
     required this.kahootId,
+    required this.authorId,
     required this.title,
     required this.description,
-    required this.status,
     required this.visibility,
-    required this.quiz,
-    required this.answers,
+    required this.question,
     this.image = '',
     this.theme = '',
-    DateTime? creationDate,
-  }) : creationDate = creationDate ?? DateTime.now();
+  });
+
+  factory Kahoot.fromJson(Map<String, dynamic> json) {
+    return Kahoot(
+      kahootId: json['kahootId'] as String,
+      authorId: json['authorId'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      image: json['image'] as String? ?? '',
+      theme: json['theme'] as String? ?? '',
+      visibility: KahootVisibilityX.fromString(json['visibility'] as String),
+      question: Question.fromJsonList(json['questions'] as List<dynamic>),
+    );
+  }
+
+  static List<Kahoot> fromJsonList(List<dynamic> jsonList) {
+    return jsonList
+        .map((json) => Kahoot.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 }
