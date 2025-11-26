@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import '../create/create_kahoot_page.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key, required this.onCreate}) : super(key: key);
-
-  final VoidCallback onCreate;
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +57,11 @@ class HomePage extends StatelessWidget {
                   elevation: 4,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
                 ),
-                onPressed: onCreate,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CreateKahootPage()),
+                  );
+                },
                 child: const Text('Crear kahoot'),
               ),
             ],
@@ -71,31 +74,49 @@ class HomePage extends StatelessWidget {
         unselectedItemColor: Colors.brown.withOpacity(0.7),
         currentIndex: 2,
         onTap: (index) {
-          // Solo el botón de crear es funcional
+          if (index == 3) {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CreateKahootPage()),
+            );
+          } else {
+            // Otros índices: aún no implementados
+          }
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: _NavIcon(Icons.home),
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
+            icon: _NavIcon(Icons.explore),
             label: 'Descubre',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.group),
+            icon: _NavIcon(Icons.group),
             label: 'Unirse',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
+            icon: _NavIcon(Icons.add_circle_outline),
             label: 'Crear',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
+            icon: _NavIcon(Icons.library_books),
             label: 'Biblioteca',
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NavIcon extends StatelessWidget {
+  final IconData data;
+  const _NavIcon(this.data);
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: const Offset(0, -4), // mover ligeramente hacia arriba
+      child: Icon(data, size: 24),
     );
   }
 }

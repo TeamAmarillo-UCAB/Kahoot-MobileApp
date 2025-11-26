@@ -11,30 +11,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Kahoot',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
       ),
-      home: HomePage(
-        onCreate: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const DummyCreatePage()),
-          );
-        },
-      ),
+      home: const HomePage(),
     );
   }
 }
 
-class DummyCreatePage extends StatelessWidget {
-  const DummyCreatePage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Crear Kahoot')),
-      body: const Center(child: Text('Pantalla de creación de Kahoot (dummy)')),
-    );
-  }
-}
+// La página de creación real ahora está en create_kahoot_page.dart
