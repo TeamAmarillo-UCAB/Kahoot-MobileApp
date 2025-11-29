@@ -1,128 +1,120 @@
-// Archivo: lib/data/datasources/image_datasource_impl.dart
+// Archivo: lib/Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/entities/media_file.dart'; // Importa la entidad de dominio
-import '../../domain/datasource/image_datasource.dart'; // Implementa la interfaz
+import 'dart:typed_data';
+import '../../domain/entities/media_file.dart';
+import '../../domain/datasource/image_datasource.dart';
 
-// Generador de UUID para el mock
 const uuid = Uuid();
+
+// Bytes de un GIF 1x1 transparente para el mock de descarga
+final List<int> _transparentGifBytes = Uint8List.fromList([
+  0x47,
+  0x49,
+  0x46,
+  0x38,
+  0x39,
+  0x61,
+  0x01,
+  0x00,
+  0x01,
+  0x00,
+  0x80,
+  0x00,
+  0x00,
+  0xff,
+  0xff,
+  0xff,
+  0x00,
+  0x00,
+  0x00,
+  0x21,
+  0xf9,
+  0x04,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x2c,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x02,
+  0x02,
+  0x44,
+  0x01,
+  0x00,
+  0x3b,
+]);
 
 class ImageDatasourceImpl implements ImageDataSource {
   final Dio dio = Dio();
-
-  // ⚠️ VARIABLE DE CONTROL: Establécela en true para hacer mock, false para usar la API real
-  final bool isMocking = true; // Establecer en 'true' para probar el mock
+  final bool isMocking = true;
 
   @override
   Future<Map<String, dynamic>> uploadImage(MediaFile file) async {
-    // =========================================================
-    // Bloque 1: Lógica del Mock Local
-    // =========================================================
     if (isMocking) {
-      // Simular Latencia
       await Future.delayed(const Duration(seconds: 2));
-
-      // Simular Validación (Ejemplo: error 400 Bad Request)
-      if (file.bytes.length > 5 * 1024 * 1024) {
-        throw Exception('400 Bad Request: El archivo excede el límite de 5MB.');
-      }
-
       final newUuid = uuid.v4();
-      print(
-        '✅ [MOCK IN-PLACE] Subida simulada exitosamente para: ${file.name}',
-      );
 
-      // Devolver la respuesta simulada
       return {
         "id": newUuid,
-        "type": "image",
+        "data": {
+          "type": "Buffer",
+          "data": file.bytes.sublist(
+            0,
+            file.bytes.length > 10 ? 10 : file.bytes.length,
+          ),
+        },
         "mimeType": file.mimeType ?? "application/octet-stream",
-        "url": "https://mock-api.com/media/$newUuid",
         "size": file.bytes.length,
+        "originalName": file.name,
         "createdAt": DateTime.now().toIso8601String(),
       };
-    }
-    // =========================================================
-    // Fin Bloque Mock
-    // =========================================================
-
-    // ---------------------------------------------------------
-    // Bloque 2: Lógica REAL de la API (Comentada o Ejecutada)
-    // ---------------------------------------------------------
-
-    // Si isMocking es false, el código continúa aquí.
-
-    // 1. Crea MultipartFile y FormData a partir de la entidad MediaFile
-    MultipartFile fileToUpload = MultipartFile.fromBytes(
-      file.bytes,
-      filename: file.name,
-      contentType: file.mimeType != null
-          ? MediaType.parse(file.mimeType!)
-          : null,
-    );
-
-    FormData formData = FormData.fromMap({'file': fileToUpload});
-
-    try {
-      const String apiBaseUrl = 'https://tu-api.com';
-      const String requestPath = '/media/upload';
-
-      // ⚠️ Llamada a la API real
-      final Response response = await dio.request(
-        '$apiBaseUrl$requestPath',
-        options: Options(method: 'POST'),
-        data: formData,
-      );
-
-      // Manejar la respuesta exitosa (201 Created)
-      if (response.statusCode == 201) {
-        return response.data as Map<String, dynamic>;
-      } else {
-        // Manejar otros códigos de éxito (ej. 200)
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error:
-              'Failed to upload image with status code: ${response.statusCode}',
-        );
-      }
-    } on DioException catch (e) {
-      // Manejar errores de API reales
-      if (e.response?.statusCode == 404) {
-        throw Exception('404 Not Found: El endpoint no existe.');
-      } else if (e.response?.statusCode == 400) {
-        throw Exception('400 Bad Request: Datos de slide inválidos.');
-      }
-      throw e;
+    } else {
+      // Lógica de API real para POST
+      throw UnimplementedError('Real API POST is not implemented yet.');
     }
   }
 
-  // Puedes dejar deleteImage sin mock si no lo estás probando, o añadir el mismo patrón.
   @override
-  Future<void> deleteImage(String id) async {
-    // Si necesitas mockear la eliminación, sigue el mismo patrón:
+  Future<List<int>> getImage(String idOrUrl) async {
     if (isMocking) {
       await Future.delayed(const Duration(milliseconds: 500));
-      print(
-        '🗑️ [MOCK IN-PLACE] Eliminación simulada exitosamente para ID: $id',
-      );
-      return;
-    }
+      print('📥 [MOCK IN-PLACE] Descarga simulada para ID/URL: $idOrUrl');
+      return _transparentGifBytes;
+    } else {
+      // Lógica REAL de la API (GET)
+      try {
+        const String apiBaseUrl = 'https://tu-api.com';
+        final url = idOrUrl.startsWith('http')
+            ? idOrUrl
+            : '$apiBaseUrl/media/$idOrUrl';
 
-    // Lógica real de eliminación:
-    try {
-      const String apiBaseUrl = 'https://tu-api.com';
-      const String requestPath = '/media/';
+        final response = await dio.get(
+          url,
+          options: Options(responseType: ResponseType.bytes),
+        );
 
-      await dio.delete(
-        '$apiBaseUrl$requestPath$id',
-        options: Options(headers: {'Content-Type': 'application/json'}),
-      );
-    } on DioException catch (e) {
-      throw e;
+        if (response.statusCode == 200) {
+          return response.data as List<int>;
+        } else {
+          throw Exception(
+            'Failed to download image: Status ${response.statusCode}',
+          );
+        }
+      } on DioException catch (e) {
+        throw Exception('Download failed: ${e.message}');
+      }
     }
   }
 }

@@ -1,8 +1,11 @@
-// Archivo: lib/data/datasources/image_datasource.dart
+// Archivo: lib/domain/datasource/image_datasource.dart
 
-import '../../domain/entities/media_file.dart';
+import '../entities/media_file.dart';
 
 abstract class ImageDataSource {
-  // Firma idéntica al repositorio para que la delegación sea limpia
+  // Para la subida
   Future<Map<String, dynamic>> uploadImage(MediaFile file);
+
+  // Para la descarga
+  Future<List<int>> getImage(String idOrUrl);
 }

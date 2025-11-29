@@ -2,20 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
+import 'dart:typed_data'; // Necesario para Uint8List y Image.memory
 
-// --- Importaciones de tu Arquitectura (RUTAS CORREGIDAS SIN PREFIJO DE PAQUETE) ---
-// Ahora las rutas son absolutas dentro del paquete: /Contenido_Multimedia/...
-
-// 1. Dominio (Entidades e Interfaces de Contrato)
+// --- Importaciones de tu Arquitectura ---
 import 'Contenido_Multimedia/domain/entities/media_file.dart';
 import 'Contenido_Multimedia/domain/repositories/image_repository.dart';
 import 'Contenido_Multimedia/domain/datasource/image_datasource.dart';
-
-// 2. Aplicación (Casos de Uso)
-import 'Contenido_Multimedia/application/usecases/upload_image.dart'; // Contiene la clase UploadImage
-
-// 3. Infraestructura (Implementaciones de Repositorio y Datasource)
+import 'Contenido_Multimedia/application/usecases/upload_image.dart';
+import 'Contenido_Multimedia/application/usecases/get_image.dart';
 import 'Contenido_Multimedia/infrastructure/repositories/image_repository_impl.dart';
 import 'Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart';
 
@@ -27,7 +21,7 @@ void main() {
 }
 
 // -------------------------------------------------------------
-// CLASES MYAPP Y MYHOMEPAGE
+// CLASES DE WIDGETS
 // -------------------------------------------------------------
 
 class MyApp extends StatelessWidget {
@@ -40,6 +34,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      // MyHomePage DEBE ESTAR DEFINIDO antes de ser usado aquí.
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -54,13 +49,20 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// -------------------------------------------------------------
+// CLASE DE ESTADO
+// -------------------------------------------------------------
+
+// ⬅️ La sintaxis es correcta: State<MyHomePage>
 class _MyHomePageState extends State<MyHomePage> {
   // 1. Declaración de las dependencias
   late final ImageDataSource _dataSource;
   late final ImageRepository _repository;
   late final UploadImage _uploadImageUseCase;
+  late final DownloadImage _downloadImageUseCase;
 
-  String _uploadStatus = 'Pulsa el botón de subida (➕) para probar.';
+  String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar Mock (⬇️).';
+  List<int>? _downloadedImageBytes;
 
   @override
   void initState() {
@@ -69,36 +71,36 @@ class _MyHomePageState extends State<MyHomePage> {
     _dataSource = ImageDatasourceImpl();
     _repository = ImageRepositoryImpl(_dataSource);
     _uploadImageUseCase = UploadImage(_repository);
+    _downloadImageUseCase = DownloadImage(_repository);
   }
 
-  // Función de prueba que simula la selección y la subida
+  // Función de prueba de Subida
   Future<void> _testUpload() async {
     setState(() {
-      _uploadStatus = 'Seleccionando archivo...';
+      _statusMessage = 'Seleccionando archivo para subir...';
+      _downloadedImageBytes = null;
     });
 
     try {
-      // 3. Selección del archivo y obtención de bytes (Capa de Presentación/Plataforma)
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
         withData: true,
       );
-
       if (result == null || result.files.isEmpty) {
-        setState(() => _uploadStatus = 'Subida cancelada por el usuario.');
+        setState(() => _statusMessage = 'Subida cancelada por el usuario.');
         return;
       }
 
       PlatformFile platformFile = result.files.first;
       Uint8List? fileBytes = platformFile.bytes;
-
       if (fileBytes == null || fileBytes.isEmpty) {
-        setState(() => _uploadStatus = 'Error: No se pudieron leer los bytes.');
+        setState(
+          () => _statusMessage = 'Error: No se pudieron leer los bytes.',
+        );
         return;
       }
 
-      // 4. Creación de la Entidad de Dominio MediaFile
       final MediaFile fileToUpload = MediaFile(
         bytes: fileBytes.toList(),
         name: platformFile.name,
@@ -108,22 +110,41 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 
       setState(() {
-        _uploadStatus = 'Subiendo ${fileToUpload.name}...';
+        _statusMessage = 'Subiendo ${fileToUpload.name}...';
       });
-
-      // 5. Ejecución del Caso de Uso
       final responseData = await _uploadImageUseCase.call(fileToUpload);
 
-      // 6. Manejo de la respuesta
       setState(() {
-        _uploadStatus = '✅ ¡Subida exitosa! UUID: ${responseData['id']}';
+        _statusMessage = '✅ ¡Subida exitosa! UUID: ${responseData['id']}';
       });
     } catch (e) {
-      // Manejo de errores de red, API, o validación
       setState(() {
-        _uploadStatus = '❌ Error de subida: ${e.toString()}';
+        _statusMessage = '❌ Error de subida: ${e.toString()}';
       });
       print('ERROR: $e');
+    }
+  }
+
+  // Función de prueba de Descarga
+  Future<void> _testDownload() async {
+    setState(() {
+      _statusMessage = 'Iniciando búsqueda Mock (Descarga)...';
+      _downloadedImageBytes = null;
+    });
+
+    try {
+      const testId = 'ID-para-buscar-en-existencias';
+      final imageBytes = await _downloadImageUseCase.call(testId);
+
+      setState(() {
+        _downloadedImageBytes = imageBytes;
+        _statusMessage =
+            '✅ Búsqueda/Descarga Mock exitosa. Bytes recibidos: ${imageBytes.length}';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = '❌ Error de Descarga/Búsqueda: ${e.toString()}';
+      });
     }
   }
 
@@ -141,23 +162,55 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Text(
-                'Estado de la Prueba de Subida:',
+                'Estado:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               Text(
-                _uploadStatus,
+                _statusMessage,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 30),
+              if (_downloadedImageBytes != null) ...[
+                const Text(
+                  'Imagen Mock (GIF 1x1):',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Image.memory(
+                  Uint8List.fromList(_downloadedImageBytes!),
+                  height: 100,
+                  width: 100,
+                  fit: BoxFit.contain,
+                ),
+                const Text(
+                  '(Se simula la persistencia)',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _testUpload,
-        tooltip: 'Subir Imagen de Prueba',
-        child: const Icon(Icons.upload),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _testUpload,
+            heroTag: 'upload',
+            tooltip: 'Subir Imagen de Prueba',
+            child: const Icon(Icons.upload),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: _testDownload,
+            heroTag: 'download',
+            tooltip: 'Buscar/Descargar Mock',
+            child: const Icon(Icons.download),
+          ),
+        ],
       ),
     );
   }
