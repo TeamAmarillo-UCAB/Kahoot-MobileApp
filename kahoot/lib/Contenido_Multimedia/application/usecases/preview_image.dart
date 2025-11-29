@@ -5,7 +5,7 @@ class PreviewImage {
 
   PreviewImage(this.repository);
 
-  Future<void> call(String url) async {
-    return await repository.previewImage(url);
+  Future<List<int>> call(String idOrUrl) async {
+    return await repository.previewImage(idOrUrl);
   }
 }

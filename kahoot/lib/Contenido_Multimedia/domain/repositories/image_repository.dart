@@ -8,4 +8,6 @@ abstract class ImageRepository {
 
   // Para la descarga (Download/Get). Retorna List<int> (bytes genéricos).
   Future<List<int>> getImage(String idOrUrl);
+
+  Future<List<int>> previewImage(String idOrUrl);
 }

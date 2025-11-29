@@ -1,8 +1,6 @@
-// Archivo: lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data'; // Necesario para Uint8List y Image.memory
+import 'dart:typed_data';
 
 // --- Importaciones de tu Arquitectura ---
 import 'Contenido_Multimedia/domain/entities/media_file.dart';
@@ -10,6 +8,7 @@ import 'Contenido_Multimedia/domain/repositories/image_repository.dart';
 import 'Contenido_Multimedia/domain/datasource/image_datasource.dart';
 import 'Contenido_Multimedia/application/usecases/upload_image.dart';
 import 'Contenido_Multimedia/application/usecases/get_image.dart';
+import 'Contenido_Multimedia/application/usecases/preview_image.dart';
 import 'Contenido_Multimedia/infrastructure/repositories/image_repository_impl.dart';
 import 'Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart';
 
@@ -34,7 +33,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      // MyHomePage DEBE ESTAR DEFINIDO antes de ser usado aquí.
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -53,13 +51,13 @@ class MyHomePage extends StatefulWidget {
 // CLASE DE ESTADO
 // -------------------------------------------------------------
 
-// ⬅️ La sintaxis es correcta: State<MyHomePage>
 class _MyHomePageState extends State<MyHomePage> {
   // 1. Declaración de las dependencias
   late final ImageDataSource _dataSource;
   late final ImageRepository _repository;
   late final UploadImage _uploadImageUseCase;
   late final DownloadImage _downloadImageUseCase;
+  late final PreviewImage _previewImageUseCase;
 
   String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar Mock (⬇️).';
   List<int>? _downloadedImageBytes;
@@ -72,6 +70,28 @@ class _MyHomePageState extends State<MyHomePage> {
     _repository = ImageRepositoryImpl(_dataSource);
     _uploadImageUseCase = UploadImage(_repository);
     _downloadImageUseCase = DownloadImage(_repository);
+    _previewImageUseCase = PreviewImage(_repository);
+  }
+
+  // FUNCIÓN AUXILIAR: Encapsula la lógica de la vista previa
+  Future<void> _loadPreview(String id) async {
+    setState(() {
+      _statusMessage = 'Cargando Vista Previa para el ID: $id...';
+    });
+
+    try {
+      final imageBytes = await _previewImageUseCase.call(id);
+
+      setState(() {
+        _downloadedImageBytes = imageBytes;
+        _statusMessage =
+            '✅ Operación completa. Vista Previa exitosa. Bytes: ${imageBytes.length}';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = '❌ Error al obtener Vista Previa: ${e.toString()}';
+      });
+    }
   }
 
   // Función de prueba de Subida
@@ -112,14 +132,16 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _statusMessage = 'Subiendo ${fileToUpload.name}...';
       });
-      final responseData = await _uploadImageUseCase.call(fileToUpload);
 
-      setState(() {
-        _statusMessage = '✅ ¡Subida exitosa! UUID: ${responseData['id']}';
-      });
+      // 1. Ejecutar Subida
+      final responseData = await _uploadImageUseCase.call(fileToUpload);
+      final uploadedId = responseData['id'] as String;
+
+      // 2. Saltar a la Vista Previa después de la subida.
+      await _loadPreview(uploadedId);
     } catch (e) {
       setState(() {
-        _statusMessage = '❌ Error de subida: ${e.toString()}';
+        _statusMessage = '❌ Error de Subida: ${e.toString()}';
       });
       print('ERROR: $e');
     }
@@ -134,13 +156,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       const testId = 'ID-para-buscar-en-existencias';
-      final imageBytes = await _downloadImageUseCase.call(testId);
 
-      setState(() {
-        _downloadedImageBytes = imageBytes;
-        _statusMessage =
-            '✅ Búsqueda/Descarga Mock exitosa. Bytes recibidos: ${imageBytes.length}';
-      });
+      // 1. Ejecutar Descarga (simular la acción)
+      await _downloadImageUseCase.call(testId);
+
+      // 2. Saltar a la Vista Previa después de la descarga.
+      await _loadPreview(testId);
     } catch (e) {
       setState(() {
         _statusMessage = '❌ Error de Descarga/Búsqueda: ${e.toString()}';
@@ -174,18 +195,18 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(height: 30),
               if (_downloadedImageBytes != null) ...[
                 const Text(
-                  'Imagen Mock (GIF 1x1):',
+                  'Vista Previa (Resultado):',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Image.memory(
                   Uint8List.fromList(_downloadedImageBytes!),
-                  height: 100,
-                  width: 100,
+                  height: 200,
+                  width: 300,
                   fit: BoxFit.contain,
                 ),
                 const Text(
-                  '(Se simula la persistencia)',
+                  '(Datos obtenidos por el caso de uso PreviewImage)',
                   style: TextStyle(fontSize: 12),
                 ),
               ],
@@ -200,14 +221,14 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             onPressed: _testUpload,
             heroTag: 'upload',
-            tooltip: 'Subir Imagen de Prueba',
+            tooltip: 'Subir Imagen (Subida -> Vista Previa)',
             child: const Icon(Icons.upload),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
             onPressed: _testDownload,
             heroTag: 'download',
-            tooltip: 'Buscar/Descargar Mock',
+            tooltip: 'Descargar Mock (Descarga -> Vista Previa)',
             child: const Icon(Icons.download),
           ),
         ],

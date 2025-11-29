@@ -8,4 +8,6 @@ abstract class ImageDataSource {
 
   // Para la descarga
   Future<List<int>> getImage(String idOrUrl);
+
+  Future<List<int>> previewImage(String idOrUrl);
 }

@@ -9,62 +9,34 @@ import '../../domain/datasource/image_datasource.dart';
 
 const uuid = Uuid();
 
-// Bytes de un GIF 1x1 transparente para el mock de descarga
-final List<int> _transparentGifBytes = Uint8List.fromList([
-  0x47,
-  0x49,
-  0x46,
-  0x38,
-  0x39,
-  0x61,
-  0x01,
-  0x00,
-  0x01,
-  0x00,
-  0x80,
-  0x00,
-  0x00,
-  0xff,
-  0xff,
-  0xff,
-  0x00,
-  0x00,
-  0x00,
-  0x21,
-  0xf9,
-  0x04,
-  0x01,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x2c,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x01,
-  0x00,
-  0x01,
-  0x00,
-  0x00,
-  0x02,
-  0x02,
-  0x44,
-  0x01,
-  0x00,
-  0x3b,
-]);
+// ❌ Se elimina la definición de _transparentGifBytes, ya no es necesaria.
 
 class ImageDatasourceImpl implements ImageDataSource {
   final Dio dio = Dio();
-  final bool isMocking = true;
+  // Bandera para subir (usamos MOCK para devolver bytes inmediatamente)
+  final bool isUploadMocking = true;
+  // Esta bandera ahora es irrelevante para getImage/previewImage, pero la mantenemos.
+  final bool isDownloadMocking = false;
+
+  // Cache temporal para la subida
+  List<int>? _lastUploadedMockBytes;
+  String? _lastUploadedMockId;
+
+  // ====================================================================
+  // ⬆️ UPLOAD IMAGE (SIN CAMBIOS)
+  // ====================================================================
 
   @override
   Future<Map<String, dynamic>> uploadImage(MediaFile file) async {
-    if (isMocking) {
+    if (isUploadMocking) {
       await Future.delayed(const Duration(seconds: 2));
       final newUuid = uuid.v4();
+
+      _lastUploadedMockBytes = file.bytes;
+      _lastUploadedMockId = newUuid;
+      print(
+        '⬆️ [MOCK] Archivo subido (${file.name}). Guardando en cache mock con ID: $newUuid',
+      );
 
       return {
         "id": newUuid,
@@ -81,40 +53,88 @@ class ImageDatasourceImpl implements ImageDataSource {
         "createdAt": DateTime.now().toIso8601String(),
       };
     } else {
-      // Lógica de API real para POST
       throw UnimplementedError('Real API POST is not implemented yet.');
     }
   }
 
+  // ====================================================================
+  // 📥 GET IMAGE (DESCARGA COMPLETA - AHORA SOLO API REAL)
+  // ====================================================================
+
   @override
   Future<List<int>> getImage(String idOrUrl) async {
-    if (isMocking) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      print('📥 [MOCK IN-PLACE] Descarga simulada para ID/URL: $idOrUrl');
-      return _transparentGifBytes;
-    } else {
-      // Lógica REAL de la API (GET)
-      try {
-        const String apiBaseUrl = 'https://tu-api.com';
-        final url = idOrUrl.startsWith('http')
-            ? idOrUrl
-            : '$apiBaseUrl/media/$idOrUrl';
+    // Dimensiones para la imagen de Placeholder (ej. 300x200)
+    const int width = 300;
+    const int height = 200;
+    const String loremPicsumUrl = 'https://picsum.photos/$width/$height';
 
-        final response = await dio.get(
-          url,
-          options: Options(responseType: ResponseType.bytes),
+    // ❌ Eliminado el bloque if (isDownloadMocking)
+
+    // --- Lógica de API Real (Usando Placeholder para Prueba) ---
+    try {
+      final url = loremPicsumUrl;
+
+      print('🌐 Descargando imagen de P L A C E H O L D E R desde: $url');
+
+      final response = await dio.get(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as List<int>;
+      } else {
+        throw Exception(
+          'Failed to download placeholder image: Status ${response.statusCode}',
         );
-
-        if (response.statusCode == 200) {
-          return response.data as List<int>;
-        } else {
-          throw Exception(
-            'Failed to download image: Status ${response.statusCode}',
-          );
-        }
-      } on DioException catch (e) {
-        throw Exception('Download failed: ${e.message}');
       }
+    } on DioException catch (e) {
+      print('❌ Error de Dio: ${e.message}');
+      throw Exception('Placeholder image download failed: ${e.message}');
+    }
+  }
+
+  // ====================================================================
+  // 👁️ PREVIEW IMAGE (SIN CAMBIOS)
+  // ====================================================================
+
+  @override
+  Future<List<int>> previewImage(String idOrUrl) async {
+    // 1. 🥇 PRIORIDAD: Verificar si el ID solicitado coincide con el archivo que acabamos de "subir"
+    if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
+      print(
+        '👁️ [CACHE MOCK] Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
+      );
+      return _lastUploadedMockBytes!;
+    }
+
+    // 2. 🥈 SEGUNDA OPCIÓN: Usar Lorem Picsum.
+    const int width = 300;
+    const int height = 200;
+    const String loremPicsumUrl = 'https://picsum.photos/$width/$height';
+
+    try {
+      final url = loremPicsumUrl;
+
+      print(
+        '🌐 Descargando imagen de P L A C E H O L D E R para vista previa desde: $url',
+      );
+
+      final response = await dio.get(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as List<int>;
+      } else {
+        throw Exception(
+          'Failed to download placeholder for preview: Status ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      print('❌ Error de Dio en Preview: ${e.message}');
+      throw Exception('Preview failed: ${e.message}');
     }
   }
 }
