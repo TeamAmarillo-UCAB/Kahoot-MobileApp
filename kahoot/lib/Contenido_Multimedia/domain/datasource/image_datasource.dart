@@ -1,9 +1,8 @@
-import 'package:dartz/dartz.dart';
-import '../entities/image.dart';
+// Archivo: lib/data/datasources/image_datasource.dart
+
+import '../../domain/entities/media_file.dart';
 
 abstract class ImageDataSource {
-  Future<Either<void>>> deleteImage(String url);
-  Future<Image> downloadImage(String url);
-  Future<Image> previewImage(String url);
-  Future<void> uploadImage(String url);
+  // Firma idéntica al repositorio para que la delegación sea limpia
+  Future<Map<String, dynamic>> uploadImage(MediaFile file);
 }

@@ -1,9 +1,8 @@
-import 'package:dartz/dartz.dart';
-import '../entities/image.dart';
+// Archivo: lib/domain/repositories/image_repository.dart
+
+import '../entities/media_file.dart';
 
 abstract class ImageRepository {
-  Future<void> deleteImage(String url);
-  Future<void> downloadImage(String url);
-  Future<void> previewImage(String url);
-  Future<void> uploadImage(String url);
+  // Para la subida (Upload): Espera la entidad de dominio y devuelve la respuesta JSON del servidor
+  Future<Map<String, dynamic>> uploadImage(MediaFile file);
 }
