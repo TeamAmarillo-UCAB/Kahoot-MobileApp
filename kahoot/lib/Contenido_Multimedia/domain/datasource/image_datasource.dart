@@ -7,7 +7,7 @@ abstract class ImageDataSource {
   Future<Map<String, dynamic>> uploadImage(MediaFile file);
 
   // Para la descarga
-  Future<List<int>> getImage(String idOrUrl);
+  Future<List<String>> getImage(String idOrUrl);
 
   Future<List<int>> previewImage(String idOrUrl);
 

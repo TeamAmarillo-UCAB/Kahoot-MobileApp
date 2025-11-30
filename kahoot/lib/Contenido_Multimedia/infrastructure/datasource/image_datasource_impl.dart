@@ -62,45 +62,38 @@ class ImageDatasourceImpl implements ImageDataSource {
   // ====================================================================
 
   @override
-  Future<List<int>> getImage(String idOrUrl) async {
-    // Dimensiones para la imagen de Placeholder (ej. 300x200)
-    const int width = 300;
-    const int height = 200;
-    const String loremPicsumUrl = 'https://picsum.photos/$width/$height';
+  // 🚨 ASUMIMOS QUE LA INTERFAZ HA CAMBIADO A: Future<List<String>> getImage(String idOrUrl)
+  Future<List<String>> getImage(String idOrUrl) async {
+    const int count = 3; // Queremos 10 imágenes
+    const int width = 150;
+    const int height = 150;
 
-    // ❌ Eliminado el bloque if (isDownloadMocking)
+    // URL base de Lorem Picsum
+    const String baseUrl = 'https://picsum.photos';
 
-    // --- Lógica de API Real (Usando Placeholder para Prueba) ---
-    try {
-      final url = loremPicsumUrl;
+    final List<String> imageUrls = [];
 
-      print('🌐 Descargando imagen de P L A C E H O L D E R desde: $url');
-
-      final response = await dio.get(
-        url,
-        options: Options(responseType: ResponseType.bytes),
-      );
-
-      if (response.statusCode == 200) {
-        return response.data as List<int>;
-      } else {
-        throw Exception(
-          'Failed to download placeholder image: Status ${response.statusCode}',
-        );
-      }
-    } on DioException catch (e) {
-      print('❌ Error de Dio: ${e.message}');
-      throw Exception('Placeholder image download failed: ${e.message}');
+    // Generamos 10 URLs diferentes usando un ID aleatorio (seed)
+    // El 'seed' (número después de /id/) asegura una imagen diferente.
+    for (int i = 0; i < count; i++) {
+      // Usamos i + 100 para obtener un rango diferente de fotos
+      final randomId = i + 100;
+      final url = '$baseUrl/id/$randomId/$width/$height';
+      imageUrls.add(url);
     }
-  }
 
+    print('🌐 Generadas ${imageUrls.length} URLs de imágenes aleatorias.');
+
+    // Devolvemos la lista de URLs para que la UI pueda mostrarlas.
+    return imageUrls;
+  }
   // ====================================================================
   // 👁️ PREVIEW IMAGE (SIN CAMBIOS)
   // ====================================================================
 
   @override
   Future<List<int>> previewImage(String idOrUrl) async {
-    // 1. 🥇 PRIORIDAD: Verificar si el ID solicitado coincide con el archivo que acabamos de "subir"
+    // 1. Prioridad: Verificar si el ID solicitado coincide con el archivo que acabamos de "subir"
     if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
       print(
         '👁️ [CACHE MOCK] Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
@@ -108,20 +101,20 @@ class ImageDatasourceImpl implements ImageDataSource {
       return _lastUploadedMockBytes!;
     }
 
-    // 2. 🥈 SEGUNDA OPCIÓN: Usar Lorem Picsum.
-    const int width = 300;
-    const int height = 200;
-    const String loremPicsumUrl = 'https://picsum.photos/$width/$height';
+    // 2. Segunda Opción: Si es una URL (Descarga/Selección), usar Dio.
+    // Usamos el idOrUrl directamente, ya que en el flujo de selección es la URL completa.
+
+    const int defaultWidth = 300;
+    const int defaultHeight = 300;
+    final urlToFetch = idOrUrl.startsWith('http')
+        ? idOrUrl
+        : 'https://picsum.photos/$defaultWidth/$defaultHeight'; // Fallback si es un ID desconocido
 
     try {
-      final url = loremPicsumUrl;
-
-      print(
-        '🌐 Descargando imagen de P L A C E H O L D E R para vista previa desde: $url',
-      );
+      print('🌐 Descargando imagen para vista previa desde: $urlToFetch');
 
       final response = await dio.get(
-        url,
+        urlToFetch,
         options: Options(responseType: ResponseType.bytes),
       );
 
@@ -129,7 +122,7 @@ class ImageDatasourceImpl implements ImageDataSource {
         return response.data as List<int>;
       } else {
         throw Exception(
-          'Failed to download placeholder for preview: Status ${response.statusCode}',
+          'Failed to download for preview: Status ${response.statusCode}',
         );
       }
     } on DioException catch (e) {

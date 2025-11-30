@@ -15,7 +15,7 @@ class ImageRepositoryImpl implements ImageRepository {
   }
 
   @override
-  Future<List<int>> getImage(String idOrUrl) async {
+  Future<List<String>> getImage(String idOrUrl) async {
     return await dataSource.getImage(idOrUrl);
   }
 

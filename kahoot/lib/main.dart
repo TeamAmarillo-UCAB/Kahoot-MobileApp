@@ -61,8 +61,12 @@ class _MyHomePageState extends State<MyHomePage> {
   late final PreviewImage _previewImageUseCase;
   late final DeleteImage _deleteImageUseCase;
 
-  String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar Mock (⬇️).';
+  String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar (⬇️).';
   List<int>? _downloadedImageBytes;
+
+  // 🚨 NUEVAS VARIABLES DE ESTADO PARA LA GALERÍA
+  List<String>? _availableImageUrls;
+  String? _selectedImageUrl;
 
   @override
   void initState() {
@@ -76,10 +80,36 @@ class _MyHomePageState extends State<MyHomePage> {
     _deleteImageUseCase = DeleteImage(_repository);
   }
 
+  // ⬇️ FUNCIÓN NUEVA: Descarga los bytes de una URL específica (llamada al seleccionar)
+  Future<void> _fetchBytesFromUrl(String url) async {
+    setState(() {
+      _statusMessage = 'Descargando imagen seleccionada: $url...';
+      _selectedImageUrl = url;
+    });
+
+    try {
+      // Usamos PreviewImage, que ahora está configurado para manejar la descarga de URLs
+      final imageBytes = await _previewImageUseCase.call(url);
+
+      setState(() {
+        _downloadedImageBytes = imageBytes;
+        _statusMessage = '✅ Imagen seleccionada y cargada exitosamente.';
+        _availableImageUrls =
+            null; // Ocultamos la galería después de la selección
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = '❌ Error al descargar la imagen: ${e.toString()}';
+      });
+    }
+  }
+
   // FUNCIÓN AUXILIAR: Encapsula la lógica de la vista previa
   Future<void> _loadPreview(String id) async {
     setState(() {
       _statusMessage = 'Cargando Vista Previa para el ID: $id...';
+      _availableImageUrls = null; // ⬅️ Limpiar galería
+      _selectedImageUrl = null;
     });
 
     try {
@@ -97,11 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Función de prueba de Subida
+  // Función de prueba de Subida (MODIFICADA para limpiar la galería)
   Future<void> _testUpload() async {
     setState(() {
       _statusMessage = 'Seleccionando archivo para subir...';
       _downloadedImageBytes = null;
+      _availableImageUrls = null; // ⬅️ Limpiar galería
     });
 
     try {
@@ -150,53 +181,61 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Función de prueba de Descarga
+  // Función de prueba de Descarga (MODIFICADA para cargar la galería)
   Future<void> _testDownload() async {
     setState(() {
-      _statusMessage = 'Iniciando búsqueda Mock (Descarga)...';
+      _statusMessage = 'Buscando 10 URLs de imágenes...';
       _downloadedImageBytes = null;
+      _availableImageUrls = null; // Limpiar vista anterior
+      _selectedImageUrl = null;
     });
 
     try {
       const testId = 'ID-para-buscar-en-existencias';
 
-      // 1. Ejecutar Descarga (simular la acción)
-      await _downloadImageUseCase.call(testId);
+      // 1. Ejecutar Descarga para obtener la LISTA DE URLs (List<String>)
+      // 🚨 ASUMIMOS QUE DownloadImage devuelve List<String>
+      final urls = await _downloadImageUseCase.call(testId) as List<String>;
 
-      // 2. Saltar a la Vista Previa después de la descarga.
-      await _loadPreview(testId);
+      setState(() {
+        _availableImageUrls = urls;
+        _statusMessage =
+            '✅ ${urls.length} URLs obtenidas. Selecciona una imagen.';
+      });
     } catch (e) {
       setState(() {
-        _statusMessage = '❌ Error de Descarga/Búsqueda: ${e.toString()}';
+        _statusMessage = '❌ Error al obtener URLs: ${e.toString()}';
       });
     }
   }
 
+  // Función de Eliminación (MODIFICADA para limpiar la galería)
   Future<void> _deleteFile() async {
-    if (_downloadedImageBytes == null) {
+    // Si hay una imagen mostrada O la galería está abierta
+    if (_downloadedImageBytes == null && _availableImageUrls == null) {
       setState(
-        () => _statusMessage = 'No hay archivo en vista previa para eliminar.',
+        () => _statusMessage = 'No hay contenido para eliminar/restablecer.',
       );
       return;
     }
 
-    // Usamos un ID de prueba (el que se usó para la subida o descarga)
-    // Nota: Esto asume que el ID es persistente, pero para la prueba mock lo tratamos como "eliminado".
-    const testId = 'ID-para-buscar-en-existencias';
+    // Usamos un ID/URL si está disponible, si no, usamos un ID de prueba
+    final idToDelete = _selectedImageUrl ?? 'ID-para-eliminar-mock';
 
     setState(() {
-      _statusMessage = 'Intentando eliminar archivo con ID: $testId...';
+      _statusMessage = 'Intentando eliminar/restablecer estado...';
     });
 
     try {
-      // 1. Ejecutar la Eliminación (llama al DataSource)
-      await _deleteImageUseCase.call(testId);
+      // 1. Ejecutar la Eliminación (llama al DataSource, limpia mock cache)
+      await _deleteImageUseCase.call(idToDelete);
 
       // 2. Restablecer el estado de la UI
       setState(() {
         _downloadedImageBytes = null;
-        _statusMessage =
-            '✅ Archivo eliminado y vista previa restablecida. Elige otra acción.';
+        _availableImageUrls = null; // ⬅️ Limpiar la galería
+        _selectedImageUrl = null;
+        _statusMessage = '✅ Archivo/Estado limpiado. Elige otra acción.';
       });
     } catch (e) {
       setState(() {
@@ -218,6 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              // --- Estado Global ---
               const Text(
                 'Estado:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -229,6 +269,43 @@ class _MyHomePageState extends State<MyHomePage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
+
+              // --- Condición 1: Mostrar Galería de Selección ---
+              if (_availableImageUrls != null && _downloadedImageBytes == null)
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4, // 3 miniaturas por fila
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                        ),
+                    itemCount: _availableImageUrls!.length,
+                    itemBuilder: (context, index) {
+                      final url = _availableImageUrls![index];
+                      return GestureDetector(
+                        onTap: () => _fetchBytesFromUrl(url),
+                        child: AspectRatio(
+                          // ⬅️ NUEVO WIDGET CLAVE
+                          aspectRatio:
+                              1.0, // Hace que la miniatura sea cuadrada (1:1)
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                )
+              else
+              // --- Condición 2: Mostrar Imagen Única (Vista Previa) ---
               if (_downloadedImageBytes != null) ...[
                 const Text(
                   'Vista Previa (Resultado):',
@@ -237,15 +314,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 10),
                 Image.memory(
                   Uint8List.fromList(_downloadedImageBytes!),
-                  height: 200,
+                  height: 300,
                   width: 300,
                   fit: BoxFit.contain,
                 ),
-                const Text(
-                  '(Datos obtenidos por el caso de uso PreviewImage)',
-                  style: TextStyle(fontSize: 12),
+                Text(
+                  '(Datos obtenidos de: ${_selectedImageUrl == null ? 'Subida (Mock Cache)' : 'Descarga API'})',
+                  style: const TextStyle(fontSize: 12),
                 ),
-              ],
+              ] else
+                // --- Condición 3: Placeholder ---
+                const Spacer(),
             ],
           ),
         ),
@@ -264,15 +343,14 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             onPressed: _testDownload,
             heroTag: 'download',
-            tooltip: 'Descargar Mock (Descarga -> Vista Previa)',
+            tooltip: 'Buscar 10 Imágenes (Galería)',
             child: const Icon(Icons.download),
           ),
-          const SizedBox(height: 10), // ⬅️ NUEVO ESPACIO
+          const SizedBox(height: 10),
           FloatingActionButton(
-            // ⬅️ BOTÓN DE ELIMINACIÓN
             onPressed: _deleteFile,
             heroTag: 'delete',
-            tooltip: 'Eliminar y Restablecer Vista Previa',
+            tooltip: 'Eliminar y Restablecer Vista Previa/Galería',
             child: const Icon(Icons.delete),
           ),
         ],
