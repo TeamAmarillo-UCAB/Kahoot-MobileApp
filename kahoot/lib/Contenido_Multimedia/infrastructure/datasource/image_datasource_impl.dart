@@ -12,7 +12,16 @@ const uuid = Uuid();
 // ❌ Se elimina la definición de _transparentGifBytes, ya no es necesaria.
 
 class ImageDatasourceImpl implements ImageDataSource {
-  final Dio dio = Dio();
+  final Dio dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(
+        seconds: 10,
+      ), // Límite para establecer la conexión
+      receiveTimeout: const Duration(
+        seconds: 10,
+      ), // Límite para recibir la respuesta
+    ),
+  );
   // Bandera para subir (usamos MOCK para devolver bytes inmediatamente)
   final bool isUploadMocking = true;
   // Esta bandera ahora es irrelevante para getImage/previewImage, pero la mantenemos.
@@ -64,7 +73,7 @@ class ImageDatasourceImpl implements ImageDataSource {
   @override
   // 🚨 ASUMIMOS QUE LA INTERFAZ HA CAMBIADO A: Future<List<String>> getImage(String idOrUrl)
   Future<List<String>> getImage(String idOrUrl) async {
-    const int count = 3; // Queremos 10 imágenes
+    const int count = 16; // Queremos 10 imágenes
     const int width = 150;
     const int height = 150;
 
@@ -77,7 +86,7 @@ class ImageDatasourceImpl implements ImageDataSource {
     // El 'seed' (número después de /id/) asegura una imagen diferente.
     for (int i = 0; i < count; i++) {
       // Usamos i + 100 para obtener un rango diferente de fotos
-      final randomId = i + 100;
+      final randomId = i + 10;
       final url = '$baseUrl/id/$randomId/$width/$height';
       imageUrls.add(url);
     }

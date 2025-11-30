@@ -291,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               1.0, // Hace que la miniatura sea cuadrada (1:1)
                           child: Image.network(
                             url,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
                               return const Center(
