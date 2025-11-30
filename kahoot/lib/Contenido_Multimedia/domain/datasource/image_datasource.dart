@@ -10,4 +10,6 @@ abstract class ImageDataSource {
   Future<List<int>> getImage(String idOrUrl);
 
   Future<List<int>> previewImage(String idOrUrl);
+
+  Future<void> deleteImage(String idOrUrl);
 }

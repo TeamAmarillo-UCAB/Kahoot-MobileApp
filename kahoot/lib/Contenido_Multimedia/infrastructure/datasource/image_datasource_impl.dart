@@ -137,4 +137,44 @@ class ImageDatasourceImpl implements ImageDataSource {
       throw Exception('Preview failed: ${e.message}');
     }
   }
+
+  @override
+  Future<void> deleteImage(String id) async {
+    if (isUploadMocking) {
+      // Simulamos un retraso para la eliminación
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Si el ID es el último subido, lo eliminamos de la caché mock
+      if (id == _lastUploadedMockId) {
+        _lastUploadedMockBytes = null;
+        _lastUploadedMockId = null;
+      }
+
+      print(
+        '🗑️ [MOCK] Eliminación simulada y cache mock limpiado para ID: $id',
+      );
+      // En el mock, simplemente no devolvemos nada (Future<void>)
+      return;
+    } else {
+      // Lógica REAL de la API (DELETE)
+      try {
+        const String apiBaseUrl = 'https://tu-api.com';
+        final url = '$apiBaseUrl/media/$id';
+
+        final response = await dio.delete(url);
+
+        if (response.statusCode == 200) {
+          print('✅ Eliminación real exitosa para ID: $id');
+          return;
+        } else {
+          throw Exception(
+            'Failed to delete image: Status ${response.statusCode}',
+          );
+        }
+      } on DioException catch (e) {
+        // 404 Not Found: El Kahoot no existe o no es accesible.
+        throw Exception('Delete failed: ${e.message}');
+      }
+    }
+  }
 }

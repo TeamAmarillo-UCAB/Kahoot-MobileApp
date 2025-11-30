@@ -23,4 +23,9 @@ class ImageRepositoryImpl implements ImageRepository {
   Future<List<int>> previewImage(String idOrUrl) async {
     return await dataSource.previewImage(idOrUrl);
   }
+
+  @override
+  Future<void> deleteImage(String idOrUrl) async {
+    return await dataSource.deleteImage(idOrUrl);
+  }
 }

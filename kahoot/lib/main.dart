@@ -9,6 +9,7 @@ import 'Contenido_Multimedia/domain/datasource/image_datasource.dart';
 import 'Contenido_Multimedia/application/usecases/upload_image.dart';
 import 'Contenido_Multimedia/application/usecases/get_image.dart';
 import 'Contenido_Multimedia/application/usecases/preview_image.dart';
+import 'Contenido_Multimedia/application/usecases/delete_image.dart';
 import 'Contenido_Multimedia/infrastructure/repositories/image_repository_impl.dart';
 import 'Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart';
 
@@ -58,6 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late final UploadImage _uploadImageUseCase;
   late final DownloadImage _downloadImageUseCase;
   late final PreviewImage _previewImageUseCase;
+  late final DeleteImage _deleteImageUseCase;
 
   String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar Mock (⬇️).';
   List<int>? _downloadedImageBytes;
@@ -71,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _uploadImageUseCase = UploadImage(_repository);
     _downloadImageUseCase = DownloadImage(_repository);
     _previewImageUseCase = PreviewImage(_repository);
+    _deleteImageUseCase = DeleteImage(_repository);
   }
 
   // FUNCIÓN AUXILIAR: Encapsula la lógica de la vista previa
@@ -169,6 +172,39 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _deleteFile() async {
+    if (_downloadedImageBytes == null) {
+      setState(
+        () => _statusMessage = 'No hay archivo en vista previa para eliminar.',
+      );
+      return;
+    }
+
+    // Usamos un ID de prueba (el que se usó para la subida o descarga)
+    // Nota: Esto asume que el ID es persistente, pero para la prueba mock lo tratamos como "eliminado".
+    const testId = 'ID-para-buscar-en-existencias';
+
+    setState(() {
+      _statusMessage = 'Intentando eliminar archivo con ID: $testId...';
+    });
+
+    try {
+      // 1. Ejecutar la Eliminación (llama al DataSource)
+      await _deleteImageUseCase.call(testId);
+
+      // 2. Restablecer el estado de la UI
+      setState(() {
+        _downloadedImageBytes = null;
+        _statusMessage =
+            '✅ Archivo eliminado y vista previa restablecida. Elige otra acción.';
+      });
+    } catch (e) {
+      setState(() {
+        _statusMessage = '❌ Error al eliminar el archivo: ${e.toString()}';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -230,6 +266,14 @@ class _MyHomePageState extends State<MyHomePage> {
             heroTag: 'download',
             tooltip: 'Descargar Mock (Descarga -> Vista Previa)',
             child: const Icon(Icons.download),
+          ),
+          const SizedBox(height: 10), // ⬅️ NUEVO ESPACIO
+          FloatingActionButton(
+            // ⬅️ BOTÓN DE ELIMINACIÓN
+            onPressed: _deleteFile,
+            heroTag: 'delete',
+            tooltip: 'Eliminar y Restablecer Vista Previa',
+            child: const Icon(Icons.delete),
           ),
         ],
       ),
