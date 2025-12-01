@@ -1,5 +1,3 @@
-// Archivo: lib/Contenido_Multimedia/infrastructure/repositories/image_repository_impl.dart
-
 import '../../domain/repositories/media_resource_repository.dart';
 import '../../domain/entities/media_resource.dart';
 import '../../domain/datasource/media_resource_datasource.dart';

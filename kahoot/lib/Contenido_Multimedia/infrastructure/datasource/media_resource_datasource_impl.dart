@@ -1,5 +1,3 @@
-// Archivo: lib/Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart
-
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/media_resource.dart';
@@ -7,42 +5,41 @@ import '../../domain/datasource/media_resource_datasource.dart';
 
 const uuid = Uuid();
 
-// ❌ Se elimina la definición de _transparentGifBytes, ya no es necesaria.
-
 class MediaResourceDatasourceImpl implements MediaResourceDataSource {
+  //Instancia de Dio para los requests
   final Dio dio = Dio(
     BaseOptions(
-      connectTimeout: const Duration(
-        seconds: 10,
-      ), // Límite para establecer la conexión
-      receiveTimeout: const Duration(
-        seconds: 10,
-      ), // Límite para recibir la respuesta
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
     ),
   );
-  // Bandera para subir (usamos MOCK para devolver bytes inmediatamente)
+
+  //Booleano que es true si la subida se hace con un mock y no con un post
   final bool isUploadMocking = true;
 
-  // Cache temporal para la subida
+  //Almacén de bytes de la imagen que el usuario ha seleccionado
   List<int>? _lastUploadedMockBytes;
-  String? _lastUploadedMockId;
 
-  // ====================================================================
-  // ⬆️ UPLOAD IMAGE (SIN CAMBIOS)
-  // ====================================================================
+  //Id de referencia de la imagen simulada
+  String? _lastUploadedMockId;
 
   @override
   Future<Map<String, dynamic>> uploadMediaResource(MediaResource file) async {
+    //VERIFICAR UPLOADMOCKING SI ES NECESARIO
     if (isUploadMocking) {
       await Future.delayed(const Duration(seconds: 2));
       final newUuid = uuid.v4();
 
+      //Bytes del archivo subido
       _lastUploadedMockBytes = file.bytes;
+      //Crea un Uuid para la imagen
       _lastUploadedMockId = newUuid;
+
       print(
-        '⬆️ [MOCK] Archivo subido (${file.name}). Guardando en cache mock con ID: $newUuid',
+        'Archivo mock subido (${file.name}). Guardando en cache mock con ID: $newUuid',
       );
 
+      //Mapa de JSON
       return {
         "id": newUuid,
         "data": {
@@ -58,64 +55,49 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
         "createdAt": DateTime.now().toIso8601String(),
       };
     } else {
-      throw UnimplementedError('Real API POST is not implemented yet.');
+      throw UnimplementedError('El post real todavía no ha sido implementado.');
     }
   }
 
-  // ====================================================================
-  // 📥 GET IMAGE (DESCARGA COMPLETA - AHORA SOLO API REAL)
-  // ====================================================================
-
   @override
-  // 🚨 ASUMIMOS QUE LA INTERFAZ HA CAMBIADO A: Future<List<String>> getImage(String idOrUrl)
   Future<List<String>> getMediaResource(String idOrUrl) async {
-    const int count = 16; // Queremos 10 imágenes
-    const int width = 150;
-    const int height = 150;
+    const int count = 16; //Número de imágenes
+    const int width = 150; //Ancho de las imágenes
+    const int height = 150; //Alto de las imágenes
 
-    // URL base de Lorem Picsum
+    //API de prueba
     const String baseUrl = 'https://picsum.photos';
 
     final List<String> mediaResourcesUrls = [];
 
-    // Generamos 10 URLs diferentes usando un ID aleatorio (seed)
-    // El 'seed' (número después de /id/) asegura una imagen diferente.
+    //Obtiene las URL de las imágenes extraídas de la API de prueba
     for (int i = 0; i < count; i++) {
-      // Usamos i + 100 para obtener un rango diferente de fotos
       final randomId = i + 10;
       final url = '$baseUrl/id/$randomId/$width/$height';
       mediaResourcesUrls.add(url);
     }
 
-    print(
-      '🌐 Generadas ${mediaResourcesUrls.length} URLs de imágenes aleatorias.',
-    );
-
-    // Devolvemos la lista de URLs para que la UI pueda mostrarlas.
+    print('Generadas ${mediaResourcesUrls.length} URLs de imágenes de la API.');
+    //Retorna las URLs de las imágenes de la API
     return mediaResourcesUrls;
   }
-  // ====================================================================
-  // 👁️ PREVIEW IMAGE (SIN CAMBIOS)
-  // ====================================================================
 
   @override
   Future<List<int>> previewMediaResource(String idOrUrl) async {
-    // 1. Prioridad: Verificar si el ID solicitado coincide con el archivo que acabamos de "subir"
+    //Si hay un archivo subido ya, lo muestra
     if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
       print(
-        '👁️ [CACHE MOCK] Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
+        'Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
       );
       return _lastUploadedMockBytes!;
     }
 
-    // 2. Segunda Opción: Si es una URL (Descarga/Selección), usar Dio.
-    // Usamos el idOrUrl directamente, ya que en el flujo de selección es la URL completa.
-
-    const int defaultWidth = 300;
-    const int defaultHeight = 300;
+    const int defaultWidth = 300; //Ancho de vista previa
+    const int defaultHeight = 300; //Alto de vista previa
+    //Llamada a URL si no hay imagen subida para preview
     final urlToFetch = idOrUrl.startsWith('http')
         ? idOrUrl
-        : 'https://picsum.photos/$defaultWidth/$defaultHeight'; // Fallback si es un ID desconocido
+        : 'https://picsum.photos/$defaultWidth/$defaultHeight';
 
     try {
       print('🌐 Descargando imagen para vista previa desde: $urlToFetch');
@@ -126,45 +108,44 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
       );
 
       if (response.statusCode == 200) {
-        return response.data as List<int>;
+        return response.data
+            as List<int>; //Devuelve la respuesta de la URL como lista de bytes
       } else {
         throw Exception(
           'Failed to download for preview: Status ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
-      print('❌ Error de Dio en Preview: ${e.message}');
+      print('Error de Dio en Preview: ${e.message}');
       throw Exception('Preview failed: ${e.message}');
     }
   }
 
   @override
   Future<void> deleteMediaResource(String id) async {
+    //USA EL MOCK DE LA SUBIDAAAAAAAAAAAAAAAAAAA RECORDARRRR
     if (isUploadMocking) {
-      // Simulamos un retraso para la eliminación
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Si el ID es el último subido, lo eliminamos de la caché mock
+      //Elimina el mock (imagen subida o extraída)
       if (id == _lastUploadedMockId) {
         _lastUploadedMockBytes = null;
         _lastUploadedMockId = null;
       }
 
-      print(
-        '🗑️ [MOCK] Eliminación simulada y cache mock limpiado para ID: $id',
-      );
-      // En el mock, simplemente no devolvemos nada (Future<void>)
+      print('Eliminación simulada y cache mock limpiado para ID: $id');
+
       return;
     } else {
-      // Lógica REAL de la API (DELETE)
+      //Try para cuando haya que hacer el DELETE real
       try {
-        const String apiBaseUrl = 'https://tu-api.com';
+        const String apiBaseUrl = 'https://la-api-del-back';
         final url = '$apiBaseUrl/media/$id';
 
         final response = await dio.delete(url);
 
         if (response.statusCode == 200) {
-          print('✅ Eliminación real exitosa para ID: $id');
+          print('Eliminación real exitosa para ID: $id');
           return;
         } else {
           throw Exception(
@@ -172,7 +153,6 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
           );
         }
       } on DioException catch (e) {
-        // 404 Not Found: El Kahoot no existe o no es accesible.
         throw Exception('Delete failed: ${e.message}');
       }
     }
