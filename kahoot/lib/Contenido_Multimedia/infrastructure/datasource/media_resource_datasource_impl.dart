@@ -1,17 +1,15 @@
 // Archivo: lib/Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart
 
 import 'package:dio/dio.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:typed_data';
-import '../../domain/entities/media_file.dart';
-import '../../domain/datasource/image_datasource.dart';
+import '../../domain/entities/media_resource.dart';
+import '../../domain/datasource/media_resource_datasource.dart';
 
 const uuid = Uuid();
 
 // ❌ Se elimina la definición de _transparentGifBytes, ya no es necesaria.
 
-class ImageDatasourceImpl implements ImageDataSource {
+class MediaResourceDatasourceImpl implements MediaResourceDataSource {
   final Dio dio = Dio(
     BaseOptions(
       connectTimeout: const Duration(
@@ -24,8 +22,6 @@ class ImageDatasourceImpl implements ImageDataSource {
   );
   // Bandera para subir (usamos MOCK para devolver bytes inmediatamente)
   final bool isUploadMocking = true;
-  // Esta bandera ahora es irrelevante para getImage/previewImage, pero la mantenemos.
-  final bool isDownloadMocking = false;
 
   // Cache temporal para la subida
   List<int>? _lastUploadedMockBytes;
@@ -36,7 +32,7 @@ class ImageDatasourceImpl implements ImageDataSource {
   // ====================================================================
 
   @override
-  Future<Map<String, dynamic>> uploadImage(MediaFile file) async {
+  Future<Map<String, dynamic>> uploadMediaResource(MediaResource file) async {
     if (isUploadMocking) {
       await Future.delayed(const Duration(seconds: 2));
       final newUuid = uuid.v4();
@@ -72,7 +68,7 @@ class ImageDatasourceImpl implements ImageDataSource {
 
   @override
   // 🚨 ASUMIMOS QUE LA INTERFAZ HA CAMBIADO A: Future<List<String>> getImage(String idOrUrl)
-  Future<List<String>> getImage(String idOrUrl) async {
+  Future<List<String>> getMediaResource(String idOrUrl) async {
     const int count = 16; // Queremos 10 imágenes
     const int width = 150;
     const int height = 150;
@@ -80,7 +76,7 @@ class ImageDatasourceImpl implements ImageDataSource {
     // URL base de Lorem Picsum
     const String baseUrl = 'https://picsum.photos';
 
-    final List<String> imageUrls = [];
+    final List<String> mediaResourcesUrls = [];
 
     // Generamos 10 URLs diferentes usando un ID aleatorio (seed)
     // El 'seed' (número después de /id/) asegura una imagen diferente.
@@ -88,20 +84,22 @@ class ImageDatasourceImpl implements ImageDataSource {
       // Usamos i + 100 para obtener un rango diferente de fotos
       final randomId = i + 10;
       final url = '$baseUrl/id/$randomId/$width/$height';
-      imageUrls.add(url);
+      mediaResourcesUrls.add(url);
     }
 
-    print('🌐 Generadas ${imageUrls.length} URLs de imágenes aleatorias.');
+    print(
+      '🌐 Generadas ${mediaResourcesUrls.length} URLs de imágenes aleatorias.',
+    );
 
     // Devolvemos la lista de URLs para que la UI pueda mostrarlas.
-    return imageUrls;
+    return mediaResourcesUrls;
   }
   // ====================================================================
   // 👁️ PREVIEW IMAGE (SIN CAMBIOS)
   // ====================================================================
 
   @override
-  Future<List<int>> previewImage(String idOrUrl) async {
+  Future<List<int>> previewMediaResource(String idOrUrl) async {
     // 1. Prioridad: Verificar si el ID solicitado coincide con el archivo que acabamos de "subir"
     if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
       print(
@@ -141,7 +139,7 @@ class ImageDatasourceImpl implements ImageDataSource {
   }
 
   @override
-  Future<void> deleteImage(String id) async {
+  Future<void> deleteMediaResource(String id) async {
     if (isUploadMocking) {
       // Simulamos un retraso para la eliminación
       await Future.delayed(const Duration(milliseconds: 500));

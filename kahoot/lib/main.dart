@@ -3,15 +3,15 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
 
 // --- Importaciones de tu Arquitectura ---
-import 'Contenido_Multimedia/domain/entities/media_file.dart';
-import 'Contenido_Multimedia/domain/repositories/image_repository.dart';
-import 'Contenido_Multimedia/domain/datasource/image_datasource.dart';
-import 'Contenido_Multimedia/application/usecases/upload_image.dart';
-import 'Contenido_Multimedia/application/usecases/get_image.dart';
-import 'Contenido_Multimedia/application/usecases/preview_image.dart';
-import 'Contenido_Multimedia/application/usecases/delete_image.dart';
-import 'Contenido_Multimedia/infrastructure/repositories/image_repository_impl.dart';
-import 'Contenido_Multimedia/infrastructure/datasource/image_datasource_impl.dart';
+import 'Contenido_Multimedia/domain/entities/media_resource.dart';
+import 'Contenido_Multimedia/domain/repositories/media_resource_repository.dart';
+import 'Contenido_Multimedia/domain/datasource/media_resource_datasource.dart';
+import 'Contenido_Multimedia/application/usecases/upload_media_resource.dart';
+import 'Contenido_Multimedia/application/usecases/get_media_resource.dart';
+import 'Contenido_Multimedia/application/usecases/preview_media_resource.dart';
+import 'Contenido_Multimedia/application/usecases/delete_media_resource.dart';
+import 'Contenido_Multimedia/infrastructure/repositories/media_resource_repository_impl.dart';
+import 'Contenido_Multimedia/infrastructure/datasource/media_resource_datasource_impl.dart';
 
 // -------------------------------------------------------------
 
@@ -54,47 +54,47 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   // 1. Declaración de las dependencias
-  late final ImageDataSource _dataSource;
-  late final ImageRepository _repository;
-  late final UploadImage _uploadImageUseCase;
-  late final DownloadImage _downloadImageUseCase;
-  late final PreviewImage _previewImageUseCase;
-  late final DeleteImage _deleteImageUseCase;
+  late final MediaResourceDataSource _dataSource;
+  late final MediaResourceRepository _repository;
+  late final UploadMediaResource _uploadMediaResourceUseCase;
+  late final GetMediaResource _getMediaResourceUseCase;
+  late final PreviewMediaResource _previewMediaResourceUseCase;
+  late final DeleteMediaResource _deleteMediaResourceUseCase;
 
   String _statusMessage = 'Elige una acción: Subir (⬆️) o Descargar (⬇️).';
-  List<int>? _downloadedImageBytes;
+  List<int>? _gottenMediaResourceBytes;
 
   // 🚨 NUEVAS VARIABLES DE ESTADO PARA LA GALERÍA
-  List<String>? _availableImageUrls;
-  String? _selectedImageUrl;
+  List<String>? _availableMediaResourceUrls;
+  String? _selectedMediaResourceUrl;
 
   @override
   void initState() {
     super.initState();
     // 2. Inicialización de la cadena de dependencias
-    _dataSource = ImageDatasourceImpl();
-    _repository = ImageRepositoryImpl(_dataSource);
-    _uploadImageUseCase = UploadImage(_repository);
-    _downloadImageUseCase = DownloadImage(_repository);
-    _previewImageUseCase = PreviewImage(_repository);
-    _deleteImageUseCase = DeleteImage(_repository);
+    _dataSource = MediaResourceDatasourceImpl();
+    _repository = MediaResourceRepositoryImpl(_dataSource);
+    _uploadMediaResourceUseCase = UploadMediaResource(_repository);
+    _getMediaResourceUseCase = GetMediaResource(_repository);
+    _previewMediaResourceUseCase = PreviewMediaResource(_repository);
+    _deleteMediaResourceUseCase = DeleteMediaResource(_repository);
   }
 
   // ⬇️ FUNCIÓN NUEVA: Descarga los bytes de una URL específica (llamada al seleccionar)
   Future<void> _fetchBytesFromUrl(String url) async {
     setState(() {
       _statusMessage = 'Descargando imagen seleccionada: $url...';
-      _selectedImageUrl = url;
+      _selectedMediaResourceUrl = url;
     });
 
     try {
       // Usamos PreviewImage, que ahora está configurado para manejar la descarga de URLs
-      final imageBytes = await _previewImageUseCase.call(url);
+      final mediaResourceBytes = await _previewMediaResourceUseCase.call(url);
 
       setState(() {
-        _downloadedImageBytes = imageBytes;
+        _gottenMediaResourceBytes = mediaResourceBytes;
         _statusMessage = '✅ Imagen seleccionada y cargada exitosamente.';
-        _availableImageUrls =
+        _availableMediaResourceUrls =
             null; // Ocultamos la galería después de la selección
       });
     } catch (e) {
@@ -108,17 +108,17 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadPreview(String id) async {
     setState(() {
       _statusMessage = 'Cargando Vista Previa para el ID: $id...';
-      _availableImageUrls = null; // ⬅️ Limpiar galería
-      _selectedImageUrl = null;
+      _availableMediaResourceUrls = null; // ⬅️ Limpiar galería
+      _selectedMediaResourceUrl = null;
     });
 
     try {
-      final imageBytes = await _previewImageUseCase.call(id);
+      final mediaResourceBytes = await _previewMediaResourceUseCase.call(id);
 
       setState(() {
-        _downloadedImageBytes = imageBytes;
+        _gottenMediaResourceBytes = mediaResourceBytes;
         _statusMessage =
-            '✅ Operación completa. Vista Previa exitosa. Bytes: ${imageBytes.length}';
+            '✅ Operación completa. Vista Previa exitosa. Bytes: ${mediaResourceBytes.length}';
       });
     } catch (e) {
       setState(() {
@@ -131,8 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _testUpload() async {
     setState(() {
       _statusMessage = 'Seleccionando archivo para subir...';
-      _downloadedImageBytes = null;
-      _availableImageUrls = null; // ⬅️ Limpiar galería
+      _gottenMediaResourceBytes = null;
+      _availableMediaResourceUrls = null; // ⬅️ Limpiar galería
     });
 
     try {
@@ -155,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return;
       }
 
-      final MediaFile fileToUpload = MediaFile(
+      final MediaResource fileToUpload = MediaResource(
         bytes: fileBytes.toList(),
         name: platformFile.name,
         mimeType: platformFile.extension != null
@@ -168,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
 
       // 1. Ejecutar Subida
-      final responseData = await _uploadImageUseCase.call(fileToUpload);
+      final responseData = await _uploadMediaResourceUseCase.call(fileToUpload);
       final uploadedId = responseData['id'] as String;
 
       // 2. Saltar a la Vista Previa después de la subida.
@@ -182,12 +182,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // Función de prueba de Descarga (MODIFICADA para cargar la galería)
-  Future<void> _testDownload() async {
+  Future<void> _testGet() async {
     setState(() {
       _statusMessage = 'Buscando 10 URLs de imágenes...';
-      _downloadedImageBytes = null;
-      _availableImageUrls = null; // Limpiar vista anterior
-      _selectedImageUrl = null;
+      _gottenMediaResourceBytes = null;
+      _availableMediaResourceUrls = null; // Limpiar vista anterior
+      _selectedMediaResourceUrl = null;
     });
 
     try {
@@ -195,10 +195,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       // 1. Ejecutar Descarga para obtener la LISTA DE URLs (List<String>)
       // 🚨 ASUMIMOS QUE DownloadImage devuelve List<String>
-      final urls = await _downloadImageUseCase.call(testId) as List<String>;
+      final urls = await _getMediaResourceUseCase.call(testId) as List<String>;
 
       setState(() {
-        _availableImageUrls = urls;
+        _availableMediaResourceUrls = urls;
         _statusMessage =
             '✅ ${urls.length} URLs obtenidas. Selecciona una imagen.';
       });
@@ -212,7 +212,8 @@ class _MyHomePageState extends State<MyHomePage> {
   // Función de Eliminación (MODIFICADA para limpiar la galería)
   Future<void> _deleteFile() async {
     // Si hay una imagen mostrada O la galería está abierta
-    if (_downloadedImageBytes == null && _availableImageUrls == null) {
+    if (_gottenMediaResourceBytes == null &&
+        _availableMediaResourceUrls == null) {
       setState(
         () => _statusMessage = 'No hay contenido para eliminar/restablecer.',
       );
@@ -220,7 +221,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     // Usamos un ID/URL si está disponible, si no, usamos un ID de prueba
-    final idToDelete = _selectedImageUrl ?? 'ID-para-eliminar-mock';
+    final idToDelete = _selectedMediaResourceUrl ?? 'ID-para-eliminar-mock';
 
     setState(() {
       _statusMessage = 'Intentando eliminar/restablecer estado...';
@@ -228,13 +229,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       // 1. Ejecutar la Eliminación (llama al DataSource, limpia mock cache)
-      await _deleteImageUseCase.call(idToDelete);
+      await _deleteMediaResourceUseCase.call(idToDelete);
 
       // 2. Restablecer el estado de la UI
       setState(() {
-        _downloadedImageBytes = null;
-        _availableImageUrls = null; // ⬅️ Limpiar la galería
-        _selectedImageUrl = null;
+        _gottenMediaResourceBytes = null;
+        _availableMediaResourceUrls = null; // ⬅️ Limpiar la galería
+        _selectedMediaResourceUrl = null;
         _statusMessage = '✅ Archivo/Estado limpiado. Elige otra acción.';
       });
     } catch (e) {
@@ -271,7 +272,8 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(height: 30),
 
               // --- Condición 1: Mostrar Galería de Selección ---
-              if (_availableImageUrls != null && _downloadedImageBytes == null)
+              if (_availableMediaResourceUrls != null &&
+                  _gottenMediaResourceBytes == null)
                 Expanded(
                   child: GridView.builder(
                     gridDelegate:
@@ -280,9 +282,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
                         ),
-                    itemCount: _availableImageUrls!.length,
+                    itemCount: _availableMediaResourceUrls!.length,
                     itemBuilder: (context, index) {
-                      final url = _availableImageUrls![index];
+                      final url = _availableMediaResourceUrls![index];
                       return GestureDetector(
                         onTap: () => _fetchBytesFromUrl(url),
                         child: AspectRatio(
@@ -306,20 +308,20 @@ class _MyHomePageState extends State<MyHomePage> {
                 )
               else
               // --- Condición 2: Mostrar Imagen Única (Vista Previa) ---
-              if (_downloadedImageBytes != null) ...[
+              if (_gottenMediaResourceBytes != null) ...[
                 const Text(
                   'Vista Previa (Resultado):',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Image.memory(
-                  Uint8List.fromList(_downloadedImageBytes!),
+                  Uint8List.fromList(_gottenMediaResourceBytes!),
                   height: 300,
                   width: 300,
                   fit: BoxFit.contain,
                 ),
                 Text(
-                  '(Datos obtenidos de: ${_selectedImageUrl == null ? 'Subida (Mock Cache)' : 'Descarga API'})',
+                  '(Datos obtenidos de: ${_selectedMediaResourceUrl == null ? 'Subida (Mock Cache)' : 'Descarga API'})',
                   style: const TextStyle(fontSize: 12),
                 ),
               ] else
@@ -341,7 +343,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
-            onPressed: _testDownload,
+            onPressed: _testGet,
             heroTag: 'download',
             tooltip: 'Buscar 10 Imágenes (Galería)',
             child: const Icon(Icons.download),

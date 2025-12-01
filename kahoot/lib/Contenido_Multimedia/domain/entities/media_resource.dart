@@ -1,4 +1,4 @@
-class MediaFile {
+class MediaResource {
   /// Los bytes del archivo. Es el contenido binario.
   final List<int> bytes;
 
@@ -8,5 +8,5 @@ class MediaFile {
   /// El tipo MIME (opcional, pero útil para validaciones).
   final String? mimeType;
 
-  MediaFile({required this.bytes, required this.name, this.mimeType});
+  MediaResource({required this.bytes, required this.name, this.mimeType});
 }

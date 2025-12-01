@@ -1,18 +1,18 @@
 // Archivo: lib/domain/usecases/upload_image.dart
 
-import '../../domain/repositories/image_repository.dart';
+import '../../domain/repositories/media_resource_repository.dart';
 // Importa la entidad de dominio MediaFile
-import '../../domain/entities/media_file.dart';
+import '../../domain/entities/media_resource.dart';
 
-class UploadImage {
-  final ImageRepository repository;
+class UploadMediaResource {
+  final MediaResourceRepository repository;
 
-  UploadImage(this.repository);
+  UploadMediaResource(this.repository);
 
   // ⬅️ Cambia el argumento de String url a MediaFile file
   // ⬅️ Cambia el retorno de Future<void> a Future<Map<String, dynamic>> para devolver la respuesta del servidor (UUID)
-  Future<Map<String, dynamic>> call(MediaFile file) async {
+  Future<Map<String, dynamic>> call(MediaResource file) async {
     // El caso de uso llama directamente al repositorio con la entidad de dominio
-    return await repository.uploadImage(file);
+    return await repository.uploadMediaResource(file);
   }
 }
