@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/kahoot_details_page.dart';
 
 class CreateKahootPage extends StatelessWidget {
   const CreateKahootPage({Key? key}) : super(key: key);
@@ -31,7 +32,7 @@ class CreateKahootPage extends StatelessWidget {
                 subtitle: 'Toma el control total de la creación de kahoots',
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const _BlankEditorPage()),
+                    MaterialPageRoute(builder: (_) => const KahootDetailsPage()),
                   );
                 },
               ),
@@ -83,16 +84,7 @@ class _TemplateCard extends StatelessWidget {
   }
 }
 
-class _BlankEditorPage extends StatelessWidget {
-  const _BlankEditorPage({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo Kahoot')),
-      body: const Center(child: Text('Editor en blanco (pendiente de implementar)')),
-    );
-  }
-}
+
 
 class _CreateBottomNav extends StatelessWidget {
   final int currentIndex;
