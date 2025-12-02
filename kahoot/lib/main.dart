@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 
+const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backcomun-production.up.railway.app');
+
 void main() {
   runApp(const MyApp());
 }

@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../application/usecases/kahoot/create_kahoot.dart';
+import '../../application/usecases/kahoot/update_kahoot.dart';
+import '../../infrastructure/datasource/kahoot_datasource_impl.dart';
+import '../../infrastructure/repositories/kahoot_repository_impl.dart';
+import '../../presentation/blocs/kahoot_editor_cubit.dart';
 import '../pages/create/add_question_modal.dart';
+import '../../../main.dart';
+import '../../domain/entities/question.dart';
+import '../../domain/entities/answer.dart';
 
 class KahootDetailsPage extends StatefulWidget {
   const KahootDetailsPage({Key? key}) : super(key: key);
@@ -12,6 +21,77 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   String visibility = 'Privado';
   final List<String> visibilityOptions = ['Privado', 'Público'];
   int questionsCount = 0;
+  final TextEditingController _titleController = TextEditingController();
+  String? _selectedTheme;
+
+  late final KahootDatasourceImpl _datasource;
+  late final KahootRepositoryImpl _repository;
+  late final CreateKahoot _createKahoot;
+  late final UpdateKahoot _updateKahoot;
+  late final KahootEditorCubit _editorCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _datasource = KahootDatasourceImpl();
+    // set base URL from main.dart constant
+    _datasource.dio.options.baseUrl = apiBaseUrl;
+    _repository = KahootRepositoryImpl(datasource: _datasource);
+    _createKahoot = CreateKahoot(_repository);
+    _updateKahoot = UpdateKahoot(_repository);
+    _editorCubit = KahootEditorCubit(
+      createKahootUseCase: _createKahoot,
+      updateKahootUseCase: _updateKahoot,
+      initialAuthorId: 'author123',
+    );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _editorCubit.close();
+    super.dispose();
+  }
+
+  Question? _mapResultToQuestion(Map result) {
+    try {
+      final String type = (result['type'] as String?) ?? '';
+      final String title = (result['title'] as String?)?.trim() ?? '';
+      final int time = (result['time'] as int?) ?? 20;
+      final List answersRaw = (result['answers'] as List?) ?? [];
+      final answers = answersRaw.map((e) => Answer(
+            image: '',
+            isCorrect: (e['isCorrect'] as bool?) ?? false,
+            text: (e['text'] as String?) ?? '',
+            questionId: '',
+          )).toList();
+
+      QuestionType qType;
+      switch (type) {
+        case 'true_false':
+          qType = QuestionType.true_false;
+          break;
+        case 'short_answer':
+          qType = QuestionType.short_answer;
+          break;
+        case 'quiz':
+        default:
+          qType = QuestionType.quiz_single;
+      }
+
+      return Question(
+        text: title,
+        title: title,
+        mediaId: '',
+        type: qType,
+        points: 1000,
+        timeLimitSeconds: time,
+        answer: answers,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +115,33 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 foregroundColor: Colors.brown,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              onPressed: () {},
+              onPressed: () async {
+                final title = _titleController.text.trim();
+                if (title.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El título es requerido.')),
+                  );
+                  return;
+                }
+                final visibilityValue = visibility == 'Privado' ? 'private' : 'public';
+
+                _editorCubit
+                  ..setTitle(title)
+                  ..setVisibility(visibilityValue)
+                  ..setTheme(_selectedTheme ?? '');
+
+                await _editorCubit.saveCreate();
+                final state = _editorCubit.state;
+                if (state.status == EditorStatus.saved) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Kahoot creado correctamente.')),
+                  );
+                } else if (state.status == EditorStatus.error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.errorMessage ?? 'Ocurrió un error al guardar.')),
+                  );
+                }
+              },
               child: const Text('Guardar'),
             ),
           ),
@@ -74,6 +180,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     children: [
                       Expanded(
                         child: TextField(
+                          controller: _titleController,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Color(0xFFFFD54F),
@@ -102,6 +209,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: DropdownButtonFormField<String>(
+                    value: _selectedTheme,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Color(0xFFFFD54F),
@@ -117,7 +225,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                       DropdownMenuItem(value: 'Historia', child: Text('Historia')),
                       DropdownMenuItem(value: 'Ciencias', child: Text('Ciencias')),
                     ],
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      setState(() => _selectedTheme = value);
+                    },
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -151,21 +261,37 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Preguntas ($questionsCount)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      ...List.generate(questionsCount, (i) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF444444),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text('Pregunta ${i + 1}', style: const TextStyle(color: Colors.white)),
-                      )),
-                    ],
+                  child: BlocBuilder<KahootEditorCubit, KahootEditorState>(
+                    bloc: _editorCubit,
+                    builder: (context, state) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Preguntas (${state.questions.length})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ...List.generate(state.questions.length, (i) => Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF444444),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(state.questions[i].title.isNotEmpty ? state.questions[i].title : 'Pregunta ${i + 1}', style: const TextStyle(color: Colors.white)),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                  onPressed: () {
+                                    _editorCubit.removeQuestion(i);
+                                  },
+                                ),
+                              ],
+                            ),
+                          )),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 80),
@@ -186,10 +312,15 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   isScrollControlled: true,
                   builder: (_) => const AddQuestionModal(),
                 );
-                if (result != null && result is Map && result['type'] == 'quiz') {
-                  setState(() {
-                    questionsCount += 1;
-                  });
+                if (result != null && result is Map) {
+                  final q = _mapResultToQuestion(result);
+                  if (q != null) {
+                    _editorCubit.addQuestion(q);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No se pudo crear la pregunta. Revisa los datos.')),
+                    );
+                  }
                 }
               },
               label: const Text('Añadir pregunta'),

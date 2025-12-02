@@ -4,32 +4,53 @@ import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
 
-class KahootDatasourceImpl implements KahootDatasource{
+class KahootDatasourceImpl implements KahootDatasource {
   final Dio dio = Dio();
 
   @override
-  Future<void> createKahoot(String kahootId, String authorId, String title, String description, String image, String visibility, String theme, List<Question> question, List<Answer> answer) async{
+  Future<void> createKahoot(
+    String kahootId,
+    String authorId,
+    String title,
+    String description,
+    String image,
+    String visibility,
+    String theme,
+    List<Question> question,
+    List<Answer> answer,
+  ) async {
     await dio.request(
-      'https://api',
+      '/kahoots',
       options: Options(method: 'POST'),
       data: {
-        'authorId': authorId,
+        'authorId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
         'title': title,
         'description': description,
         'coverImageId': image,
-        'visibility': visibility,
-        'themeId': theme,
-        'questions': question.map((q) => {
-          'questionText': q.title,
-          'questionType': q.type.toString(),
-          'timeLimit': q.timeLimitSeconds,
-          'points': q.points,
-          'answers': q.answer.map((a) => {
-            'answerText': a.text,
-            'mediaId': a.image,
-            'isCorrect': a.isCorrect,
-          }).toList(),
-        }).toList(),
+        'visibility': "private",
+        'status': 'draft',
+        'category': 'Tecnología',
+        'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
+        'questions': question
+            .map(
+              (q) => {
+                'questionText': q.title,
+                'mediaId': q.mediaId,
+                'questionType': _mapQuestionType(q.type),
+                'timeLimit': q.timeLimitSeconds,
+                'points': q.points,
+                'answers': q.answer
+                    .map(
+                      (a) => {
+                        'answerText': a.text,
+                        'mediaId': a.image,
+                        'isCorrect': a.isCorrect,
+                      },
+                    )
+                    .toList(),
+              },
+            )
+            .toList(),
       },
     );
   }
@@ -42,34 +63,41 @@ class KahootDatasourceImpl implements KahootDatasource{
       'title': kahoot.title,
       'description': kahoot.description,
       'coverImageId': kahoot.image,
-      'visibility': kahoot.visibility.toString(),
+      'visibility': kahoot.visibility.toShortString(),
       'themeId': kahoot.theme,
-      'questions': kahoot.question.map((q) => {
-        'questionText': q.title,
-        'questionType': q.type.toString(),
-        'timeLimit': q.timeLimitSeconds,
-        'points': q.points,
-        'answers': q.answer.map((a) => {
-          'answerText': a.text,
-          'mediaId': a.image,
-          'isCorrect': a.isCorrect,
-        }).toList(),
-      }).toList(),
+      'questions': kahoot.question
+          .map(
+            (q) => {
+              'questionText': q.title,
+              'mediaId': q.mediaId,
+              'questionType': _mapQuestionType(q.type),
+              'timeLimit': q.timeLimitSeconds,
+              'points': q.points,
+              'answers': q.answer
+                  .map(
+                    (a) => {
+                      'answerText': a.text,
+                      'mediaId': a.image,
+                      'isCorrect': a.isCorrect,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
     };
 
     await dio.put(
-      'https://api/kahoots/$kahootId',
+      '/kahoots/$kahootId',
       data: body,
-      options: Options(
-        headers: {'Content-Type': 'application/json'},
-      ),
+      options: Options(headers: {'Content-Type': 'application/json'}),
     );
   }
 
   @override
   Future<void> deleteKahoot(String id) async {
     await dio.delete(
-      'https://api/kahoots/$id',
+      '/kahoots/$id',
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
   }
@@ -77,7 +105,7 @@ class KahootDatasourceImpl implements KahootDatasource{
   @override
   Future<List<Kahoot>> getAllKahoots() async {
     final response = await dio.get(
-      'https://api/kahoots',
+      '/kahoots',
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
     final data = response.data;
@@ -89,5 +117,16 @@ class KahootDatasourceImpl implements KahootDatasource{
       return [];
     }
   }
-  
+}
+
+String _mapQuestionType(QuestionType t) {
+  switch (t) {
+    case QuestionType.true_false:
+      return 'true_false';
+    case QuestionType.quiz_single:
+    case QuestionType.quiz_multiple:
+      return 'quiz';
+    default:
+      return 'quiz';
+  }
 }

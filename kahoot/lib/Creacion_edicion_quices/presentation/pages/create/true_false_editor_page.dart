@@ -74,8 +74,17 @@ class _TrueFalseEditorPageState extends State<TrueFalseEditorPage> {
 	}
 
 	void _save() {
-		// Solo UI, sin lógica de persistencia
-		Navigator.of(context).pop({'type': 'true_false'});
+		final questionText = questionController.text.trim();
+		final answers = <Map<String, dynamic>>[
+			{'text': trueController.text.trim(), 'isCorrect': true},
+			{'text': falseController.text.trim(), 'isCorrect': false},
+		];
+		Navigator.of(context).pop({
+			'type': 'true_false',
+			'title': questionText,
+			'time': selectedTime,
+			'answers': answers,
+		});
 	}
 
 	@override

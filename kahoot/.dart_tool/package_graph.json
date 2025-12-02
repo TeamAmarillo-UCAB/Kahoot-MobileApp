@@ -12,7 +12,8 @@
         "equatable",
         "flutter",
         "flutter_bloc",
-        "http"
+        "http",
+        "provider"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -64,6 +65,15 @@
         "bloc",
         "flutter",
         "provider"
+      ]
+    },
+    {
+      "name": "provider",
+      "version": "6.1.5+1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "nested"
       ]
     },
     {
@@ -191,19 +201,17 @@
       ]
     },
     {
-      "name": "provider",
-      "version": "6.1.5+1",
-      "dependencies": [
-        "collection",
-        "flutter",
-        "nested"
-      ]
-    },
-    {
       "name": "bloc",
       "version": "8.1.4",
       "dependencies": [
         "meta"
+      ]
+    },
+    {
+      "name": "nested",
+      "version": "1.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -308,13 +316,6 @@
       "dependencies": [
         "source_span",
         "string_scanner"
-      ]
-    },
-    {
-      "name": "nested",
-      "version": "1.0.0",
-      "dependencies": [
-        "flutter"
       ]
     },
     {

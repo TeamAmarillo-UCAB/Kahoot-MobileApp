@@ -75,8 +75,24 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
   }
 
   void _save() {
-    // Solo UI, sin lógica de persistencia
-    Navigator.of(context).pop({'type': 'short_answer'});
+    final questionText = questionController.text.trim();
+    final answers = <Map<String, dynamic>>[];
+    final correct = correctController.text.trim();
+    if (correct.isNotEmpty) {
+      answers.add({'text': correct, 'isCorrect': true});
+    }
+    for (final c in extraControllers) {
+      final t = c.text.trim();
+      if (t.isNotEmpty) {
+        answers.add({'text': t, 'isCorrect': true}); // respuestas aceptadas
+      }
+    }
+    Navigator.of(context).pop({
+      'type': 'short_answer',
+      'title': questionText,
+      'time': selectedTime,
+      'answers': answers,
+    });
   }
 
   void _addExtraField() {

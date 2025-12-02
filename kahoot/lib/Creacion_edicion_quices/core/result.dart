@@ -3,12 +3,12 @@ class Result<T> {
   final Exception? _error;
   final bool _isSuccess;
 
-  Result._(T? value, Exception? error, bool isSuccess)
-      : assert(value != null || error != null,
-            'Result value or error must be provided'),
-        _value = value,
-        _error = error,
-        _isSuccess = isSuccess;
+
+
+    const Result._(this._value, this._error, this._isSuccess)
+      : assert(_value != null || _error != null, 'Result value or error must be provided');
+
+  static Result<void> voidSuccess() => Result._(null, null, true);
 
   bool isSuccessful() => _isSuccess;
 

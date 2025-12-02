@@ -18,6 +18,7 @@ extension QuestionTypeX on QuestionType {
 class Question {
   final String text;
   final String title;
+  final String mediaId;
   final QuestionType type;
   final int points;
   final int timeLimitSeconds; // seconds
@@ -26,6 +27,7 @@ class Question {
   Question({
     required this.text,
     required this.title,
+    required this.mediaId,
     required this.type,
     required this.points,
     required this.timeLimitSeconds,
@@ -36,6 +38,7 @@ class Question {
     return Question(
       text: json['text'] as String? ?? '',
       title: json['title'] as String? ?? '',
+      mediaId: json['mediaId'] as String? ?? '',
       type: QuestionTypeX.fromString(json['type'] as String? ?? 'quiz_single'),
       points: json['points'] as int? ?? 0,
       timeLimitSeconds: json['timeLimitSeconds'] as int? ?? 0,

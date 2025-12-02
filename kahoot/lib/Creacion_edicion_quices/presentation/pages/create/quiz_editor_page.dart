@@ -27,8 +27,30 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
   }
 
   void _save() {
-    // Solo UI, sin lógica de persistencia
-    Navigator.of(context).pop({'type': 'quiz'});
+    final questionText = questionController.text.trim();
+    final allControllers = [
+      ...answerControllers,
+      if (showExtraAnswers) ...extraAnswerControllers,
+    ];
+    final answers = <Map<String, dynamic>>[];
+    for (final c in allControllers) {
+      final t = c.text.trim();
+      if (t.isNotEmpty) {
+        answers.add({'text': t});
+      }
+    }
+    if (answers.isNotEmpty) {
+      // primera respuesta como correcta por defecto
+      for (var i = 0; i < answers.length; i++) {
+        answers[i]['isCorrect'] = i == 0;
+      }
+    }
+    Navigator.of(context).pop({
+      'type': 'quiz',
+      'title': questionText,
+      'time': selectedTime,
+      'answers': answers,
+    });
   }
 
   void _openTimeMenu() {
