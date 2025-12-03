@@ -169,6 +169,10 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
         state.questions,
         const <Answer>[],
       );
+      if (result == null) {
+        emit(state.copyWith(status: EditorStatus.error, errorMessage: 'Error inesperado: resultado nulo.'));
+        return;
+      }
       if (result.isSuccessful()) {
         emit(state.copyWith(status: EditorStatus.saved));
       } else {

@@ -5,8 +5,7 @@ class Result<T> {
 
 
 
-    const Result._(this._value, this._error, this._isSuccess)
-      : assert(_value != null || _error != null, 'Result value or error must be provided');
+  const Result._(this._value, this._error, this._isSuccess);
 
   static Result<void> voidSuccess() => Result._(null, null, true);
 

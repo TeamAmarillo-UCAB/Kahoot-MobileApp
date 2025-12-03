@@ -30,7 +30,8 @@ class KahootListCubit extends Cubit<KahootListState> {
     if (result.isSuccessful()) {
       emit(KahootListState.loaded(result.getValue()));
     } else {
-      emit(KahootListState.error(result.getError().toString()));
+      // Mostrar un mensaje amigable para errores no-404
+      emit(const KahootListState.error('No se pudieron cargar tus kahoots. Intenta más tarde.'));
     }
   }
 }

@@ -9,17 +9,19 @@ import '../pages/create/add_question_modal.dart';
 import '../../../main.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
+import '../../domain/entities/kahoot.dart';
 
 class KahootDetailsPage extends StatefulWidget {
-  const KahootDetailsPage({Key? key}) : super(key: key);
+  final Kahoot? initialKahoot;
+  const KahootDetailsPage({Key? key, this.initialKahoot}) : super(key: key);
 
   @override
   State<KahootDetailsPage> createState() => _KahootDetailsPageState();
 }
 
 class _KahootDetailsPageState extends State<KahootDetailsPage> {
-  String visibility = 'Privado';
-  final List<String> visibilityOptions = ['Privado', 'Público'];
+  String visibility = 'private';
+  final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
   String? _selectedTheme;
@@ -44,6 +46,24 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       updateKahootUseCase: _updateKahoot,
       initialAuthorId: 'author123',
     );
+
+    // Prefill if editing an existing kahoot
+    final k = widget.initialKahoot;
+    if (k != null) {
+      _titleController.text = k.title;
+      visibility = k.visibility == KahootVisibility.private ? 'private' : 'public';
+      _selectedTheme = k.theme;
+      _editorCubit
+        ..setAuthor(k.authorId)
+        ..setTitle(k.title)
+        ..setDescription(k.description)
+        ..setCoverImage(k.image)
+        ..setVisibility(k.visibility.toShortString())
+        ..setTheme(k.theme);
+      for (final q in k.question) {
+        _editorCubit.addQuestion(q);
+      }
+    }
   }
 
   @override
@@ -123,23 +143,28 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   );
                   return;
                 }
-                final visibilityValue = visibility == 'Privado' ? 'private' : 'public';
+                final visibilityValue = visibility == 'private' ? 'private' : 'public';
+                final isEditing = widget.initialKahoot != null;
 
                 _editorCubit
                   ..setTitle(title)
                   ..setVisibility(visibilityValue)
                   ..setTheme(_selectedTheme ?? '');
 
-                await _editorCubit.saveCreate();
+                if (isEditing) {
+                  final kahootToUpdate = _buildKahootFromState(widget.initialKahoot!);
+                  await _editorCubit.saveUpdate(kahootToUpdate);
+                } else {
+                  await _editorCubit.saveCreate();
+                }
                 final state = _editorCubit.state;
                 if (state.status == EditorStatus.saved) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Kahoot creado correctamente.')),
-                  );
+                  // Éxito: volver automáticamente y avisar a la pantalla anterior
+                  Navigator.of(context).pop(true);
                 } else if (state.status == EditorStatus.error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.errorMessage ?? 'Ocurrió un error al guardar.')),
-                  );
+                  // Error: mostrar mensaje conciso y permanecer en la vista
+                  final msg = state.errorMessage ?? 'No se pudo guardar. Revisa título, visibilidad, tema y preguntas.';
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                 }
               },
               child: const Text('Guardar'),
@@ -329,6 +354,20 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Kahoot _buildKahootFromState(Kahoot original) {
+    final vis = KahootVisibilityX.fromString(_editorCubit.state.visibility);
+    return Kahoot(
+      kahootId: original.kahootId,
+      authorId: _editorCubit.state.authorId,
+      title: _editorCubit.state.title,
+      description: _editorCubit.state.description,
+      visibility: vis,
+      question: _editorCubit.state.questions,
+      image: _editorCubit.state.coverImageId,
+      theme: _editorCubit.state.themeId,
     );
   }
 }
