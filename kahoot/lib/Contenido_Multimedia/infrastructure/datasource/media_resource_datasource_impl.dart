@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' show MediaType;
 import '../../domain/entities/media_resource.dart';
 import '../../domain/datasource/media_resource_datasource.dart';
 
@@ -55,7 +57,47 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
         "createdAt": DateTime.now().toIso8601String(),
       };
     } else {
-      throw UnimplementedError('El post real todavía no ha sido implementado.');
+      // Esto es para cuando la API esté lista
+      final path = '/media/upload';
+
+      // Conversión de  MediaResource a FormData
+      final multipartFile = MultipartFile.fromBytes(
+        Uint8List.fromList(file.bytes),
+        filename: file.name,
+        contentType: file.mimeType != null
+            ? MediaType.parse(file.mimeType!)
+            : null,
+      );
+
+      //Request body
+      final formData = FormData.fromMap({'file': multipartFile});
+
+      try {
+        //solicitud
+        final response = await dio.post(path, data: formData);
+
+        //Respuesta 201
+        if (response.statusCode == 201) {
+          // Devuelve la respuesta
+          return response.data as Map<String, dynamic>;
+        } else {
+          throw Exception(
+            'Error de subida. Status Code: ${response.statusCode}',
+          );
+        }
+      } on DioException catch (e) {
+        //Error 400
+        if (e.response?.statusCode == 400) {
+          throw Exception('400 Bad Request: Datos de slide inválidos.');
+        }
+        //Error 404
+        if (e.response?.statusCode == 404) {
+          throw Exception(
+            '404 Not Found: El Kahoot no existe o no es accesible.',
+          );
+        }
+        throw Exception('Error de red/conexión: ${e.message}');
+      }
     }
   }
 
@@ -137,23 +179,38 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
 
       return;
     } else {
-      //Try para cuando haya que hacer el DELETE real
+      // Para cuando esté lista la API
+      final path = '/media/$id';
+
       try {
-        const String apiBaseUrl = 'https://la-api-del-back';
-        final url = '$apiBaseUrl/media/$id';
+        // Solicitud
+        final response = await dio.delete(path);
 
-        final response = await dio.delete(url);
-
+        // Response 200 (eliminado exitosamente)
         if (response.statusCode == 200) {
           print('Eliminación real exitosa para ID: $id');
           return;
         } else {
           throw Exception(
-            'Failed to delete image: Status ${response.statusCode}',
+            'Failed to delete media resource: Status ${response.statusCode}',
           );
         }
       } on DioException catch (e) {
-        throw Exception('Delete failed: ${e.message}');
+        // Error 404
+        if (e.response?.statusCode == 404) {
+          throw Exception(
+            '404 Not Found: El Kahoot no existe o no es accesible.',
+          );
+        }
+
+        // Error HTTP
+        if (e.response != null) {
+          throw Exception(
+            'Delete failed (HTTP ${e.response!.statusCode}): ${e.response!.statusMessage}',
+          );
+        }
+        // Error de red
+        throw Exception('Delete failed (Network/Connection): ${e.message}');
       }
     }
   }
