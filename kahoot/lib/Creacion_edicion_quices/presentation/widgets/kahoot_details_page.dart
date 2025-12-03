@@ -25,6 +25,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
   String? _selectedTheme;
+  final List<String> _themeOptions = const ['Matemáticas', 'Historia', 'Ciencias'];
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
@@ -52,7 +53,8 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     if (k != null) {
       _titleController.text = k.title;
       visibility = k.visibility == KahootVisibility.private ? 'private' : 'public';
-      _selectedTheme = k.theme;
+      // Si el theme viene como id/backend y no coincide con las opciones visibles, no preseleccionar para evitar errores en Dropdown
+      _selectedTheme = _themeOptions.contains(k.theme) ? k.theme : null;
       _editorCubit
         ..setAuthor(k.authorId)
         ..setTitle(k.title)
@@ -159,8 +161,14 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 }
                 final state = _editorCubit.state;
                 if (state.status == EditorStatus.saved) {
-                  // Éxito: volver automáticamente y avisar a la pantalla anterior
-                  Navigator.of(context).pop(true);
+                  // Éxito: volver automáticamente y avisar a la pantalla anterior con datos útiles
+                  final createdId = widget.initialKahoot == null ? _datasource.lastCreatedKahootId : null;
+                  Navigator.of(context).pop({
+                    'saved': true,
+                    'title': state.title,
+                    'isEditing': widget.initialKahoot != null,
+                    if (createdId != null) 'newKahootId': createdId,
+                  });
                 } else if (state.status == EditorStatus.error) {
                   // Error: mostrar mensaje conciso y permanecer en la vista
                   final msg = state.errorMessage ?? 'No se pudo guardar. Revisa título, visibilidad, tema y preguntas.';
@@ -234,7 +242,8 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: DropdownButtonFormField<String>(
-                    value: _selectedTheme,
+                    // Asegurar que el value esté dentro de las opciones; si no, dejar null
+                    value: _themeOptions.contains(_selectedTheme) ? _selectedTheme : null,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Color(0xFFFFD54F),
@@ -245,11 +254,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    items: [
-                      DropdownMenuItem(value: 'Matemáticas', child: Text('Matemáticas')),
-                      DropdownMenuItem(value: 'Historia', child: Text('Historia')),
-                      DropdownMenuItem(value: 'Ciencias', child: Text('Ciencias')),
-                    ],
+                    items: _themeOptions
+                        .map((t) => DropdownMenuItem<String>(value: t, child: Text(t)))
+                        .toList(),
                     onChanged: (value) {
                       setState(() => _selectedTheme = value);
                     },

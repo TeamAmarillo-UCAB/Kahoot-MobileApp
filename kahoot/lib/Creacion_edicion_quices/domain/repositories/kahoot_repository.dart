@@ -8,4 +8,6 @@ abstract class KahootRepository {
   Future<Result<void>> updateKahoot(Kahoot kahoot);
   Future<Result<void>> deleteKahoot(String id);
   Future<Result<List<Kahoot>>> getAllKahoots();
+  Future<Result<List<Kahoot>>> getKahootsByAuthor(String authorId);
+  Future<Result<Kahoot?>> getKahootByKahootId(String kahootId);
 }

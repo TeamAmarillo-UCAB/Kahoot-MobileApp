@@ -59,4 +59,28 @@ class KahootRepositoryImpl implements KahootRepository{
     }
   }
 
+  @override
+  Future<Result<List<Kahoot>>> getKahootsByAuthor(String authorId) async {
+    try {
+      final kahoots = await datasource.getKahootsByAuthor(authorId);
+      return Result.success(kahoots);
+    } catch (e, stackTrace) {
+      print("Error fetching kahoots by author: $e");
+      print("Stacktrace: $stackTrace");
+      return Result.makeError(Exception(e));
+    }
+  }
+
+  @override
+  Future<Result<Kahoot?>> getKahootByKahootId(String kahootId) async {
+    try {
+      final kahoot = await datasource.getKahootByKahootId(kahootId);
+      return Result.success(kahoot);
+    } catch (e, stackTrace) {
+      print("Error fetching kahoot by id: $e");
+      print("Stacktrace: $stackTrace");
+      return Result.makeError(Exception(e));
+    }
+  }
+
 }

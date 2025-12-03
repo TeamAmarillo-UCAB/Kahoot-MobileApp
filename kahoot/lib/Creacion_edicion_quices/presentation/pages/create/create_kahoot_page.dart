@@ -4,8 +4,11 @@ import '../../widgets/kahoot_details_page.dart';
 import '../../../infrastructure/datasource/kahoot_datasource_impl.dart';
 import '../../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../../application/usecases/kahoot/get_all_kahoots.dart';
+import '../../../application/usecases/kahoot/get_kahoots_by_author.dart';
+import '../../../application/usecases/kahoot/get_kahoot_by_kahoot_id.dart';
 import '../../../application/usecases/kahoot/delete_kahoot.dart';
 import '../../../presentation/blocs/kahoot_list_cubit.dart';
+import 'kahoot_view_page.dart';
 import '../../../domain/entities/kahoot.dart';
 import '../../../../main.dart';
 
@@ -20,6 +23,8 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
   late final GetAllKahoots _getAllKahoots;
+  late final GetKahootsByAuthor _getKahootsByAuthor;
+  late final GetKahootByKahootId _getKahootByKahootId;
   late final DeleteKahoot _deleteKahoot;
   late final KahootListCubit _listCubit;
 
@@ -30,8 +35,20 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
     _datasource.dio.options.baseUrl = apiBaseUrl;
     _repository = KahootRepositoryImpl(datasource: _datasource);
     _getAllKahoots = GetAllKahoots(_repository);
+    _getKahootsByAuthor = GetKahootsByAuthor(_repository);
+    _getKahootByKahootId = GetKahootByKahootId(_repository);
     _deleteKahoot = DeleteKahoot(_repository);
-    _listCubit = KahootListCubit(getAllKahoots: _getAllKahoots);
+    // Usa un authorId conocido; sustituye por el del usuario autenticado si está disponible
+    const String authorId = 'f1986c62-7dc1-47c5-9a1f-03d34043e8f4';
+    // Listar por autor por defecto; dejar kahootId vacío para evitar id fijo
+    const String kahootId = '';
+    _listCubit = KahootListCubit(
+      getAllKahoots: _getAllKahoots,
+      getByAuthor: _getKahootsByAuthor,
+      authorId: authorId,
+      getByKahootId: _getKahootByKahootId,
+      kahootId: kahootId,
+    );
     _listCubit.load();
   }
 
@@ -71,14 +88,20 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
                 subtitle: 'Toma el control total de la creación de kahoots',
                 onTap: () {
                   Navigator.of(context)
-                      .push<bool>(
+                      .push(
                         MaterialPageRoute(builder: (_) => const KahootDetailsPage()),
                       )
-                      .then((saved) {
-                        if (saved == true) {
-                          _listCubit.load();
+                      .then((result) {
+                        if (result is Map && result['saved'] == true) {
+                          final String title = (result['title'] as String?) ?? 'Kahoot';
+                          final String? newId = result['newKahootId'] as String?;
+                          if (newId != null && newId.isNotEmpty) {
+                            _listCubit.loadWithKahootId(newId);
+                          } else {
+                            _listCubit.load();
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Kahoot guardado.')),
+                            SnackBar(content: Text('$title guardado.')),
                           );
                         }
                       });
@@ -136,14 +159,21 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
                           kahoot: k,
                           onOpen: () {
                             Navigator.of(context)
-                                .push<bool>(
-                                  MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: k)),
+                                .push(
+                                  MaterialPageRoute(builder: (_) => KahootViewPage(kahoot: k)),
                                 )
-                                .then((saved) {
-                                  if (saved == true) {
-                                    _listCubit.load();
+                                .then((result) {
+                                  if (result is Map && result['saved'] == true) {
+                                    final String title = (result['title'] as String?) ?? k.title;
+                                    final bool isEditing = (result['isEditing'] as bool?) ?? true;
+                                    final String? newId = result['newKahootId'] as String?;
+                                    if (newId != null && newId.isNotEmpty) {
+                                      _listCubit.loadWithKahootId(newId);
+                                    } else {
+                                      _listCubit.load();
+                                    }
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Kahoot actualizado.')),
+                                      SnackBar(content: Text(isEditing ? '$title actualizado.' : '$title guardado.')),
                                     );
                                   }
                                 });

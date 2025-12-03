@@ -6,4 +6,6 @@ abstract class KahootDatasource {
   Future<void> updateKahoot(Kahoot kahoot);
   Future <void> deleteKahoot(String id);
   Future<List<Kahoot>> getAllKahoots();
+  Future<List<Kahoot>> getKahootsByAuthor(String authorId);
+  Future<Kahoot?> getKahootByKahootId(String kahootId);
 }
