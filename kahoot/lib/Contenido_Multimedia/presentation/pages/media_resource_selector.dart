@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
 
 import '../../../../Contenido_Multimedia/domain/entities/media_resource.dart';
@@ -11,6 +10,7 @@ import '../../../../Contenido_Multimedia/application/usecases/get_media_resource
 import '../../../../Contenido_Multimedia/application/usecases/delete_media_resource.dart';
 import '../../../../Contenido_Multimedia/infrastructure/repositories/media_resource_repository_impl.dart';
 import '../../../../Contenido_Multimedia/infrastructure/datasource/media_resource_datasource_impl.dart';
+import '../../../../Contenido_Multimedia/infrastructure/services/file_picker_service.dart';
 
 class MediaResourceSelector extends StatefulWidget {
   const MediaResourceSelector({super.key});
@@ -27,6 +27,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
   late final UploadMediaResource _uploadMediaResourceUseCase;
   late final GetMediaResource _getMediaResourceUseCase;
   late final DeleteMediaResource _deleteMediaResourceUseCase;
+  late final FilePickerService _filePickerService;
 
   //Mensaje de estado
   String _statusMessage = 'Elige un archivo.';
@@ -47,6 +48,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     _previewMediaResourceUseCase = PreviewMediaResource(_repository);
     _getMediaResourceUseCase = GetMediaResource(_repository);
     _deleteMediaResourceUseCase = DeleteMediaResource(_repository);
+    _filePickerService = FilePickerServiceImpl();
   }
 
   //Función para cargar vista previa
@@ -82,43 +84,26 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     });
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
-        withData: true,
-      );
-      if (result == null || result.files.isEmpty) {
+      // Obtiene el archivo del servicio Filepicker
+      final MediaResource? fileToUpload = await _filePickerService
+          .pickImageResource();
+
+      if (fileToUpload == null) {
         setState(() => _statusMessage = 'Subida cancelada por el usuario.');
         return;
       }
-
-      PlatformFile platformFile = result.files.first;
-      Uint8List? fileBytes = platformFile.bytes;
-      if (fileBytes == null || fileBytes.isEmpty) {
-        setState(
-          () => _statusMessage = 'Error: No se pudieron leer los bytes.',
-        );
-        return;
-      }
-      //Conversión a MediaResource
-      final MediaResource fileToUpload = MediaResource(
-        bytes: fileBytes.toList(),
-        name: platformFile.name,
-        mimeType: platformFile.extension != null
-            ? 'image/${platformFile.extension}'
-            : null,
-      );
 
       setState(() {
         _statusMessage = 'Subiendo...';
       });
 
-      final responseData = await _uploadMediaResourceUseCase.call(
-        fileToUpload,
-      ); //Llamada al caso de uso upload
+      // Llama al caso de uso de subida
+      final responseData = await _uploadMediaResourceUseCase.call(fileToUpload);
+
       final uploadedId = responseData['id'] as String;
 
-      await _loadPreview(uploadedId); //Llama al preview para que la muestre
+      //Carga la vista previa del archivo
+      await _loadPreview(uploadedId);
       _statusMessage = '';
     } catch (e) {
       setState(() {
