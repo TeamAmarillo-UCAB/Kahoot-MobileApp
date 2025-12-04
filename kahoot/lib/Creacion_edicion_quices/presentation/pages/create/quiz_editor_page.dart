@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 // Dependencias eliminadas, vista solo UI
 
 class QuizEditorPage extends StatefulWidget {
@@ -11,10 +12,14 @@ class QuizEditorPage extends StatefulWidget {
 
 class _QuizEditorPageState extends State<QuizEditorPage> {
   final TextEditingController questionController = TextEditingController();
-  final List<TextEditingController> answerControllers =
-      List.generate(4, (_) => TextEditingController());
-  final List<TextEditingController> extraAnswerControllers =
-      List.generate(2, (_) => TextEditingController());
+  final List<TextEditingController> answerControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
+  final List<TextEditingController> extraAnswerControllers = List.generate(
+    2,
+    (_) => TextEditingController(),
+  );
   bool showExtraAnswers = false;
 
   final List<int> timeOptions = [5, 10, 20, 45, 60, 90, 120, 180, 240];
@@ -67,7 +72,13 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Selecciona tiempo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const Text(
+                'Selecciona tiempo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -77,7 +88,9 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
                   return ChoiceChip(
                     label: Text('$t s'),
                     selected: isSelected,
-                    labelStyle: TextStyle(color: isSelected ? Colors.brown : Colors.white),
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.brown : Colors.white,
+                    ),
                     selectedColor: const Color(0xFFFFD54F),
                     backgroundColor: const Color(0xFF444444),
                     onSelected: (_) => setState(() => selectedTime = t),
@@ -91,7 +104,9 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFD54F),
                     foregroundColor: Colors.brown,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () => Navigator.of(ctx).pop(),
                   child: const Text('Listo'),
@@ -119,7 +134,10 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
           icon: const Icon(Icons.close, color: Colors.brown),
           onPressed: _modifyCurrent,
         ),
-        title: const Text('Quiz', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Quiz',
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -127,7 +145,9 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFB300),
                 foregroundColor: Colors.brown,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: _save,
               child: const Text('Listo'),
@@ -141,21 +161,7 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF333333),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: const [
-                  Icon(Icons.insert_photo, color: Colors.white70, size: 40),
-                  SizedBox(height: 8),
-                  Text('Añadir multimedia', style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
+            const MediaResourceSelector(),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -165,7 +171,9 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF673AB7),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                     onPressed: _openTimeMenu,
                     icon: const Icon(Icons.timer),
@@ -200,17 +208,39 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _AnswerBox(controller: answerControllers[0], color: const Color(0xFFE53935))),
+                      Expanded(
+                        child: _AnswerBox(
+                          controller: answerControllers[0],
+                          color: const Color(0xFFE53935),
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: _AnswerBox(controller: answerControllers[1], color: const Color(0xFF1E88E5))),
+                      Expanded(
+                        child: _AnswerBox(
+                          controller: answerControllers[1],
+                          color: const Color(0xFF1E88E5),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Expanded(child: _AnswerBox(controller: answerControllers[2], color: const Color(0xFFFFB300), optional: true)),
+                      Expanded(
+                        child: _AnswerBox(
+                          controller: answerControllers[2],
+                          color: const Color(0xFFFFB300),
+                          optional: true,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: _AnswerBox(controller: answerControllers[3], color: const Color(0xFF43A047), optional: true)),
+                      Expanded(
+                        child: _AnswerBox(
+                          controller: answerControllers[3],
+                          color: const Color(0xFF43A047),
+                          optional: true,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -221,19 +251,37 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF444444),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        onPressed: () => setState(() => showExtraAnswers = true),
+                        onPressed: () =>
+                            setState(() => showExtraAnswers = true),
                         child: const Text('Añadir más respuestas'),
                       ),
                     ),
                   if (showExtraAnswers) ...[
                     Row(
                       children: [
-                        Expanded(child: _AnswerBox(controller: extraAnswerControllers[0], color: const Color(0xFF6D4C41), optional: true)),
+                        Expanded(
+                          child: _AnswerBox(
+                            controller: extraAnswerControllers[0],
+                            color: const Color(0xFF6D4C41),
+                            optional: true,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: _AnswerBox(controller: extraAnswerControllers[1], color: const Color(0xFF00897B), optional: true)),
+                        Expanded(
+                          child: _AnswerBox(
+                            controller: extraAnswerControllers[1],
+                            color: const Color(0xFF00897B),
+                            optional: true,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -251,7 +299,11 @@ class _AnswerBox extends StatelessWidget {
   final TextEditingController controller;
   final Color color;
   final bool optional;
-  const _AnswerBox({required this.controller, required this.color, this.optional = false});
+  const _AnswerBox({
+    required this.controller,
+    required this.color,
+    this.optional = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -264,11 +316,16 @@ class _AnswerBox extends StatelessWidget {
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
-          hintText: optional ? 'Respuesta opcional' : 'Pulsa para añadir respuesta',
+          hintText: optional
+              ? 'Respuesta opcional'
+              : 'Pulsa para añadir respuesta',
           hintStyle: const TextStyle(color: Colors.white),
           border: InputBorder.none,
         ),
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

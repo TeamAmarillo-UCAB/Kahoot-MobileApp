@@ -10,6 +10,7 @@ import '../../../main.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
 import '../../domain/entities/kahoot.dart';
+import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 
 class KahootDetailsPage extends StatefulWidget {
   final Kahoot? initialKahoot;
@@ -25,7 +26,11 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
   String? _selectedTheme;
-  final List<String> _themeOptions = const ['Matemáticas', 'Historia', 'Ciencias'];
+  final List<String> _themeOptions = const [
+    'Matemáticas',
+    'Historia',
+    'Ciencias',
+  ];
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
@@ -52,7 +57,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     final k = widget.initialKahoot;
     if (k != null) {
       _titleController.text = k.title;
-      visibility = k.visibility == KahootVisibility.private ? 'private' : 'public';
+      visibility = k.visibility == KahootVisibility.private
+          ? 'private'
+          : 'public';
       // Si el theme viene como id/backend y no coincide con las opciones visibles, no preseleccionar para evitar errores en Dropdown
       _selectedTheme = _themeOptions.contains(k.theme) ? k.theme : null;
       _editorCubit
@@ -81,12 +88,16 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       final String title = (result['title'] as String?)?.trim() ?? '';
       final int time = (result['time'] as int?) ?? 20;
       final List answersRaw = (result['answers'] as List?) ?? [];
-      final answers = answersRaw.map((e) => Answer(
-            image: '',
-            isCorrect: (e['isCorrect'] as bool?) ?? false,
-            text: (e['text'] as String?) ?? '',
-            questionId: '',
-          )).toList();
+      final answers = answersRaw
+          .map(
+            (e) => Answer(
+              image: '',
+              isCorrect: (e['isCorrect'] as bool?) ?? false,
+              text: (e['text'] as String?) ?? '',
+              questionId: '',
+            ),
+          )
+          .toList();
 
       QuestionType qType;
       switch (type) {
@@ -122,7 +133,10 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFD54F),
         elevation: 0,
-        title: const Text('Crear Kahoot', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Crear Kahoot',
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.brown),
@@ -135,7 +149,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFFFB300),
                 foregroundColor: Colors.brown,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: () async {
                 final title = _titleController.text.trim();
@@ -148,11 +164,17 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 // Validación: no permitir guardar si no hay preguntas
                 if (_editorCubit.state.questions.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Debes añadir al menos una pregunta antes de guardar.')),
+                    const SnackBar(
+                      content: Text(
+                        'Debes añadir al menos una pregunta antes de guardar.',
+                      ),
+                    ),
                   );
                   return;
                 }
-                final visibilityValue = visibility == 'private' ? 'private' : 'public';
+                final visibilityValue = visibility == 'private'
+                    ? 'private'
+                    : 'public';
                 final isEditing = widget.initialKahoot != null;
 
                 _editorCubit
@@ -161,7 +183,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   ..setTheme(_selectedTheme ?? '');
 
                 if (isEditing) {
-                  final kahootToUpdate = _buildKahootFromState(widget.initialKahoot!);
+                  final kahootToUpdate = _buildKahootFromState(
+                    widget.initialKahoot!,
+                  );
                   await _editorCubit.saveUpdate(kahootToUpdate);
                 } else {
                   await _editorCubit.saveCreate();
@@ -169,19 +193,26 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 final state = _editorCubit.state;
                 if (state.status == EditorStatus.saved) {
                   // Éxito: volver automáticamente y avisar a la pantalla anterior con datos útiles
-                  final createdId = widget.initialKahoot == null ? _datasource.lastCreatedKahootId : null;
+                  final createdId = widget.initialKahoot == null
+                      ? _datasource.lastCreatedKahootId
+                      : null;
                   final updatedId = widget.initialKahoot?.kahootId;
                   Navigator.of(context).pop({
                     'saved': true,
                     'title': state.title,
                     'isEditing': widget.initialKahoot != null,
                     if (createdId != null) 'newKahootId': createdId,
-                    if (updatedId != null && updatedId.isNotEmpty) 'updatedKahootId': updatedId,
+                    if (updatedId != null && updatedId.isNotEmpty)
+                      'updatedKahootId': updatedId,
                   });
                 } else if (state.status == EditorStatus.error) {
                   // Error: mostrar mensaje conciso y permanecer en la vista
-                  final msg = state.errorMessage ?? 'No se pudo guardar. Revisa título, visibilidad, tema y preguntas.';
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                  final msg =
+                      state.errorMessage ??
+                      'No se pudo guardar. Revisa título, visibilidad, tema y preguntas.';
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(msg)));
                 }
               },
               child: const Text('Guardar'),
@@ -197,24 +228,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
-                Container(
-                  height: 140,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFB300),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.image, size: 40, color: Colors.black54),
-                        SizedBox(height: 8),
-                        Text('Pulsa para añadir una imagen de portada', style: TextStyle(color: Colors.black)),
-                      ],
-                    ),
-                  ),
-                ),
+                const MediaResourceSelector(),
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -252,7 +266,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: DropdownButtonFormField<String>(
                     // Asegurar que el value esté dentro de las opciones; si no, dejar null
-                    value: _themeOptions.contains(_selectedTheme) ? _selectedTheme : null,
+                    value: _themeOptions.contains(_selectedTheme)
+                        ? _selectedTheme
+                        : null,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Color(0xFFFFD54F),
@@ -264,7 +280,12 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                       ),
                     ),
                     items: _themeOptions
-                        .map((t) => DropdownMenuItem<String>(value: t, child: Text(t)))
+                        .map(
+                          (t) => DropdownMenuItem<String>(
+                            value: t,
+                            child: Text(t),
+                          ),
+                        )
                         .toList(),
                     onChanged: (value) {
                       setState(() => _selectedTheme = value);
@@ -308,28 +329,49 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Preguntas (${state.questions.length})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Preguntas (${state.questions.length})',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          ...List.generate(state.questions.length, (i) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF444444),
-                              borderRadius: BorderRadius.circular(8),
+                          ...List.generate(
+                            state.questions.length,
+                            (i) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 14,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Color(0xFF444444),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    state.questions[i].title.isNotEmpty
+                                        ? state.questions[i].title
+                                        : 'Pregunta ${i + 1}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.redAccent,
+                                    ),
+                                    onPressed: () {
+                                      _editorCubit.removeQuestion(i);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(state.questions[i].title.isNotEmpty ? state.questions[i].title : 'Pregunta ${i + 1}', style: const TextStyle(color: Colors.white)),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                  onPressed: () {
-                                    _editorCubit.removeQuestion(i);
-                                  },
-                                ),
-                              ],
-                            ),
-                          )),
+                          ),
                         ],
                       );
                     },
@@ -359,7 +401,11 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     _editorCubit.addQuestion(q);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No se pudo crear la pregunta. Revisa los datos.')),
+                      const SnackBar(
+                        content: Text(
+                          'No se pudo crear la pregunta. Revisa los datos.',
+                        ),
+                      ),
                     );
                   }
                 }

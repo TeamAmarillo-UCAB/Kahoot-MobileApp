@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 // Dependencias eliminadas, vista solo UI
 
 class ShortAnswerEditorPage extends StatefulWidget {
@@ -37,7 +38,13 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Selecciona tiempo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const Text(
+                'Selecciona tiempo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -47,7 +54,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                   return ChoiceChip(
                     label: Text('$t s'),
                     selected: isSelected,
-                    labelStyle: TextStyle(color: isSelected ? Colors.brown : Colors.white),
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.brown : Colors.white,
+                    ),
                     selectedColor: const Color(0xFFFFD54F),
                     backgroundColor: const Color(0xFF444444),
                     onSelected: (_) => setState(() => selectedTime = t),
@@ -61,7 +70,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFD54F),
                     foregroundColor: Colors.brown,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () => Navigator.of(ctx).pop(),
                   child: const Text('Listo'),
@@ -114,7 +125,10 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
           icon: const Icon(Icons.close, color: Colors.brown),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Respuesta corta', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Respuesta corta',
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -122,7 +136,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFB300),
                 foregroundColor: Colors.brown,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: _save,
               child: const Text('Listo'),
@@ -136,21 +152,7 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF333333),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: const [
-                  Icon(Icons.insert_photo, color: Colors.white70, size: 40),
-                  SizedBox(height: 8),
-                  Text('Añadir multimedia', style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
+            const MediaResourceSelector(),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -158,7 +160,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF673AB7),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
                 onPressed: _openTimeMenu,
                 icon: const Icon(Icons.timer),
@@ -200,7 +204,10 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                     hintStyle: TextStyle(color: Colors.white),
                     border: InputBorder.none,
                   ),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -211,7 +218,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black87,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: _addExtraField,
                   child: const Text('Añadir otras respuestas aceptadas'),
@@ -222,28 +231,35 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    ...extraControllers.map((c) => Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3A3A3A),
-                            borderRadius: BorderRadius.circular(8),
+                    ...extraControllers.map(
+                      (c) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3A3A3A),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: TextField(
+                          controller: c,
+                          decoration: const InputDecoration(
+                            hintText: 'Respuesta aceptada',
+                            hintStyle: TextStyle(color: Colors.white70),
+                            border: InputBorder.none,
                           ),
-                          padding: const EdgeInsets.all(12),
-                          child: TextField(
-                            controller: c,
-                            decoration: const InputDecoration(
-                              hintText: 'Respuesta aceptada',
-                              hintStyle: TextStyle(color: Colors.white70),
-                              border: InputBorder.none,
-                            ),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        )),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () => setState(() => extraControllers.add(TextEditingController())),
-                        child: const Text('Añadir otra', style: TextStyle(color: Color(0xFFFFD54F))),
+                        onPressed: () => setState(
+                          () => extraControllers.add(TextEditingController()),
+                        ),
+                        child: const Text(
+                          'Añadir otra',
+                          style: TextStyle(color: Color(0xFFFFD54F)),
+                        ),
                       ),
                     ),
                   ],
