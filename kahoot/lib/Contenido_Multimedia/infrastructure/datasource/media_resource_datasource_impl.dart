@@ -29,7 +29,6 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
   Future<Map<String, dynamic>> uploadMediaResource(MediaResource file) async {
     //VERIFICAR UPLOADMOCKING SI ES NECESARIO
     if (isUploadMocking) {
-      await Future.delayed(const Duration(seconds: 2));
       final newUuid = uuid.v4();
 
       //Bytes del archivo subido
@@ -167,8 +166,6 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
   Future<void> deleteMediaResource(String id) async {
     //USA EL MOCK DE LA SUBIDAAAAAAAAAAAAAAAAAAA RECORDARRRR
     if (isUploadMocking) {
-      await Future.delayed(const Duration(milliseconds: 500));
-
       //Elimina el mock (imagen subida o extraída)
       if (id == _lastUploadedMockId) {
         _lastUploadedMockBytes = null;

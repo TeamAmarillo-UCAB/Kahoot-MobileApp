@@ -165,8 +165,12 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     }
   }
 
-  //Función para borrar el archivo
+  //Variable de estado de borrado
+  bool _isDeleting = false;
+  // Función para borrar el archivo
   Future<void> _deleteFile() async {
+    if (_isDeleting) return; // Previene múltiples toques mientras carga
+
     if (_gottenMediaResourceBytes == null &&
         _availableMediaResourceUrls == null) {
       setState(
@@ -175,19 +179,20 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
       return;
     }
 
+    // Definir el ID a eliminar
     final idToDelete = _selectedMediaResourceUrl ?? 'ID-para-eliminar-mock';
 
     setState(() {
       _statusMessage = 'Eliminando archivo...';
+      _isDeleting = true; // Activa indicador de carga
     });
 
     try {
-      await _deleteMediaResourceUseCase.call(
-        idToDelete,
-      ); //Llamada al caso de uso de borrar
+      // Llamada al caso de uso de eliminar
+      await _deleteMediaResourceUseCase.call(idToDelete);
 
       setState(() {
-        //Limpia todo lo que había actualmente
+        // Limpia la imagen previa
         _gottenMediaResourceBytes = null;
         _availableMediaResourceUrls = null;
         _selectedMediaResourceUrl = null;
@@ -196,6 +201,11 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     } catch (e) {
       setState(() {
         _statusMessage = 'Error al eliminar el archivo: ${e.toString()}';
+      });
+    } finally {
+      // Desactiva indicador de carga
+      setState(() {
+        _isDeleting = false;
       });
     }
   }
@@ -237,7 +247,8 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
                             shape: const CircleBorder(),
                             padding: const EdgeInsets.all(4),
                           ),
-                          onPressed: _deleteFile, // ⬅️ Llama a _deleteFile
+                          onPressed:
+                              _deleteFile, // Llamada a función de eliminación
                           tooltip: 'Eliminar imagen',
                         ),
                       ),
