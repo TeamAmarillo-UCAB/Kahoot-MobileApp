@@ -32,7 +32,7 @@ class KahootDatasourceImpl implements KahootDatasource {
       'category': 'Tecnología',
       'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
       'questions': question.map((q) {
-        final String qt = q.title;
+        final String qt = (q.title.isNotEmpty ? q.title : q.text);
         final String qMedia = q.mediaId;
         final String qType = _mapQuestionType(q.type);
         final answersMapped = q.answer.asMap().entries.map((entry) {
@@ -105,23 +105,49 @@ class KahootDatasourceImpl implements KahootDatasource {
   @override
   Future<void> updateKahoot(Kahoot kahoot) async {
     final String kahootId = kahoot.kahootId; // utilizar el id del kahoot recibido
+    // Fetch existing kahoot to preserve fields when incoming values are empty
+    Kahoot? existing;
+    try {
+      existing = await getKahootByKahootId(kahootId);
+    } catch (_) {
+      existing = null;
+    }
     final Map<String, dynamic> body = { 
       'authorId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
-      'title': kahoot.title,
-      'description': kahoot.description,
-      'coverImageId': kahoot.image,
+        'title': kahoot.title.isNotEmpty
+          ? kahoot.title
+          : (existing?.title ?? kahoot.title),
+        'description': kahoot.description.isNotEmpty
+          ? kahoot.description
+          : (existing?.description ?? kahoot.description),
+        'coverImageId': kahoot.image.isNotEmpty
+          ? kahoot.image
+          : ((existing?.image ?? '') .isNotEmpty ? existing!.image : null),
       'visibility': "private",
       'status': 'draft',
       'category': 'Tecnología',
       'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4", 
-      'questions': kahoot.question.map((q) {
-        final String qt = q.title;
+      'questions': kahoot.question.asMap().entries.map((entry) {
+        final int qIdx = entry.key;
+        final Question q = entry.value;
+        final Question? exQ = (existing != null && existing.question.length > qIdx)
+          ? existing.question[qIdx]
+            : null;
+        final String qtCandidate = q.text.isNotEmpty
+            ? q.text
+            : (q.title.isNotEmpty ? q.title : '');
+        final String qt = qtCandidate.isNotEmpty
+            ? qtCandidate
+            : ((exQ?.text ?? exQ?.title ?? ''));
         final String qMedia = q.mediaId;
         final String qType = _mapQuestionType(q.type);
         // Mapear respuestas con índice para manejar true/false por defecto
-        final answersMapped = q.answer.asMap().entries.map((entry) {
-          final int idx = entry.key;
-          final Answer a = entry.value;
+        final answersMappedAll = q.answer.asMap().entries.map((aEntry) {
+          final int idx = aEntry.key;
+          final Answer a = aEntry.value;
+          final Answer? exA = (exQ != null && exQ.answer.length > idx)
+              ? exQ.answer[idx]
+              : null;
           final String text = a.text.trim();
           final String media = a.image.trim();
           String? answerText;
@@ -141,8 +167,19 @@ class KahootDatasourceImpl implements KahootDatasource {
               answerText = idx == 0 ? 'Verdadero' : 'Falso';
               mediaId = null;
             } else {
-              answerText = null;
-              mediaId = null;
+              // Preserve existing answerText/mediaId if available
+              final String exText = (exA?.text ?? '').trim();
+              final String exMedia = (exA?.image ?? '').trim();
+              if (exText.isNotEmpty) {
+                answerText = exText;
+                mediaId = null;
+              } else if (exMedia.isNotEmpty) {
+                answerText = null;
+                mediaId = exMedia;
+              } else {
+                answerText = null;
+                mediaId = null;
+              }
             }
           }
           return {
@@ -152,16 +189,34 @@ class KahootDatasourceImpl implements KahootDatasource {
           };
         }).toList();
 
+        // Filtrar respuestas inválidas (ambos nulos) para cumplir la regla backend
+        final answersMapped = answersMappedAll
+            .where((a) => a['answerText'] != null || a['mediaId'] != null)
+            .toList();
+
+        // Debug por pregunta
+        // ignore: avoid_print
+        print('Pregunta #' + qIdx.toString() + ' text="' + (qt) + '" respuestas_validas=' + answersMapped.length.toString());
+
         return {
           'questionText': qt,
-          'mediaId': qMedia.isEmpty ? null : qMedia,
+            'mediaId': qMedia.isNotEmpty
+              ? qMedia
+              : (((exQ?.mediaId ?? '')).isNotEmpty ? exQ!.mediaId : null),
           'questionType': qType,
           'timeLimit': q.timeLimitSeconds,
           'points': q.points,
           'answers': answersMapped,
         };
-      }).toList(),
+      })
+      // Omitir preguntas sin texto luego del merge
+      .where((qMap) => ((qMap['questionText'] as String?) ?? '').trim().isNotEmpty)
+      .toList(),
     };
+
+    // Debug: log PUT payload before sending
+    // ignore: avoid_print
+    print('PUT /kahoots/' + kahootId + ' payload: ' + jsonEncode(body));
 
     final Response res = await dio.put(
       '/kahoots/$kahootId',

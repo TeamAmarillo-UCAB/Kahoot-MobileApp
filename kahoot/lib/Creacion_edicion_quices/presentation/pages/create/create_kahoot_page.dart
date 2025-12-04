@@ -182,12 +182,29 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
                                 });
                           },
                           onDelete: () async {
-                            await _deleteKahoot.call(k.kahootId);
-                            // Recargar lista luego de eliminar
-                            _listCubit.load();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Kahoot eliminado.')),
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Eliminar kahoot'),
+                                content: Text('¿Seguro que deseas eliminar "${k.title}"? Esta acción no se puede deshacer.'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
+                                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Eliminar')),
+                                ],
+                              ),
                             );
+                            if (confirmed != true) return;
+                            try {
+                              await _deleteKahoot.call(k.kahootId);
+                              _listCubit.load();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Kahoot eliminado.')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No se pudo eliminar el kahoot. Intenta más tarde.')),
+                              );
+                            }
                           },
                         )).toList(),
                       );
