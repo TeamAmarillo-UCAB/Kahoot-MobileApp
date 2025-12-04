@@ -95,8 +95,11 @@ class _CreateKahootPageState extends State<CreateKahootPage> {
                         if (result is Map && result['saved'] == true) {
                           final String title = (result['title'] as String?) ?? 'Kahoot';
                           final String? newId = result['newKahootId'] as String?;
+                          final String? updatedId = result['updatedKahootId'] as String?;
                           if (newId != null && newId.isNotEmpty) {
                             _listCubit.loadWithKahootId(newId);
+                          } else if (updatedId != null && updatedId.isNotEmpty) {
+                            _listCubit.loadWithKahootId(updatedId);
                           } else {
                             _listCubit.load();
                           }

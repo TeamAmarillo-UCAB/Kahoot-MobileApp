@@ -145,6 +145,13 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   );
                   return;
                 }
+                // Validación: no permitir guardar si no hay preguntas
+                if (_editorCubit.state.questions.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Debes añadir al menos una pregunta antes de guardar.')),
+                  );
+                  return;
+                }
                 final visibilityValue = visibility == 'private' ? 'private' : 'public';
                 final isEditing = widget.initialKahoot != null;
 
@@ -163,11 +170,13 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 if (state.status == EditorStatus.saved) {
                   // Éxito: volver automáticamente y avisar a la pantalla anterior con datos útiles
                   final createdId = widget.initialKahoot == null ? _datasource.lastCreatedKahootId : null;
+                  final updatedId = widget.initialKahoot?.kahootId;
                   Navigator.of(context).pop({
                     'saved': true,
                     'title': state.title,
                     'isEditing': widget.initialKahoot != null,
                     if (createdId != null) 'newKahootId': createdId,
+                    if (updatedId != null && updatedId.isNotEmpty) 'updatedKahootId': updatedId,
                   });
                 } else if (state.status == EditorStatus.error) {
                   // Error: mostrar mensaje conciso y permanecer en la vista

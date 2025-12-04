@@ -31,18 +31,53 @@ class KahootDatasourceImpl implements KahootDatasource {
       'status': 'draft',
       'category': 'Tecnología',
       'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
-      'questions': question.map((q) => {
-            'questionText': q.title,
-            'mediaId': (q.mediaId.isEmpty ? null : q.mediaId),
-            'questionType': _mapQuestionType(q.type),
-            'timeLimit': q.timeLimitSeconds,
-            'points': q.points,
-            'answers': q.answer.map((a) => {
-                  'answerText': (a.text.isEmpty ? null : a.text),
-                  'mediaId': (a.image.isEmpty ? null : a.image),
-                  'isCorrect': a.isCorrect,
-                }).toList(),
-          }).toList(),
+      'questions': question.map((q) {
+        final String qt = q.title;
+        final String qMedia = q.mediaId;
+        final String qType = _mapQuestionType(q.type);
+        final answersMapped = q.answer.asMap().entries.map((entry) {
+          final int idx = entry.key;
+          final Answer a = entry.value;
+          final String text = (a.text).trim();
+          final String media = (a.image).trim();
+          String? answerText;
+          String? mediaId;
+          if (text.isNotEmpty && media.isNotEmpty) {
+            // Priorizar texto si ambos existen
+            answerText = text;
+            mediaId = null;
+          } else if (text.isNotEmpty) {
+            answerText = text;
+            mediaId = null;
+          } else if (media.isNotEmpty) {
+            answerText = null;
+            mediaId = media;
+          } else {
+            // Si es true/false y ambos vacíos, poner etiquetas por defecto
+            if (qType == 'true_false') {
+              answerText = idx == 0 ? 'Verdadero' : 'Falso';
+              mediaId = null;
+            } else {
+              answerText = null;
+              mediaId = null;
+            }
+          }
+          return {
+            'answerText': answerText,
+            'mediaId': mediaId,
+            'isCorrect': a.isCorrect,
+          };
+        }).toList();
+
+        return {
+          'questionText': qt,
+          'mediaId': qMedia.isEmpty ? null : qMedia,
+          'questionType': qType,
+          'timeLimit': q.timeLimitSeconds,
+          'points': q.points,
+          'answers': answersMapped,
+        };
+      }).toList(),
     };
 
     // Debug: log payload to help diagnose 500s
@@ -70,7 +105,7 @@ class KahootDatasourceImpl implements KahootDatasource {
   @override
   Future<void> updateKahoot(Kahoot kahoot) async {
     final String kahootId = kahoot.kahootId; // utilizar el id del kahoot recibido
-    final Map<String, dynamic> body = {
+    final Map<String, dynamic> body = { 
       'authorId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
       'title': kahoot.title,
       'description': kahoot.description,
@@ -78,27 +113,54 @@ class KahootDatasourceImpl implements KahootDatasource {
       'visibility': "private",
       'status': 'draft',
       'category': 'Tecnología',
-      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
-      'questions': kahoot.question
-          .map(
-            (q) => {
-              'questionText': q.title,
-              'mediaId': q.mediaId,
-              'questionType': _mapQuestionType(q.type),
-              'timeLimit': q.timeLimitSeconds,
-              'points': q.points,
-              'answers': q.answer
-                  .map(
-                    (a) => {
-                      'answerText': a.text,
-                      'mediaId': a.image,
-                      'isCorrect': a.isCorrect,
-                    },
-                  )
-                  .toList(),
-            },
-          )
-          .toList(),
+      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4", 
+      'questions': kahoot.question.map((q) {
+        final String qt = q.title;
+        final String qMedia = q.mediaId;
+        final String qType = _mapQuestionType(q.type);
+        // Mapear respuestas con índice para manejar true/false por defecto
+        final answersMapped = q.answer.asMap().entries.map((entry) {
+          final int idx = entry.key;
+          final Answer a = entry.value;
+          final String text = a.text.trim();
+          final String media = a.image.trim();
+          String? answerText;
+          String? mediaId;
+          if (text.isNotEmpty && media.isNotEmpty) {
+            answerText = text;
+            mediaId = null;
+          } else if (text.isNotEmpty) {
+            answerText = text;
+            mediaId = null;
+          } else if (media.isNotEmpty) {
+            answerText = null;
+            mediaId = media;
+          } else {
+            // Ambos vacíos: si es true/false, poner etiquetas por defecto
+            if (qType == 'true_false') {
+              answerText = idx == 0 ? 'Verdadero' : 'Falso';
+              mediaId = null;
+            } else {
+              answerText = null;
+              mediaId = null;
+            }
+          }
+          return {
+            'answerText': answerText,
+            'mediaId': mediaId,
+            'isCorrect': a.isCorrect,
+          };
+        }).toList();
+
+        return {
+          'questionText': qt,
+          'mediaId': qMedia.isEmpty ? null : qMedia,
+          'questionType': qType,
+          'timeLimit': q.timeLimitSeconds,
+          'points': q.points,
+          'answers': answersMapped,
+        };
+      }).toList(),
     };
 
     final Response res = await dio.put(
