@@ -30,7 +30,7 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
     required this.listenEvents,
     required this.disconnectUsecase,
   }) : super(GameUiState.initial()) {
-    // Registrar manejadores
+    // REGISTRO DE MANEJADORES
     on<GameEventJoin>(_onJoinGame);
     on<GameEventHostStartGame>(_onHostStartGame);
     on<GameEventHostNextPhase>(_onHostNextPhase);
@@ -42,7 +42,8 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   // JOIN GAME
   // ───────────────────────────────
-  Future<void> _onJoinGame(GameEventJoin event, Emitter<GameUiState> emit) async {
+  Future<void> _onJoinGame(
+      GameEventJoin event, Emitter<GameUiState> emit) async {
     emit(state.copyWith(isLoading: true));
 
     try {
@@ -56,7 +57,7 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
         ),
       );
 
-      // Escuchar WebSocket
+      // LISTEN WEB SOCKET
       _wsSubscription?.cancel();
       _wsSubscription = listenEvents().listen((newState) {
         add(GameEventServerUpdate(newState));
@@ -64,7 +65,10 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
 
       emit(state.copyWith(isLoading: false));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      ));
     }
   }
 
@@ -89,15 +93,17 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onSubmitAnswer(
       GameEventSubmitAnswer event, Emitter<GameUiState> emit) async {
-    await submitAnswer(SubmitAnswerParams(
-      questionId: event.questionId,
-      answerId: event.answerId,
-      timeElapsedMs: event.timeElapsedMs,
-    ));
+    await submitAnswer(
+      SubmitAnswerParams(
+        questionId: event.questionId,
+        answerId: event.answerId,
+        timeElapsedMs: event.timeElapsedMs,
+      ),
+    );
   }
 
   // ───────────────────────────────
-  // WS SERVER UPDATE
+  // SERVER WS UPDATE
   // ───────────────────────────────
   Future<void> _onServerUpdate(
       GameEventServerUpdate event, Emitter<GameUiState> emit) async {

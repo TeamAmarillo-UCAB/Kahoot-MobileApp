@@ -29,11 +29,15 @@ class GameStateEntity {
 
   final String? quizTitle;
   final String? quizMediaUrl;
-  
-  /// <── NUEVO
-  final String? hostId;
 
+  /// Índice de la pregunta actual (eventos pueden enviarlo)
   final int questionIndex;
+
+  /// Nuevo: aparece en `question_results`
+  final dynamic correctAnswerId;
+
+  /// Nuevo: puntos ganados por ESTA pregunta
+  final int? pointsEarned;
 
   const GameStateEntity({
     required this.phase,
@@ -43,9 +47,11 @@ class GameStateEntity {
     this.scoreboard = const [],
     this.quizTitle,
     this.quizMediaUrl,
-    this.hostId,    // <── NEW
+    this.correctAnswerId,
+    this.pointsEarned,
   });
 
+  /// Estado inicial (cuando aún no se recibe nada del backend)
   factory GameStateEntity.initial() => const GameStateEntity(
         phase: GamePhase.lobby,
         players: [],
@@ -54,7 +60,8 @@ class GameStateEntity {
         scoreboard: [],
         quizTitle: null,
         quizMediaUrl: null,
-        hostId: null,      // <── NEW
+        correctAnswerId: null,
+        pointsEarned: null,
       );
 
   GameStateEntity copyWith({
@@ -65,7 +72,8 @@ class GameStateEntity {
     String? quizTitle,
     String? quizMediaUrl,
     int? questionIndex,
-    String? hostId,     // <── NEW
+    dynamic correctAnswerId,
+    int? pointsEarned,
   }) {
     return GameStateEntity(
       phase: phase ?? this.phase,
@@ -75,22 +83,22 @@ class GameStateEntity {
       quizTitle: quizTitle ?? this.quizTitle,
       quizMediaUrl: quizMediaUrl ?? this.quizMediaUrl,
       questionIndex: questionIndex ?? this.questionIndex,
-      hostId: hostId ?? this.hostId,   // <── NEW
+      correctAnswerId: correctAnswerId ?? this.correctAnswerId,
+      pointsEarned: pointsEarned ?? this.pointsEarned,
     );
   }
 
-  // ────────────────────────────────────────────────
-  // Helpers de estado
-  // ────────────────────────────────────────────────
+  // ──────────────────────────
+  // Helpers
+  // ──────────────────────────
 
   bool get isQuestionActive => phase == GamePhase.question;
   bool get isShowingResults => phase == GamePhase.results;
   bool get isFinished => phase == GamePhase.end;
 
-  // ────────────────────────────────────────────────
-  // JSON Parser robusto para eventos como:
-  // "game_state_update", "question_started", etc.
-  // ────────────────────────────────────────────────
+  // ──────────────────────────
+  // JSON parser genérico
+  // ──────────────────────────
 
   factory GameStateEntity.fromJson(Map<String, dynamic> json) {
     return GameStateEntity(
@@ -99,11 +107,12 @@ class GameStateEntity {
       questionIndex: json["questionIndex"] ?? 0,
       quizTitle: json["quizTitle"],
       quizMediaUrl: json["quizMediaUrl"],
-      hostId: json["hostId"],       // <── NEW
       currentSlide: json["currentSlideData"] == null
           ? null
           : QuestionSlide.fromJson(json["currentSlideData"]),
       scoreboard: ScoreboardEntry.fromJsonList(json["scoreboard"] ?? []),
+      correctAnswerId: json["correctAnswerId"],
+      pointsEarned: json["pointsEarned"],
     );
   }
 }

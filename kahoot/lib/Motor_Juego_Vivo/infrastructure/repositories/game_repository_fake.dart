@@ -1,9 +1,10 @@
-import 'dart:async';
+// lib/Motor_Juego_Vivo/infrastructure/repositories/game_repository_fake.dart
 
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/datasource/game_api_datasource.dart';
 import '../../domain/datasource/game_socket_datasource.dart';
 import '../../domain/entities/game_state.dart';
+import '../mappers/game_state_mapper.dart';
 
 class FakeGameRepository implements GameRepository {
   final GameApiDatasource api;
@@ -13,6 +14,9 @@ class FakeGameRepository implements GameRepository {
     required this.api,
     required this.socket,
   });
+
+  /// Estado interno igual que el repo real
+  GameStateEntity _currentState = GameStateEntity.initial();
 
   @override
   Future<void> createSession({required String kahootId}) {
@@ -42,13 +46,15 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
-  Future<void> hostStartGame() async {
+  Future<void> hostStartGame() {
     socket.emit("host_start_game", {});
+    return Future.value();
   }
 
   @override
-  Future<void> hostNextPhase() async {
+  Future<void> hostNextPhase() {
     socket.emit("host_next_phase", {});
+    return Future.value();
   }
 
   @override
@@ -56,22 +62,40 @@ class FakeGameRepository implements GameRepository {
     required String questionId,
     required int answerId,
     required int timeElapsedMs,
-  }) async {
+  }) {
     socket.emit("player_submit_answer", {
+      "playerId": "fake-player",
       "questionId": questionId,
       "answerId": answerId,
       "timeElapsedMs": timeElapsedMs,
     });
+    return Future.value();
   }
 
   @override
   Stream<GameStateEntity> listenToGameState() {
-    return socket.listen().map((event) {
-      final data = event["data"];
-      return GameStateEntity.fromJson(data);
+    return socket.listen().map((raw) {
+      final event = raw["event"];
+      final data = raw["data"];
+
+      final next = GameStateMapper.mapEvent(
+        oldState: _currentState,
+        event: event,
+        data: data is Map ? _stringifyMap(data) : {},
+      );
+
+      _currentState = next;
+      return next;
     });
   }
 
+  Map<String, dynamic> _stringifyMap(Map raw) {
+    return raw.map((k, v) => MapEntry(k.toString(), v));
+  }
+
   @override
-  void disconnect() => socket.disconnect();
+  void disconnect() {
+    socket.disconnect();
+    _currentState = GameStateEntity.initial();
+  }
 }
