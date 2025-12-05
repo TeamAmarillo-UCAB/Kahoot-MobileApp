@@ -102,62 +102,94 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
 
   @override
   Future<List<String>> getMediaResource(String idOrUrl) async {
-    const int count = 16; //Número de imágenes
-    const int width = 150; //Ancho de las imágenes
-    const int height = 150; //Alto de las imágenes
+    // 🛑 URL ABSOLUTA COMPLETA para GET /media 🛑
+    const url = 'https://backcomun-production.up.railway.app/media';
 
-    //API de prueba
-    const String baseUrl = 'https://picsum.photos';
+    try {
+      // Ejecutar la petición GET (usando la URL completa)
+      final response = await dio.get(url);
 
-    final List<String> mediaResourcesUrls = [];
+      // Si la API es exitosa (200 OK)
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = response.data;
 
-    //Obtiene las URL de las imágenes extraídas de la API de prueba
-    for (int i = 0; i < count; i++) {
-      final randomId = i + 10;
-      final url = '$baseUrl/id/$randomId/$width/$height';
-      mediaResourcesUrls.add(url);
+        // Mapear la lista de JSONs a una lista de IDs (Strings)
+        final List<String> mediaResourcesIds = jsonList.map((item) {
+          // Asumimos que cada elemento tiene una clave 'id'
+          return item['id'] as String;
+        }).toList();
+
+        print(
+          'Obtenidos ${mediaResourcesIds} de recursos multimedia de la API.',
+        );
+        return mediaResourcesIds;
+      } else {
+        throw Exception(
+          'Error al obtener recursos: Status ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      // Manejo de errores de red/conexión
+      throw Exception('Get failed: ${e.message}');
     }
-
-    print('Generadas ${mediaResourcesUrls.length} URLs de imágenes de la API.');
-    //Retorna las URLs de las imágenes de la API
-    return mediaResourcesUrls;
   }
 
   @override
   Future<List<int>> previewMediaResource(String idOrUrl) async {
-    //Si hay un archivo subido ya, lo muestra
+    // 1. Manejo del Mock
     if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
       print(
-        'Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
+        'Vista Previa: Devolviendo bytes del archivo mock: $_lastUploadedMockId',
       );
       return _lastUploadedMockBytes!;
     }
 
-    const int defaultWidth = 300; //Ancho de vista previa
-    const int defaultHeight = 300; //Alto de vista previa
-    //Llamada a URL si no hay imagen subida para preview
-    final urlToFetch = idOrUrl.startsWith('http')
-        ? idOrUrl
-        : 'https://picsum.photos/$defaultWidth/$defaultHeight';
+    // 2. CONSTRUCCIÓN DE LA URL COMPLETA
+    final String urlToFetch;
+
+    if (idOrUrl.startsWith('http')) {
+      urlToFetch = idOrUrl;
+    } else {
+      // URL ABSOLUTA para GET /media/:mediaId
+      urlToFetch = 'https://backcomun-production.up.railway.app/media/$idOrUrl';
+    }
 
     try {
-      print('🌐 Descargando imagen para vista previa desde: $urlToFetch');
+      print('🌐 Descargando bytes para vista previa desde: $urlToFetch');
 
+      // 3. Ejecución de la solicitud (CRUCIAL: Forzamos la recepción de BYTES)
       final response = await dio.get(
         urlToFetch,
+        // 🛑 CAMBIO CLAVE: ResponseType.bytes
         options: Options(responseType: ResponseType.bytes),
       );
 
+      // 4. Manejo de la Respuesta (Se espera 200 OK)
       if (response.statusCode == 200) {
-        return response.data
-            as List<int>; //Devuelve la respuesta de la URL como lista de bytes
+        final responseData = response.data;
+
+        // Se espera que responseData sea una List<int> (Uint8List)
+        if (responseData is List<int>) {
+          print(
+            'Respuesta: Bytes binarios recibidos directamente. Longitud: ${responseData.length}',
+          );
+          return responseData;
+        }
+
+        // Manejo de error si Dio no pudo convertir el stream en List<int>
+        throw Exception(
+          'Failed to cast response data to List<int>. Check server response format.',
+        );
       } else {
+        // Este error capturará 404, 500, etc.
         throw Exception(
           'Failed to download for preview: Status ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
-      print('Error de Dio en Preview: ${e.message}');
+      print(
+        'Error de Dio en Preview (Status: ${e.response?.statusCode}): ${e.message}',
+      );
       throw Exception('Preview failed: ${e.message}');
     }
   }

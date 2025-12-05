@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
 
-//Imports
+//Imports (asumimos que estos son correctos)
 import 'Contenido_Multimedia/domain/entities/media_resource.dart';
 import 'Contenido_Multimedia/domain/repositories/media_resource_repository.dart';
 import 'Contenido_Multimedia/domain/datasource/media_resource_datasource.dart';
@@ -55,9 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //Bytes del recurso extraído
   List<int>? _gottenMediaResourceBytes;
-  //URLs de los archivos
+  //URLs de los archivos (ahora contiene IDs de la API)
   List<String>? _availableMediaResourceUrls;
-  //URL del archivo seleccionado
+  //URL del archivo seleccionado (ahora contiene el ID seleccionado)
   String? _selectedMediaResourceUrl;
 
   @override
@@ -72,26 +72,31 @@ class _MyHomePageState extends State<MyHomePage> {
     _deleteMediaResourceUseCase = DeleteMediaResource(_repository);
   }
 
-  //Método llamado cuando se da a una de las imágenes de la URL
-  Future<void> _fetchBytesFromUrl(String url) async {
+  //Método llamado cuando se da a una de las imágenes de la URL (Recibe el ID)
+  Future<void> _fetchBytesFromUrl(String id) async {
+    // 1. Primer setState: Oculta la galería e indica que está cargando.
     setState(() {
-      _statusMessage = 'Descargando archivo seleccionado: $url...';
-      _selectedMediaResourceUrl = url;
+      _statusMessage = 'Cargando archivo...';
+      _selectedMediaResourceUrl = id;
+      _availableMediaResourceUrls = null; // Oculta la galería de inmediato.
     });
 
     try {
-      //Llama al caso de uso del preview (descarga los bytes de la URL)
-      final mediaResourceBytes = await _previewMediaResourceUseCase.call(url);
+      // Llama al caso de uso del preview (descarga los bytes del ID)
+      final mediaResourceBytes = await _previewMediaResourceUseCase.call(id);
 
+      // 2. ÉXITO: Guardamos los bytes y LIMPIAMOS EL MENSAJE DE ESTADO.
       setState(() {
-        _gottenMediaResourceBytes =
-            mediaResourceBytes; //Almacena los bytes del archivo
-        _statusMessage = 'Archivo seleccionado y cargada exitosamente.';
-        _availableMediaResourceUrls = null; //Limpia los otros URLs
+        _gottenMediaResourceBytes = mediaResourceBytes; // Almacena los bytes
+
+        // 🛑 CORRECCIÓN: Limpiamos el mensaje de estado aquí.
+        _statusMessage = '';
       });
     } catch (e) {
+      // Si la descarga falla
       setState(() {
         _statusMessage = 'Error al descargar el archivo: ${e.toString()}';
+        _gottenMediaResourceBytes = null;
       });
     }
   }
@@ -105,14 +110,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     try {
-      //Llama al caso de uso del preview (descarga los bytes de la URL)
+      //Llama al caso de uso del preview (descarga los bytes del ID)
       final mediaResourceBytes = await _previewMediaResourceUseCase.call(id);
 
       setState(() {
         _gottenMediaResourceBytes =
             mediaResourceBytes; //Almacena los bytes del archivo
-        _statusMessage =
-            'Operación completa. Vista Previa exitosa. Bytes: ${mediaResourceBytes.length}';
+        _statusMessage = '';
       });
     } catch (e) {
       setState(() {
@@ -178,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //Función para obtener las imágenes de prueba
   Future<void> _testGet() async {
     setState(() {
-      _statusMessage = 'Buscando 16 URLs de imágenes...';
+      _statusMessage = 'Cargando imágenes...';
       _gottenMediaResourceBytes = null;
       _availableMediaResourceUrls = null;
       _selectedMediaResourceUrl = null;
@@ -187,18 +191,17 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       const testId = 'ID-para-buscar-en-existencias';
 
-      final urls = await _getMediaResourceUseCase.call(
+      final ids = await _getMediaResourceUseCase.call(
         testId,
-      ); //Llamada al caso de uso de obtener las imágenes
+      ); //Llamada al caso de uso de obtener los IDs
 
       setState(() {
-        _availableMediaResourceUrls = urls;
-        _statusMessage =
-            ' ${urls.length} URLs obtenidas. Selecciona la que más te guste';
+        _availableMediaResourceUrls = ids; // Almacena los IDs de las imágenes
+        _statusMessage = 'Selecciona la que más te guste';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error al obtener URLs: ${e.toString()}';
+        _statusMessage = 'Error al obtener IDs: ${e.toString()}';
       });
     }
   }
@@ -229,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _gottenMediaResourceBytes = null;
         _availableMediaResourceUrls = null;
         _selectedMediaResourceUrl = null;
-        _statusMessage = 'Archivo eliminado. Elige otra acción.';
+        _statusMessage = '';
       });
     } catch (e) {
       setState(() {
@@ -251,10 +254,6 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text(
-                'Estado:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
               const SizedBox(height: 16),
               Text(
                 _statusMessage,
@@ -262,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              //Si hay imágenes para ver pero ninguna para elegir
+              // CORRECCIÓN: Usar FutureBuilder y Image.memory para manejar IDs
               if (_availableMediaResourceUrls != null &&
                   _gottenMediaResourceBytes == null)
                 Expanded(
@@ -275,17 +274,42 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                     itemCount: _availableMediaResourceUrls!.length,
                     itemBuilder: (context, index) {
-                      final url = _availableMediaResourceUrls![index];
+                      final mediaId =
+                          _availableMediaResourceUrls![index]; // Este es el ID
+
                       return GestureDetector(
-                        //Al tocar una de las imágenes de la galería, llama a la función
-                        onTap: () => _fetchBytesFromUrl(url),
+                        // Llama a la función de selección con el ID
+                        onTap: () => _fetchBytesFromUrl(mediaId),
                         child: AspectRatio(
                           aspectRatio: 1.0,
-                          child: Image.network(
-                            url,
-                            fit: BoxFit.contain,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
+                          // Usamos FutureBuilder para obtener los bytes del ID
+                          child: FutureBuilder<List<int>>(
+                            future: _previewMediaResourceUseCase.call(mediaId),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData &&
+                                    snapshot.data!.isNotEmpty) {
+                                  // Si tenemos los bytes, mostramos la imagen en memoria
+                                  return Image.memory(
+                                    Uint8List.fromList(snapshot.data!),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                      );
+                                    },
+                                  );
+                                } else if (snapshot.hasError) {
+                                  // Muestra un icono de error si falla la descarga o el parseo
+                                  return const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.red,
+                                  );
+                                }
+                              }
+                              // Muestra un indicador de carga mientras espera
                               return const Center(
                                 child: CircularProgressIndicator(),
                               );
@@ -298,20 +322,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 )
               //Si ya obtuvo un archivo, la muestra en pantalla
               else if (_gottenMediaResourceBytes != null) ...[
-                const Text(
-                  'Archivo seleccionado:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
                 const SizedBox(height: 10),
                 Image.memory(
                   Uint8List.fromList(_gottenMediaResourceBytes!),
                   height: 300,
                   width: 300,
                   fit: BoxFit.contain,
-                ),
-                Text(
-                  '(Archivo: ${_selectedMediaResourceUrl == null ? 'Subida' : 'De la API'})',
-                  style: const TextStyle(fontSize: 12),
                 ),
               ] else
                 const Spacer(),
@@ -335,7 +351,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             onPressed: _testGet, //Llamada a la función de extraer archivo
             heroTag: 'download',
-            tooltip: 'Buscar 16 imágenes de la API',
+            tooltip: 'Buscar imágenes de la API',
             child: const Icon(Icons.download),
           ),
           const SizedBox(height: 10),
