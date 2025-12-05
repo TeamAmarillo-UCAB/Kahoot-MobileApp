@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 
+//Imports de dominio, aplicación e infraestructura
 import '../../../../Contenido_Multimedia/domain/entities/media_resource.dart';
 import '../../../../Contenido_Multimedia/domain/repositories/media_resource_repository.dart';
 import '../../../../Contenido_Multimedia/domain/datasource/media_resource_datasource.dart';
@@ -30,7 +31,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
   late final FilePickerService _filePickerService;
 
   //Mensaje de estado
-  String _statusMessage = 'Elige un archivo.';
+  String _statusMessage = '';
   //Bytes de imagen actual
   List<int>? _gottenMediaResourceBytes;
   //Lista de URL de imágenes obtenidas
@@ -51,7 +52,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     _filePickerService = FilePickerServiceImpl();
   }
 
-  //Función para cargar vista previa
+  //Función para cargar vista previa (al subir un archivo)
   Future<void> _loadPreview(String id) async {
     setState(() {
       _statusMessage = 'Cargando Vista Previa...';
@@ -75,7 +76,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     }
   }
 
-  //
+  //Función para subir archivo
   Future<void> _testUpload() async {
     setState(() {
       _statusMessage = 'Seleccionando archivo para subir...';
@@ -104,7 +105,9 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
 
       //Carga la vista previa del archivo
       await _loadPreview(uploadedId);
-      _statusMessage = '';
+      setState(() {
+        _statusMessage = '';
+      });
     } catch (e) {
       setState(() {
         _statusMessage = 'Error de Subida: ${e.toString()}';
@@ -114,26 +117,26 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
   }
 
   //Método llamado cuando se da a una de las imágenes de la URL
-  Future<void> _fetchBytesFromUrl(String url) async {
+  Future<void> _fetchBytesFromUrl(String id) async {
     setState(() {
-      //_statusMessage = 'Descargando archivo seleccionado: $url...';
-      _selectedMediaResourceUrl = url;
+      _statusMessage = 'Cargando archivo...';
+      _selectedMediaResourceUrl = id;
+      _availableMediaResourceUrls = null;
     });
 
     try {
-      //Llama al caso de uso del preview (descarga los bytes de la URL)
-      final mediaResourceBytes = await _previewMediaResourceUseCase.call(url);
+      //Llama al caso de uso del preview
+      final mediaResourceBytes = await _previewMediaResourceUseCase.call(id);
 
       setState(() {
-        _gottenMediaResourceBytes =
-            mediaResourceBytes; //Almacena los bytes del archivo
-        //_statusMessage = 'Archivo seleccionado y cargada exitosamente.';
+        _gottenMediaResourceBytes = mediaResourceBytes; //Almacena los bytes
         _statusMessage = '';
-        _availableMediaResourceUrls = null; //Limpia los otros URLs
       });
     } catch (e) {
+      // Si la descarga falla
       setState(() {
         _statusMessage = 'Error al descargar el archivo: ${e.toString()}';
+        _gottenMediaResourceBytes = null;
       });
     }
   }
@@ -141,7 +144,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
   //Función para obtener las imágenes de prueba
   Future<void> _testGet() async {
     setState(() {
-      _statusMessage = 'Buscando 16 imágenes...';
+      _statusMessage = 'Cargando imágenes...';
       _gottenMediaResourceBytes = null;
       _availableMediaResourceUrls = null;
       _selectedMediaResourceUrl = null;
@@ -150,17 +153,16 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
     try {
       const testId = 'ID-para-buscar-en-existencias';
 
-      final urls = await _getMediaResourceUseCase.call(
-        testId,
-      ); //Llamada al caso de uso de obtener las imágenes
+      // Llamada al caso de uso getMedia
+      final ids = await _getMediaResourceUseCase.call(testId);
 
       setState(() {
-        _availableMediaResourceUrls = urls;
+        _availableMediaResourceUrls = ids; // Almacena los IDs
         _statusMessage = 'Selecciona la que más te guste';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error al obtener URLs: ${e.toString()}';
+        _statusMessage = 'Error al obtener IDs: ${e.toString()}';
       });
     }
   }
@@ -196,7 +198,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
         _gottenMediaResourceBytes = null;
         _availableMediaResourceUrls = null;
         _selectedMediaResourceUrl = null;
-        _statusMessage = 'Archivo eliminado. Elige otra acción.';
+        _statusMessage = '';
       });
     } catch (e) {
       setState(() {
@@ -212,6 +214,12 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
 
   @override
   Widget build(BuildContext context) {
+    // Define si el estado actual es de carga (para mostrar un indicador o el mensaje)
+    final bool isInitialOrFinishedState =
+        _statusMessage == 'Elige un archivo.' ||
+        _statusMessage.isEmpty ||
+        _statusMessage.contains('Error');
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(24),
@@ -221,7 +229,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
       ),
       child: _gottenMediaResourceBytes != null
           ? Center(
-              // 🟢 OPCIÓN 1: IMAGEN CARGADA (Vista Previa con botón de eliminar)
+              // La imagen está cargada
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -233,6 +241,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
                         height: 150,
                         fit: BoxFit.contain,
                       ),
+                      //Botón de eliminar archivo
                       Positioned(
                         top: -24,
                         right: -24,
@@ -247,8 +256,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
                             shape: const CircleBorder(),
                             padding: const EdgeInsets.all(4),
                           ),
-                          onPressed:
-                              _deleteFile, // Llamada a función de eliminación
+                          onPressed: _deleteFile,
                           tooltip: 'Eliminar imagen',
                         ),
                       ),
@@ -266,7 +274,7 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
           : (_availableMediaResourceUrls != null &&
                 _availableMediaResourceUrls!.isNotEmpty)
           ? Column(
-              // 🟡 OPCIÓN 2: GALERÍA VISIBLE
+              // La galería es visible
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -285,18 +293,39 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
                   ),
                   itemCount: _availableMediaResourceUrls!.length,
                   itemBuilder: (context, index) {
-                    final url = _availableMediaResourceUrls![index];
+                    final mediaId = _availableMediaResourceUrls![index];
                     return GestureDetector(
-                      onTap: () => _fetchBytesFromUrl(url),
+                      onTap: () => _fetchBytesFromUrl(mediaId),
                       child: AspectRatio(
                         aspectRatio: 1.0,
-                        child: Image.network(
-                          url,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
+                        child: FutureBuilder<List<int>>(
+                          future: _previewMediaResourceUseCase.call(mediaId),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              if (snapshot.hasData &&
+                                  snapshot.data!.isNotEmpty) {
+                                return Image.memory(
+                                  Uint8List.fromList(snapshot.data!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                    );
+                                  },
+                                );
+                              } else if (snapshot.hasError) {
+                                return const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.red,
+                                );
+                              }
+                            }
                             return const Center(
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                color: Colors.white70,
+                              ),
                             );
                           },
                         ),
@@ -318,40 +347,51 @@ class _MediaResourceSelectorState extends State<MediaResourceSelector> {
               ],
             )
           : Column(
-              // 🔴 OPCIÓN 3: PLACEHOLDER (Opciones de subir/obtener)
+              // Carga del archivo
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.insert_photo, color: Colors.white70, size: 40),
-                const SizedBox(height: 8),
-                const Text(
-                  'Añadir multimedia desde:',
-                  style: TextStyle(color: Colors.white),
+                Text(
+                  _statusMessage,
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.folder_open,
-                        color: Color(0xFFFFD54F),
+
+                // Muestra los botones si no está cargando
+                if (isInitialOrFinishedState) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Añadir multimedia desde:',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.folder_open,
+                          color: Color(0xFFFFD54F),
+                        ),
+                        iconSize: 32,
+                        onPressed: _testUpload,
+                        tooltip: 'Subir archivo local',
                       ),
-                      iconSize: 32,
-                      onPressed: _testUpload,
-                      tooltip: 'Subir archivo local',
-                    ),
-                    const SizedBox(width: 32),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.collections,
-                        color: Color(0xFFFFD54F),
+                      const SizedBox(width: 32),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.collections,
+                          color: Color(0xFFFFD54F),
+                        ),
+                        iconSize: 32,
+                        onPressed: _testGet,
+                        tooltip: 'Seleccionar de galería',
                       ),
-                      iconSize: 32,
-                      onPressed: _testGet,
-                      tooltip: 'Seleccionar de galería',
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ] else if (_statusMessage.contains('Cargando'))
+                  //Indicador de progreso
+                  const CircularProgressIndicator(color: Color(0xFFFFD54F)),
               ],
             ),
     );

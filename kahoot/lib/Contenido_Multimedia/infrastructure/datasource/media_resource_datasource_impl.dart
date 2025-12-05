@@ -102,62 +102,86 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
 
   @override
   Future<List<String>> getMediaResource(String idOrUrl) async {
-    const int count = 16; //Número de imágenes
-    const int width = 150; //Ancho de las imágenes
-    const int height = 150; //Alto de las imágenes
+    // URL de la API de todas las imágenes
+    const url = 'https://backcomun-production.up.railway.app/media';
 
-    //API de prueba
-    const String baseUrl = 'https://picsum.photos';
+    try {
+      // Ejecutar la petición GET
+      final response = await dio.get(url);
 
-    final List<String> mediaResourcesUrls = [];
+      // Respuesta exitosa
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = response.data;
 
-    //Obtiene las URL de las imágenes extraídas de la API de prueba
-    for (int i = 0; i < count; i++) {
-      final randomId = i + 10;
-      final url = '$baseUrl/id/$randomId/$width/$height';
-      mediaResourcesUrls.add(url);
+        // Mapear la lista de JSONs a una lista de IDs
+        final List<String> mediaResourcesIds = jsonList.map((item) {
+          return item['id'] as String;
+        }).toList();
+
+        print(
+          'Obtenidos ${mediaResourcesIds} de recursos multimedia de la API.',
+        );
+        return mediaResourcesIds;
+      } else {
+        throw Exception(
+          'Error al obtener recursos: Status ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      // Manejo de errores de red/conexión
+      throw Exception('Get failed: ${e.message}');
     }
-
-    print('Generadas ${mediaResourcesUrls.length} URLs de imágenes de la API.');
-    //Retorna las URLs de las imágenes de la API
-    return mediaResourcesUrls;
   }
 
   @override
   Future<List<int>> previewMediaResource(String idOrUrl) async {
-    //Si hay un archivo subido ya, lo muestra
+    //Manejo del Mock
     if (idOrUrl == _lastUploadedMockId && _lastUploadedMockBytes != null) {
       print(
-        'Vista Previa: Devolviendo bytes del archivo subido: $_lastUploadedMockId',
+        'Vista Previa: Devolviendo bytes del archivo mock: $_lastUploadedMockId',
       );
       return _lastUploadedMockBytes!;
     }
 
-    const int defaultWidth = 300; //Ancho de vista previa
-    const int defaultHeight = 300; //Alto de vista previa
-    //Llamada a URL si no hay imagen subida para preview
-    final urlToFetch = idOrUrl.startsWith('http')
-        ? idOrUrl
-        : 'https://picsum.photos/$defaultWidth/$defaultHeight';
+    //URL de obtener archivo por ID
+    final String urlToFetch;
+    urlToFetch = 'https://backcomun-production.up.railway.app/media/$idOrUrl';
 
     try {
-      print('🌐 Descargando imagen para vista previa desde: $urlToFetch');
+      print('🌐 Descargando bytes para vista previa desde: $urlToFetch');
 
+      // Ejecuta la solicitud
       final response = await dio.get(
         urlToFetch,
         options: Options(responseType: ResponseType.bytes),
       );
 
+      // Respuesta 200
       if (response.statusCode == 200) {
-        return response.data
-            as List<int>; //Devuelve la respuesta de la URL como lista de bytes
+        final responseData = response.data;
+
+        // Se retorna la data
+        if (responseData is List<int>) {
+          print(
+            'Respuesta: Bytes binarios recibidos directamente. Longitud: ${responseData.length}',
+          );
+          return responseData;
+        }
+
+        // Manejo de error de Dio
+        throw Exception(
+          'Failed to cast response data to List<int>. Check server response format.',
+        );
       } else {
+        // En caso de excepción 400 y eso
         throw Exception(
           'Failed to download for preview: Status ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
-      print('Error de Dio en Preview: ${e.message}');
+      print(
+        'Error de Dio en Preview (Status: ${e.response?.statusCode}): ${e.message}',
+      );
       throw Exception('Preview failed: ${e.message}');
     }
   }
