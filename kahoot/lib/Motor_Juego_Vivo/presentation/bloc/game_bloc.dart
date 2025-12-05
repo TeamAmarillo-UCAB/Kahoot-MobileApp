@@ -47,6 +47,13 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
     emit(state.copyWith(isLoading: true));
 
     try {
+      // SUBSCRIBE to WS updates BEFORE joining so we don't miss the initial
+      // server state that the datasource may emit immediately on connect.
+      _wsSubscription?.cancel();
+      _wsSubscription = listenEvents().listen((newState) {
+        add(GameEventServerUpdate(newState));
+      });
+
       await joinGame(
         JoinGameParams(
           pin: event.pin,
@@ -56,12 +63,6 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
           nickname: event.nickname,
         ),
       );
-
-      // LISTEN WEB SOCKET
-      _wsSubscription?.cancel();
-      _wsSubscription = listenEvents().listen((newState) {
-        add(GameEventServerUpdate(newState));
-      });
 
       emit(state.copyWith(isLoading: false));
     } catch (e) {
@@ -77,7 +78,17 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onHostStartGame(
       GameEventHostStartGame event, Emitter<GameUiState> emit) async {
-    await hostStartGame();
+    print('[GameBloc] Host requested start game');
+    emit(state.copyWith(isLoading: true));
+    try {
+      await hostStartGame();
+    } catch (e) {
+      print('[GameBloc] hostStartGame failed: $e');
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      return;
+    }
+    print('[GameBloc] hostStartGame completed');
+    emit(state.copyWith(isLoading: false));
   }
 
   // ───────────────────────────────
@@ -85,7 +96,14 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onHostNextPhase(
       GameEventHostNextPhase event, Emitter<GameUiState> emit) async {
-    await hostNextPhase();
+    emit(state.copyWith(isLoading: true));
+    try {
+      await hostNextPhase();
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      return;
+    }
+    emit(state.copyWith(isLoading: false));
   }
 
   // ───────────────────────────────
@@ -93,13 +111,20 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onSubmitAnswer(
       GameEventSubmitAnswer event, Emitter<GameUiState> emit) async {
-    await submitAnswer(
-      SubmitAnswerParams(
-        questionId: event.questionId,
-        answerId: event.answerId,
-        timeElapsedMs: event.timeElapsedMs,
-      ),
-    );
+    emit(state.copyWith(isLoading: true));
+    try {
+      await submitAnswer(
+        SubmitAnswerParams(
+          questionId: event.questionId,
+          answerId: event.answerId,
+          timeElapsedMs: event.timeElapsedMs,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      return;
+    }
+    emit(state.copyWith(isLoading: false));
   }
 
   // ───────────────────────────────

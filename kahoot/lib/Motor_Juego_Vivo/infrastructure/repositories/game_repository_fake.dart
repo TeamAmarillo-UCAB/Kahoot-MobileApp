@@ -47,6 +47,7 @@ class FakeGameRepository implements GameRepository {
 
   @override
   Future<void> hostStartGame() {
+    print('[FakeGameRepository] hostStartGame called - emitting host_start_game');
     socket.emit("host_start_game", {});
     return Future.value();
   }

@@ -41,27 +41,32 @@ class FakeSocketDatasource implements GameSocketDatasource {
 
   @override
   void emit(String event, dynamic payload) {
+    print('[FakeSocket] emit called: $event payload:${payload.runtimeType}');
     // HOST START GAME → question_started
     if (event == "host_start_game") {
-      _controller.add({
-        "event": "question_started",
-        "data": {
-          "questionIndex": 1,
-          "currentSlideData": {
-            "slideId": "slide-1",
+      // Simulate a small server processing delay before emitting question_started
+      Future.delayed(const Duration(milliseconds: 300), () {
+        print('[FakeSocket] emitting question_started');
+        _controller.add({
+          "event": "question_started",
+          "data": {
             "questionIndex": 1,
-            "questionText": "¿Capital de Francia?",
-            "mediaUrl": null,
-            "timeLimitSeconds": 15,
-            "type": "MULTIPLE_CHOICE",
-            "options": [
-              {"text": "Madrid", "image": null},
-              {"text": "París", "image": null},
-              {"text": "Roma", "image": null},
-              {"text": "Londres", "image": null},
-            ]
+            "currentSlideData": {
+              "slideId": "slide-1",
+              "questionIndex": 1,
+              "questionText": "¿Capital de Francia?",
+              "mediaUrl": null,
+              "timeLimitSeconds": 15,
+              "type": "MULTIPLE_CHOICE",
+              "options": [
+                {"text": "Madrid", "image": null},
+                {"text": "París", "image": null},
+                {"text": "Roma", "image": null},
+                {"text": "Londres", "image": null},
+              ]
+            }
           }
-        }
+        });
       });
     }
 
