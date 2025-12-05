@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/game_bloc.dart';
 import '../bloc/game_event.dart';
+import '../widgets/dev_phase_controls.dart';
 import '../bloc/game_state.dart';
 import '../widgets/player_list_widget.dart';
 
@@ -44,6 +45,8 @@ class LobbyPage extends StatelessWidget {
                 ),
               ),
               Expanded(child: PlayerListWidget(players: state.gameState.players)),
+              const SizedBox(height: 8),
+              const DevPhaseControls(),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

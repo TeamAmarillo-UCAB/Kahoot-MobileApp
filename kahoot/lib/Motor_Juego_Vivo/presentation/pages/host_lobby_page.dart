@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/game_bloc.dart';
 import '../bloc/game_event.dart';
+import '../widgets/dev_phase_controls.dart';
 import '../bloc/game_state.dart';
 import '../widgets/player_list_widget.dart';
 
@@ -30,6 +31,7 @@ class HostLobbyPage extends StatelessWidget {
               children: [
                 if (state.isLoading) const LinearProgressIndicator(),
                 Expanded(child: PlayerListWidget(players: state.gameState.players)),
+                const DevPhaseControls(),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,

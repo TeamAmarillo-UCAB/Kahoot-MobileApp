@@ -132,6 +132,10 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onServerUpdate(
       GameEventServerUpdate event, Emitter<GameUiState> emit) async {
+    print('[GameBloc] received server update - phase: ${event.newState.phase} players:${event.newState.players.length}');
+    for (var p in event.newState.players) {
+      print('[GameBloc] player -> id:${p.playerId} nick:${p.nickname} role:${p.role}');
+    }
     emit(state.copyWith(gameState: event.newState));
   }
 

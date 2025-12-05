@@ -119,4 +119,9 @@ class FakeSocketDatasource implements GameSocketDatasource {
   void disconnect() {
     _controller.close();
   }
+
+  /// Dev helper: simulate an incoming raw websocket event (same shape as emit() would produce)
+  void simulateIncoming(Map<String, dynamic> raw) {
+    _controller.add(raw);
+  }
 }

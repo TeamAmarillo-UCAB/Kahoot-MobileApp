@@ -47,16 +47,21 @@ class MyApp extends StatelessWidget {
     final listenUsecase = ListenGameEventsUsecase(repository);
     final disconnectUsecase = DisconnectUsecase(repository);
 
-    return BlocProvider(
-      create: (_) => GameBloc(
-        joinGame: joinUsecase,
-        hostStartGame: hostStart,
-        hostNextPhase: hostNext,
-        submitAnswer: submitAnswer,
-        listenEvents: listenUsecase,
-        disconnectUsecase: disconnectUsecase,
-      ),
-      child: MaterialApp(
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: repository),
+        RepositoryProvider.value(value: socket),
+      ],
+      child: BlocProvider(
+        create: (_) => GameBloc(
+          joinGame: joinUsecase,
+          hostStartGame: hostStart,
+          hostNextPhase: hostNext,
+          submitAnswer: submitAnswer,
+          listenEvents: listenUsecase,
+          disconnectUsecase: disconnectUsecase,
+        ),
+        child: MaterialApp(
         title: 'Kahoot - Demo',
         theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber)),
         initialRoute: '/',
@@ -72,6 +77,7 @@ class MyApp extends StatelessWidget {
           '/host_results': (_) => const HostResultsPage(),
           '/host_podium': (_) => const HostPodiumPage(),
         },
+        ),
       ),
     );
   }

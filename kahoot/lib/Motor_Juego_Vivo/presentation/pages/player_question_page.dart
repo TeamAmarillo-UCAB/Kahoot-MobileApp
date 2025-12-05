@@ -39,6 +39,9 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
         final slide = state.gameState.currentSlide;
         if (slide == null) return const Center(child: Text('No hay pregunta'));
 
+        // Debug: print slide content
+        print('[PlayerQuestionPage] slide.questionText="${slide.questionText}"');
+
         // Navigate automatically if phase changed unexpectedly
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!state.isQuestion) {

@@ -76,6 +76,7 @@ class FakeGameRepository implements GameRepository {
   @override
   Stream<GameStateEntity> listenToGameState() {
     return socket.listen().map((raw) {
+      print('[FakeGameRepository] raw event from socket: $raw');
       final event = raw["event"];
       final data = raw["data"];
 
@@ -84,6 +85,11 @@ class FakeGameRepository implements GameRepository {
         event: event,
         data: data is Map ? _stringifyMap(data) : {},
       );
+
+      print('[FakeGameRepository] mapped state phase: ${next.phase} players:${next.players.length}');
+      for (var p in next.players) {
+        print('[FakeGameRepository] mapped player -> id:${p.playerId} nick:${p.nickname} role:${p.role}');
+      }
 
       _currentState = next;
       return next;
