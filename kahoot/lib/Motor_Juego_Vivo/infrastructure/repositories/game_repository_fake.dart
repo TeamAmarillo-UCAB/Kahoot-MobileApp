@@ -1,13 +1,15 @@
-import '../../domain/entities/game_state.dart';
+import 'dart:async';
+
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/datasource/game_api_datasource.dart';
 import '../../domain/datasource/game_socket_datasource.dart';
+import '../../domain/entities/game_state.dart';
 
-class GameRepositoryImpl implements GameRepository {
+class FakeGameRepository implements GameRepository {
   final GameApiDatasource api;
   final GameSocketDatasource socket;
 
-  GameRepositoryImpl({
+  FakeGameRepository({
     required this.api,
     required this.socket,
   });
@@ -40,15 +42,13 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<void> hostStartGame() {
+  Future<void> hostStartGame() async {
     socket.emit("host_start_game", {});
-    return Future.value();
   }
 
   @override
-  Future<void> hostNextPhase() {
+  Future<void> hostNextPhase() async {
     socket.emit("host_next_phase", {});
-    return Future.value();
   }
 
   @override
@@ -56,24 +56,22 @@ class GameRepositoryImpl implements GameRepository {
     required String questionId,
     required int answerId,
     required int timeElapsedMs,
-  }) {
+  }) async {
     socket.emit("player_submit_answer", {
       "questionId": questionId,
       "answerId": answerId,
       "timeElapsedMs": timeElapsedMs,
     });
-    return Future.value();
   }
 
   @override
   Stream<GameStateEntity> listenToGameState() {
     return socket.listen().map((event) {
-      return GameStateEntity.fromJson(event["data"]);
+      final data = event["data"];
+      return GameStateEntity.fromJson(data);
     });
   }
 
   @override
-  void disconnect() {
-    socket.disconnect();
-  }
+  void disconnect() => socket.disconnect();
 }

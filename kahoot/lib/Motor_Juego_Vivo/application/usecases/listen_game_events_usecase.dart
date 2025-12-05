@@ -1,23 +1,12 @@
 import '../../domain/repositories/game_repository.dart';
+import '../../domain/entities/game_state.dart';
 
 class ListenGameEventsUsecase {
-  final GameRepository repo;
+  final GameRepository repository;
 
-  ListenGameEventsUsecase(this.repo);
+  ListenGameEventsUsecase(this.repository);
 
-  void call({
-    required void Function(Map<String, dynamic>) onGameState,
-    required void Function(Map<String, dynamic>) onQuestionStarted,
-    required void Function(Map<String, dynamic>) onPlayerAnswerConfirmation,
-    required void Function(Map<String, dynamic>) onQuestionResults,
-    required void Function(Map<String, dynamic>) onGameEnd,
-    required void Function(Map<String, dynamic>) onError,
-  }) {
-    repo.onGameState(onGameState);
-    repo.onQuestionStarted(onQuestionStarted);
-    repo.onPlayerAnswerConfirmation(onPlayerAnswerConfirmation);
-    repo.onQuestionResults(onQuestionResults);
-    repo.onGameEnd(onGameEnd);
-    repo.onError(onError);
+  Stream<GameStateEntity> call() {
+    return repository.listenToGameState();
   }
 }

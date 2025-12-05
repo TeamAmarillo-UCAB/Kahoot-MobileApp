@@ -1,28 +1,28 @@
-
+import '../entities/game_state.dart';
 abstract class GameRepository {
-  // HTTP
-  Future<Map<String, dynamic>> createSession(String kahootId);
-  Future<Map<String, dynamic>> getSessionByQrToken(String qrToken);
+  // REST
+  Future<void> createSession({required String kahootId});
+  Future<void> scanQr({required String qrToken});
 
-  // WebSocket control
-  void connectToSession({required String sessionPin, required String nickname});
-  void disconnect();
+  // WS connection
+  Future<void> joinGame({
+    required String pin,
+    required String role,
+    required String playerId,
+    required String username,
+    required String nickname,
+  });
 
-  // Emit events
-  void emitPlayerJoin(String sessionPin, String nickname);
-  void emitHostStartGame();
-  void emitPlayerSubmitAnswer({
+  Future<void> hostStartGame();
+  Future<void> hostNextPhase();
+
+  Future<void> submitAnswer({
     required String questionId,
-    required dynamic answerId,
+    required int answerId,
     required int timeElapsedMs,
   });
-  void emitHostNextPhase();
 
-  // Streams / callbacks
-  void onGameState(void Function(Map<String, dynamic>) callback);
-  void onQuestionStarted(void Function(Map<String, dynamic>) callback);
-  void onQuestionResults(void Function(Map<String, dynamic>) callback);
-  void onPlayerAnswerConfirmation(void Function(Map<String, dynamic>) callback);
-  void onGameEnd(void Function(Map<String, dynamic>) callback);
-  void onError(void Function(Map<String, dynamic>) callback);
+  Stream<GameStateEntity> listenToGameState();
+
+  void disconnect();
 }
