@@ -1,3 +1,5 @@
+// lib/Motor_Juego_Vivo/presentation/blocs/game_bloc.dart
+
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +32,7 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
     required this.listenEvents,
     required this.disconnectUsecase,
   }) : super(GameUiState.initial()) {
-    // REGISTRO DE MANEJADORES
+    // Registrar manejadores
     on<GameEventJoin>(_onJoinGame);
     on<GameEventHostStartGame>(_onHostStartGame);
     on<GameEventHostNextPhase>(_onHostNextPhase);
@@ -40,55 +42,44 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   }
 
   // ───────────────────────────────
-  // JOIN GAME
+  // JOIN GAME - SUSCRIBE ANTES DE JOIN
   // ───────────────────────────────
-  Future<void> _onJoinGame(
-      GameEventJoin event, Emitter<GameUiState> emit) async {
-    emit(state.copyWith(isLoading: true));
+  Future<void> _onJoinGame(GameEventJoin event, Emitter<GameUiState> emit) async {
+  print('[GameBloc] JOIN → pin=${event.pin} role=${event.role} nick=${event.nickname}');
+  emit(state.copyWith(isLoading: true));
 
-    try {
-      // SUBSCRIBE to WS updates BEFORE joining so we don't miss the initial
-      // server state that the datasource may emit immediately on connect.
-      _wsSubscription?.cancel();
-      _wsSubscription = listenEvents().listen((newState) {
-        add(GameEventServerUpdate(newState));
-      });
+  try {
+    // 1) Suscribirse ANTES del join
+    _wsSubscription?.cancel();
+    _wsSubscription = listenEvents().listen((newState) {
+      print('[GameBloc] WS → phase=${newState.phase}');
+      add(GameEventServerUpdate(newState));
+    });
 
-      await joinGame(
-        JoinGameParams(
-          pin: event.pin,
-          role: event.role,
-          playerId: event.playerId,
-          username: event.username,
-          nickname: event.nickname,
-        ),
-      );
+    // 2) Ejecutar join 
+    await joinGame(
+      JoinGameParams(
+        pin: event.pin,
+        role: event.role,
+        playerId: event.playerId,
+        username: event.username,
+        nickname: event.nickname,
+      ),
+    );
 
-      emit(state.copyWith(isLoading: false));
-    } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      ));
-    }
+    emit(state.copyWith(isLoading: false));
+  } catch (e) {
+    emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
   }
+}
 
   // ───────────────────────────────
   // HOST START GAME
   // ───────────────────────────────
   Future<void> _onHostStartGame(
       GameEventHostStartGame event, Emitter<GameUiState> emit) async {
-    print('[GameBloc] Host requested start game');
-    emit(state.copyWith(isLoading: true));
-    try {
-      await hostStartGame();
-    } catch (e) {
-      print('[GameBloc] hostStartGame failed: $e');
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
-      return;
-    }
-    print('[GameBloc] hostStartGame completed');
-    emit(state.copyWith(isLoading: false));
+    print('[GameBloc] hostStartGame requested');
+    await hostStartGame();
   }
 
   // ───────────────────────────────
@@ -96,14 +87,8 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onHostNextPhase(
       GameEventHostNextPhase event, Emitter<GameUiState> emit) async {
-    emit(state.copyWith(isLoading: true));
-    try {
-      await hostNextPhase();
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
-      return;
-    }
-    emit(state.copyWith(isLoading: false));
+    print('[GameBloc] hostNextPhase requested');
+    await hostNextPhase();
   }
 
   // ───────────────────────────────
@@ -111,31 +96,20 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onSubmitAnswer(
       GameEventSubmitAnswer event, Emitter<GameUiState> emit) async {
-    emit(state.copyWith(isLoading: true));
-    try {
-      await submitAnswer(
-        SubmitAnswerParams(
-          questionId: event.questionId,
-          answerId: event.answerId,
-          timeElapsedMs: event.timeElapsedMs,
-        ),
-      );
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
-      return;
-    }
-    emit(state.copyWith(isLoading: false));
+    print('[GameBloc] submitAnswer questionId=${event.questionId} answerId=${event.answerId} timeMs=${event.timeElapsedMs}');
+    await submitAnswer(SubmitAnswerParams(
+      questionId: event.questionId,
+      answerId: event.answerId,
+      timeElapsedMs: event.timeElapsedMs,
+    ));
   }
 
   // ───────────────────────────────
-  // SERVER WS UPDATE
+  // WS SERVER UPDATE
   // ───────────────────────────────
   Future<void> _onServerUpdate(
       GameEventServerUpdate event, Emitter<GameUiState> emit) async {
-    print('[GameBloc] received server update - phase: ${event.newState.phase} players:${event.newState.players.length}');
-    for (var p in event.newState.players) {
-      print('[GameBloc] player -> id:${p.playerId} nick:${p.nickname} role:${p.role}');
-    }
+    print('[GameBloc] received server update -> phase=${event.newState.phase} players=${event.newState.players.length}');
     emit(state.copyWith(gameState: event.newState));
   }
 
@@ -144,6 +118,7 @@ class GameBloc extends Bloc<GameEvent, GameUiState> {
   // ───────────────────────────────
   Future<void> _onDisconnect(
       GameEventDisconnect event, Emitter<GameUiState> emit) async {
+    print('[GameBloc] Disconnect requested');
     _wsSubscription?.cancel();
     disconnectUsecase();
     emit(GameUiState.initial());

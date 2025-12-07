@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'Motor_Juego_Vivo/presentation/bloc/game_bloc.dart';
+
 import 'Motor_Juego_Vivo/application/usecases/join_game_usecase.dart';
 import 'Motor_Juego_Vivo/application/usecases/host_start_game_usecase.dart';
 import 'Motor_Juego_Vivo/application/usecases/host_next_phase_usecase.dart';
@@ -26,7 +27,7 @@ import 'Motor_Juego_Vivo/presentation/pages/host_podium_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -34,7 +35,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inyectar implementaciones fake (para pruebas sin backend)
+
+    // Fake implementations
     final api = FakeApiDatasource();
     final socket = FakeSocketDatasource();
     final repository = FakeGameRepository(api: api, socket: socket);
@@ -47,6 +49,9 @@ class MyApp extends StatelessWidget {
     final listenUsecase = ListenGameEventsUsecase(repository);
     final disconnectUsecase = DisconnectUsecase(repository);
 
+    // --------------------------
+    //  PROVIDERS ENCIMA DEL MaterialApp 🔥
+    // --------------------------
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider.value(value: repository),
@@ -62,21 +67,22 @@ class MyApp extends StatelessWidget {
           disconnectUsecase: disconnectUsecase,
         ),
         child: MaterialApp(
-        title: 'Kahoot - Demo',
-        theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber)),
-        initialRoute: '/',
-        routes: {
-          '/': (_) => const EnterPinPage(),
-          '/enter_nickname': (_) => const EnterNicknamePage(),
-          '/lobby': (_) => const LobbyPage(),
-          '/player_question': (_) => const PlayerQuestionPage(),
-          '/player_results': (_) => const PlayerResultsPage(),
-          '/podium': (_) => const PodiumPage(),
-          '/host_lobby': (_) => const HostLobbyPage(),
-          '/host_question': (_) => const HostQuestionPage(),
-          '/host_results': (_) => const HostResultsPage(),
-          '/host_podium': (_) => const HostPodiumPage(),
-        },
+          debugShowCheckedModeBanner: false,
+          title: 'Kahoot - Demo',
+          theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber)),
+          initialRoute: '/',
+          routes: {
+            '/': (_) => const EnterPinPage(),
+            '/enter_nickname': (_) => const EnterNicknamePage(),
+            '/lobby': (_) => const LobbyPage(),
+            '/player_question': (_) => const PlayerQuestionPage(),
+            '/player_results': (_) => const PlayerResultsPage(),
+            '/podium': (_) => const PodiumPage(),
+            '/host_lobby': (_) => const HostLobbyPage(),
+            '/host_question': (_) => const HostQuestionPage(),
+            '/host_results': (_) => const HostResultsPage(),
+            '/host_podium': (_) => const HostPodiumPage(),
+          },
         ),
       ),
     );

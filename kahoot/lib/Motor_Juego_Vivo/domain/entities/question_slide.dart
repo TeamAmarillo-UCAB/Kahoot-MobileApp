@@ -65,19 +65,21 @@ class QuestionSlide {
   int get optionsCount => options.length;
 
   factory QuestionSlide.fromJson(Map<String, dynamic> json) {
-    final optList = json["options"] as List<dynamic>? ?? [];
+  final optRaw = json["options"] as List<dynamic>? ?? [];
+  print('[QuestionSlide] options raw: $optRaw');
 
-    return QuestionSlide(
-      slideId: json["slideId"] ?? "",
-      questionIndex: json["questionIndex"] ?? 0,
-      questionText: json["questionText"] ?? "",
-      mediaUrl: json["mediaUrl"],
-      timeLimitSeconds: json["timeLimitSeconds"] ?? 0,
-      type: QuestionTypeX.fromString(json["type"] ?? "MULTIPLE_CHOICE"),
-      options: List.generate(
-        optList.length,
-        (i) => QuestionSlideOption.fromJson(optList[i], i),
-      ),
-    );
-  }
+  return QuestionSlide(
+    slideId: json["slideId"] ?? "",
+    questionIndex: json["questionIndex"] ?? 0,
+    questionText: json["questionText"] ?? "",
+    mediaUrl: json["mediaUrl"],
+    timeLimitSeconds: json["timeLimitSeconds"] ?? 0,
+    type: QuestionTypeX.fromString(json["type"] ?? "MULTIPLE_CHOICE"),
+    options: List.generate(
+      optRaw.length,
+      (i) => QuestionSlideOption.fromJson(optRaw[i], i),
+    ),
+  );
+}
+
 }

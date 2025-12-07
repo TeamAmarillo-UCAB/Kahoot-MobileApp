@@ -1,12 +1,12 @@
-// lib/Motor_Juego_Vivo/infrastructure/datasource/game_socket_datasource_fake.dart
-
 import 'dart:async';
-
 import '../../domain/datasource/game_socket_datasource.dart';
 
 class FakeSocketDatasource implements GameSocketDatasource {
-  final _controller = StreamController<dynamic>.broadcast();
+  StreamController<dynamic> _controller = StreamController<dynamic>.broadcast();
 
+  // ------------------------------------------------------------
+  // CONNECT
+  // ------------------------------------------------------------
   @override
   Future<void> connect({
     required String pin,
@@ -15,9 +15,12 @@ class FakeSocketDatasource implements GameSocketDatasource {
     required String username,
     required String nickname,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    print('[FakeSocket] connect requested pin=$pin role=$role playerId=$playerId');
 
-    _controller.add({
+    // Pequeño delay para permitir que el BLoC se suscriba antes del primer evento
+    await Future.delayed(const Duration(milliseconds: 250));
+
+    final wrapper = {
       "event": "game_state_update",
       "data": {
         "state": "LOBBY",
@@ -36,43 +39,47 @@ class FakeSocketDatasource implements GameSocketDatasource {
         "scoreboard": [],
         "hostId": role == "HOST" ? playerId : "fake-host-id",
       }
-    });
+    };
+
+    print('[FakeSocket] connect -> emitting initial game_state_update');
+    _controller.add(wrapper);
   }
 
+  // ------------------------------------------------------------
+  // EMIT
+  // ------------------------------------------------------------
   @override
   void emit(String event, dynamic payload) {
-    print('[FakeSocket] emit called: $event payload:${payload.runtimeType}');
-    // HOST START GAME → question_started
+    print('[FakeSocket] emit event="$event"');
+
     if (event == "host_start_game") {
-      // Simulate a small server processing delay before emitting question_started
-      Future.delayed(const Duration(milliseconds: 300), () {
-        print('[FakeSocket] emitting question_started');
-        _controller.add({
-          "event": "question_started",
-          "data": {
+      final wrapper = {
+        "event": "question_started",
+        "data": {
+          "questionIndex": 1,
+          "currentSlideData": {
+            "slideId": "slide-1",
             "questionIndex": 1,
-            "currentSlideData": {
-              "slideId": "slide-1",
-              "questionIndex": 1,
-              "questionText": "¿Capital de Francia?",
-              "mediaUrl": null,
-              "timeLimitSeconds": 15,
-              "type": "MULTIPLE_CHOICE",
-              "options": [
-                {"text": "Madrid", "image": null},
-                {"text": "París", "image": null},
-                {"text": "Roma", "image": null},
-                {"text": "Londres", "image": null},
-              ]
-            }
+            "questionText": "¿Capital de Francia?",
+            "mediaUrl": null,
+            "timeLimitSeconds": 15,
+            "type": "MULTIPLE_CHOICE",
+            "options": [
+              {"text": "Madrid", "image": null},
+              {"text": "París", "image": null},
+              {"text": "Roma", "image": null},
+              {"text": "Londres", "image": null},
+            ]
           }
-        });
-      });
+        }
+      };
+
+      _controller.add(wrapper);
+      return;
     }
 
-    // PLAYER SUBMIT ANSWER → question_results
     if (event == "player_submit_answer") {
-      _controller.add({
+      final wrapper = {
         "event": "question_results",
         "data": {
           "state": "RESULTS",
@@ -80,7 +87,7 @@ class FakeSocketDatasource implements GameSocketDatasource {
           "pointsEarned": 900,
           "playerScoreboard": [
             {
-              "playerId": payload["playerId"],
+              "playerId": payload["playerId"] ?? "unknown",
               "username": "fakeUser",
               "nickname": "Fake Player",
               "totalPoints": 900,
@@ -88,12 +95,14 @@ class FakeSocketDatasource implements GameSocketDatasource {
             }
           ],
         }
-      });
+      };
+
+      _controller.add(wrapper);
+      return;
     }
 
-    // HOST NEXT PHASE → game_end
     if (event == "host_next_phase") {
-      _controller.add({
+      final wrapper = {
         "event": "game_end",
         "data": {
           "state": "END",
@@ -108,20 +117,42 @@ class FakeSocketDatasource implements GameSocketDatasource {
             }
           ],
         }
-      });
+      };
+
+      _controller.add(wrapper);
+      return;
     }
   }
 
+  // ------------------------------------------------------------
+  // simulateIncoming (DevTools)
+  // ------------------------------------------------------------
+  void simulateIncoming(Map<String, dynamic> raw) {
+    print('[FakeSocket] simulateIncoming raw event=${raw["event"]}');
+    _controller.add(raw);
+  }
+
+  // ------------------------------------------------------------
+  // LISTEN
+  // ------------------------------------------------------------
   @override
   Stream<dynamic> listen() => _controller.stream;
 
+  // ------------------------------------------------------------
+  // DISCONNECT (LA PARTE QUE ESTABA MAL)
+  // ------------------------------------------------------------
   @override
   void disconnect() {
-    _controller.close();
-  }
+    print('[FakeSocket] disconnect → resetting stream');
 
-  /// Dev helper: simulate an incoming raw websocket event (same shape as emit() would produce)
-  void simulateIncoming(Map<String, dynamic> raw) {
-    _controller.add(raw);
+    // Cerrar solo si no está cerrado
+    if (!_controller.isClosed) {
+      _controller.close();
+    }
+
+    // IMPORTANTE: crear un stream NUEVO
+    _controller = StreamController<dynamic>.broadcast();
+
+    print('[FakeSocket] new StreamController created');
   }
 }

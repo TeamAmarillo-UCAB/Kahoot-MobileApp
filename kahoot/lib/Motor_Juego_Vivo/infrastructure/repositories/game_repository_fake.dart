@@ -36,6 +36,7 @@ class FakeGameRepository implements GameRepository {
     required String username,
     required String nickname,
   }) {
+    print('[FakeGameRepository] joinGame -> socket.connect()');
     return socket.connect(
       pin: pin,
       role: role,
@@ -47,13 +48,14 @@ class FakeGameRepository implements GameRepository {
 
   @override
   Future<void> hostStartGame() {
-    print('[FakeGameRepository] hostStartGame called - emitting host_start_game');
+    print('[FakeGameRepository] hostStartGame() -> socket.emit("host_start_game")');
     socket.emit("host_start_game", {});
     return Future.value();
   }
 
   @override
   Future<void> hostNextPhase() {
+    print('[FakeGameRepository] hostNextPhase() -> socket.emit("host_next_phase")');
     socket.emit("host_next_phase", {});
     return Future.value();
   }
@@ -64,44 +66,48 @@ class FakeGameRepository implements GameRepository {
     required int answerId,
     required int timeElapsedMs,
   }) {
+    print('[FakeGameRepository] submitAnswer() -> socket.emit("player_submit_answer")');
+
     socket.emit("player_submit_answer", {
       "playerId": "fake-player",
       "questionId": questionId,
       "answerId": answerId,
       "timeElapsedMs": timeElapsedMs,
     });
+
     return Future.value();
   }
 
   @override
-  Stream<GameStateEntity> listenToGameState() {
-    return socket.listen().map((raw) {
-      print('[FakeGameRepository] raw event from socket: $raw');
-      final event = raw["event"];
-      final data = raw["data"];
+  // lib/Motor_Juego_Vivo/infrastructure/repositories/game_repository_fake.dart
 
-      final next = GameStateMapper.mapEvent(
-        oldState: _currentState,
-        event: event,
-        data: data is Map ? _stringifyMap(data) : {},
-      );
+Stream<GameStateEntity> listenToGameState() {
+  return socket.listen().map((raw) {
+    print('[FakeRepo] RAW → $raw');
 
-      print('[FakeGameRepository] mapped state phase: ${next.phase} players:${next.players.length}');
-      for (var p in next.players) {
-        print('[FakeGameRepository] mapped player -> id:${p.playerId} nick:${p.nickname} role:${p.role}');
-      }
+    final event = raw["event"];
+    final data = raw["data"];
 
-      _currentState = next;
-      return next;
-    });
-  }
+    final next = GameStateMapper.mapEvent(
+      oldState: _currentState,
+      event: event,
+      data: data is Map ? _stringify(data) : {},
+    );
 
-  Map<String, dynamic> _stringifyMap(Map raw) {
-    return raw.map((k, v) => MapEntry(k.toString(), v));
-  }
+    print('[FakeRepo] MAPPED → phase=${next.phase} players=${next.players.length}');
+    _currentState = next;
+    return next;
+  });
+}
+
+Map<String, dynamic> _stringify(Map raw) {
+  return raw.map((k, v) => MapEntry(k.toString(), v));
+}
+
 
   @override
   void disconnect() {
+    print('[FakeGameRepository] disconnect()');
     socket.disconnect();
     _currentState = GameStateEntity.initial();
   }

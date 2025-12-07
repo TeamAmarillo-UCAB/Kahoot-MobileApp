@@ -1,162 +1,147 @@
+// lib/Motor_Juego_Vivo/presentation/widgets/dev_phase_controls.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/question_slide.dart';
-import '../../domain/entities/scoreboard_entry.dart';
-import '../../domain/entities/player_info.dart';
 import '../../domain/entities/game_state.dart';
-import '../bloc/game_bloc.dart';
 import '../../infrastructure/datasource/game_socket_datasource_fake.dart';
-import '../bloc/game_event.dart';
+import '../bloc/game_bloc.dart';
 
-/// Small developer helper to force game phases locally (no validations).
+/// Dev Tools exclusivamente para entorno FAKE.
+/// - Siempre usa FakeSocketDatasource.simulateIncoming()
+/// - Nunca toca el BLoC directamente
+/// - Nunca llama a repositorio real
+/// - Genera RAW events idénticos a los del backend
 class DevPhaseControls extends StatelessWidget {
   const DevPhaseControls({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<GameBloc>();
+    final bloc = context.watch<GameBloc>();
+    final phase = bloc.state.gameState.phase;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        TextButton(
-          onPressed: () => _forcePhase(context, GamePhase.lobby),
-          child: const Text('DEV: Lobby'),
+        const SizedBox(height: 12),
+        Text("Dev Tools (FAKE)", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _btn(context, "Lobby", GamePhase.lobby),
+            SizedBox(width: 8),
+            _btn(context, "Question", GamePhase.question),
+            SizedBox(width: 8),
+            _btn(context, "Results", GamePhase.results),
+            SizedBox(width: 8),
+            _btn(context, "End", GamePhase.end),
+          ],
         ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: () => _forcePhase(context, GamePhase.question),
-          child: const Text('DEV: Question'),
-        ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: () => _forcePhase(context, GamePhase.results),
-          child: const Text('DEV: Results'),
-        ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: () => _forcePhase(context, GamePhase.end),
-          child: const Text('DEV: End'),
-        ),
+        Text("Actual: ${phase.toString().split('.').last}"),
+        SizedBox(height: 12),
       ],
     );
   }
 
+  Widget _btn(BuildContext context, String label, GamePhase phase) {
+    return TextButton(
+      onPressed: () => _forcePhase(context, phase),
+      child: Text("DEV: $label"),
+    );
+  }
+
+  /// Fuerza una fase enviando RAW events al FakeSocketDatasource.
   void _forcePhase(BuildContext context, GamePhase target) {
     final bloc = context.read<GameBloc>();
-    final current = bloc.state.gameState;
+    final state = bloc.state.gameState;
 
-    // Build a raw event that resembles what the socket would send, then try to
-    // inject it into the FakeSocketDatasource (if available). If not, fallback
-    // to dispatching a GameEventServerUpdate directly to the bloc.
-    Map<String, dynamic> raw = {};
+    final fakeSocket = RepositoryProvider.of<FakeSocketDatasource>(context, listen: false);
 
+    print("[DevTools] Force → $target");
+
+    final raw = _buildRawEvent(state, target);
+    print("[DevTools] simulateIncoming: $raw");
+
+    fakeSocket.simulateIncoming(raw);
+  }
+
+  /// Crea eventos RAW idénticos a los que emite el backend real.
+  Map<String, dynamic> _buildRawEvent(GameStateEntity s, GamePhase target) {
     switch (target) {
       case GamePhase.lobby:
-        raw = {
-          'event': 'game_state_update',
-          'data': {
-            'state': 'LOBBY',
-            'players': current.players.map((p) => {
-                  'playerId': p.playerId,
-                  'username': p.username,
-                  'nickname': p.nickname,
-                  'totalPoints': p.totalScore,
-                  'role': p.isHost ? 'HOST' : 'PLAYER',
+        return {
+          "event": "game_state_update",
+          "data": {
+            "state": "LOBBY",
+            "players": s.players.map((p) => {
+                  "playerId": p.playerId,
+                  "username": p.username,
+                  "nickname": p.nickname,
+                  "totalPoints": p.totalScore,
+                  "role": p.isHost ? "HOST" : "PLAYER",
                 }).toList(),
-            'quizTitle': current.quizTitle ?? 'Dev Quiz',
-            'questionIndex': current.questionIndex,
-            'scoreboard': [],
+            "quizTitle": s.quizTitle ?? "Dev Quiz",
+            "quizMediaUrl": null,
+            "questionIndex": 0,
+            "scoreboard": [],
           }
         };
-        break;
 
       case GamePhase.question:
-        final idx = current.questionIndex + 1;
-        raw = {
-          'event': 'question_started',
-          'data': {
-            'questionIndex': idx,
-            'currentSlideData': {
-              'slideId': 'slide-$idx',
-              'questionIndex': idx,
-              'questionText': 'Pregunta dev #$idx',
-              'mediaUrl': null,
-              'timeLimitSeconds': 15,
-              'type': 'MULTIPLE_CHOICE',
-              'options': [
-                {'text': 'A', 'image': null},
-                {'text': 'B', 'image': null},
-                {'text': 'C', 'image': null},
-                {'text': 'D', 'image': null},
-              ]
+        final idx = s.questionIndex + 1;
+        return {
+          "event": "question_started",
+          "data": {
+            "questionIndex": idx,
+            "currentSlideData": {
+              "slideId": "dev-$idx",
+              "questionIndex": idx,
+              "questionText": "Pregunta DEV #$idx",
+              "mediaUrl": null,
+              "timeLimitSeconds": 15,
+              "type": "MULTIPLE_CHOICE",
+              "options": [
+                {"text": "A", "image": null},
+                {"text": "B", "image": null},
+                {"text": "C", "image": null},
+                {"text": "D", "image": null},
+              ],
             }
           }
         };
-        break;
 
       case GamePhase.results:
-        raw = {
-          'event': 'question_results',
-          'data': {
-            'state': 'RESULTS',
-            'correctAnswerId': 1,
-            'pointsEarned': 100,
-            'playerScoreboard': current.players.map((p) => {
-                  'playerId': p.playerId,
-                  'username': p.username,
-                  'nickname': p.nickname,
-                  'totalPoints': p.totalScore + 100,
-                  'position': 1,
+        return {
+          "event": "question_results",
+          "data": {
+            "state": "RESULTS",
+            "correctAnswerId": 1,
+            "pointsEarned": 100,
+            "playerScoreboard": s.players.map((p) => {
+                  "playerId": p.playerId,
+                  "username": p.username,
+                  "nickname": p.nickname,
+                  "totalPoints": p.totalScore + 100,
+                  "position": 1,
                 }).toList(),
           }
         };
-        break;
 
       case GamePhase.end:
-        raw = {
-          'event': 'game_end',
-          'data': {
-            'state': 'END',
-            'winnerNickname': current.players.isNotEmpty ? current.players.first.nickname : 'Dev',
-            'finalScoreboard': current.players.map((p) => {
-                  'playerId': p.playerId,
-                  'username': p.username,
-                  'nickname': p.nickname,
-                  'totalPoints': p.totalScore + 200,
-                  'position': 1,
+        return {
+          "event": "game_end",
+          "data": {
+            "state": "END",
+            "winnerNickname": s.players.isNotEmpty ? s.players.first.nickname : "Dev",
+            "finalScoreboard": s.players.map((p) => {
+                  "playerId": p.playerId,
+                  "username": p.username,
+                  "nickname": p.nickname,
+                  "totalPoints": p.totalScore + 200,
+                  "position": 1,
                 }).toList(),
           }
         };
-        break;
-    }
-
-    // Try to grab the FakeSocketDatasource from RepositoryProvider and inject.
-    try {
-      final fakeSocket = RepositoryProvider.of<FakeSocketDatasource>(context, listen: false);
-      fakeSocket.simulateIncoming(raw);
-      return;
-    } catch (_) {
-      // ignore - fallback to dispatch below
-    }
-
-    // Fallback: dispatch mapped state directly to BLoC
-    try {
-      // For question_started we want to map to GameState similarly to repo
-      if (raw['event'] == 'question_started') {
-        final idx = raw['data']['questionIndex'] as int? ?? (current.questionIndex + 1);
-        final slide = QuestionSlide.fromJson(raw['data']['currentSlideData'] ?? {});
-        bloc.add(GameEventServerUpdate(current.copyWith(phase: GamePhase.question, questionIndex: idx, currentSlide: slide)));
-      } else if (raw['event'] == 'game_state_update') {
-        bloc.add(GameEventServerUpdate(current.copyWith(phase: GamePhase.lobby)));
-      } else if (raw['event'] == 'question_results') {
-        bloc.add(GameEventServerUpdate(current.copyWith(phase: GamePhase.results)));
-      } else if (raw['event'] == 'game_end') {
-        bloc.add(GameEventServerUpdate(current.copyWith(phase: GamePhase.end)));
-      }
-    } catch (e) {
-      bloc.add(GameEventServerUpdate(current));
     }
   }
 }
