@@ -27,21 +27,33 @@ import 'Motor_Juego_Vivo/presentation/pages/host_podium_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp( MyApp());
+
+  // ✅ 1. Instanciar dependencias FUERA del árbol de widgets (Singletons reales)
+  final api = FakeApiDatasource();
+  final socket = FakeSocketDatasource();
+  final repository = FakeGameRepository(api: api, socket: socket);
+
+  // Inyectamos las instancias ya creadas
+  runApp(MyApp(
+    socket: socket,
+    repository: repository,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  // Recibimos las dependencias
+  final FakeSocketDatasource socket;
+  final FakeGameRepository repository;
+
+  const MyApp({
+    Key? key,
+    required this.socket,
+    required this.repository,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
-    // Fake implementations
-    final api = FakeApiDatasource();
-    final socket = FakeSocketDatasource();
-    final repository = FakeGameRepository(api: api, socket: socket);
-
-    // Usecases
+    // Casos de uso (estos son ligeros, pueden ir aquí o arriba, pero mejor aquí usando el repo fijo)
     final joinUsecase = JoinGameUsecase(repository);
     final hostStart = HostStartGameUsecase(repository);
     final hostNext = HostNextPhaseUsecase(repository);
@@ -49,15 +61,14 @@ class MyApp extends StatelessWidget {
     final listenUsecase = ListenGameEventsUsecase(repository);
     final disconnectUsecase = DisconnectUsecase(repository);
 
-    // --------------------------
-    //  PROVIDERS ENCIMA DEL MaterialApp 🔥
-    // --------------------------
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider.value(value: repository),
-        RepositoryProvider.value(value: socket),
+        // Pasamos las instancias fijas
+        RepositoryProvider<FakeGameRepository>.value(value: repository),
+        RepositoryProvider<FakeSocketDatasource>.value(value: socket),
       ],
       child: BlocProvider(
+        lazy: false, // Forzamos arranque
         create: (_) => GameBloc(
           joinGame: joinUsecase,
           hostStartGame: hostStart,

@@ -1,7 +1,8 @@
-import '../../domain/entities/question_slide.dart';
+// Si lo corrigieras, debería ser algo como esto:
+import '../../domain/entities/player_info.dart';
 
-class QuestionMapper {
-  static QuestionSlide fromWs(Map<String, dynamic> json) {
-    return QuestionSlide.fromJson(json);
+class PlayerMapper {
+  static PlayerInfo fromWs(Map<String, dynamic> json) {
+    return PlayerInfo.fromJson(json);
   }
 }
