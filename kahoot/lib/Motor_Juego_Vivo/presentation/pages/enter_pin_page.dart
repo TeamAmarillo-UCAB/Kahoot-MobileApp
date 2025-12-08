@@ -16,7 +16,17 @@ class _EnterPinPageState extends State<EnterPinPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Entrar con PIN')),
+      // 👇 Agregamos un botón de regreso al home
+      appBar: AppBar(
+        title: const Text('Entrar con PIN'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back), // O Icons.close, según prefieras
+          onPressed: () {
+            // Usa pop para salir del Navigator anidado del GameModuleWrapper
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
