@@ -47,31 +47,19 @@ class _TimerWidgetState extends State<TimerWidget> {
   @override
   Widget build(BuildContext context) {
     final pct = widget.seconds == 0 ? 0.0 : _remaining / widget.seconds;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    
-    // El color del indicador cambia a rojo al final para dar urgencia
-    final indicatorColor = Color.lerp(Colors.red.shade700, primaryColor, pct); 
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Indicador de progreso más grueso y redondeado
         ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: LinearProgressIndicator(
-            value: pct, 
-            minHeight: 15, // Aumentamos la altura
-            backgroundColor: Colors.grey.shade800, // Fondo más oscuro para el tema
-            color: indicatorColor,
-          ),
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(value: pct, minHeight: 8, backgroundColor: Colors.grey[300], color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Tiempo restante', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white70)),
-            // Mostramos el tiempo restante de forma destacada
-            Text('${_remaining}s', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
+            Text('Tiempo restante', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('${_remaining}s', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
       ],

@@ -24,15 +24,18 @@ class HostResultsPage extends StatelessWidget {
       body: BlocBuilder<GameBloc, GameUiState>(builder: (context, state) {
         final state = context.select((GameBloc bloc) => bloc.state);
 
+        // 🚀 CORRECCIÓN DEL CRASH: Aplazamos la navegación.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!state.isResults) {
+            // ✅ CORRECCIÓN DE RUTA: Eliminar rootNavigator: true.
             if (state.isQuestion) Navigator.of(context).pushReplacementNamed('/host_question');
+            // ✅ CORRECCIÓN DE RUTA: Eliminar rootNavigator: true.
             if (state.isEnd) Navigator.of(context).pushReplacementNamed('/host_podium');
           }
         });
 
         return Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               if (state.gameState.correctAnswerId != null)
