@@ -10,19 +10,35 @@ class PlayerResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final darkBackground = const Color(0xFF222222);
+    final cardColor = Colors.grey.shade900;
+    final kahootYellow = const Color(0xFFFFD54F);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Resultados')),
+      backgroundColor: darkBackground,
+      appBar: AppBar(
+          backgroundColor: darkBackground,
+          title: const Text('Resultados', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
       body: BlocBuilder<GameBloc, GameUiState>(builder: (context, state) {
+        // Navegamos si la fase ha cambiado
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!state.isResults) {
+            if (state.isQuestion) Navigator.of(context).pushReplacementNamed('/player_question');
+            if (state.isEnd) Navigator.of(context).pushReplacementNamed('/podium');
+          }
+        });
+        
         return Column(
           children: [
             if (state.gameState.correctAnswerId != null)
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  color: cardColor,
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Text('Respuesta correcta: ${state.gameState.correctAnswerId}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Respuesta correcta: ${state.gameState.correctAnswerId}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: kahootYellow)),
                   ),
                 ),
               ),

@@ -1,5 +1,3 @@
-// lib/Motor_Juego_Vivo/presentation/widgets/dev_phase_controls.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,10 +6,6 @@ import '../../infrastructure/datasource/game_socket_datasource_fake.dart';
 import '../bloc/game_bloc.dart';
 
 /// Dev Tools exclusivamente para entorno FAKE.
-/// - Siempre usa FakeSocketDatasource.simulateIncoming()
-/// - Nunca toca el BLoC directamente
-/// - Nunca llama a repositorio real
-/// - Genera RAW events idénticos a los del backend
 class DevPhaseControls extends StatelessWidget {
   const DevPhaseControls({Key? key}) : super(key: key);
 
@@ -19,32 +13,36 @@ class DevPhaseControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.watch<GameBloc>();
     final phase = bloc.state.gameState.phase;
+    // Usamos colores claros para el tema oscuro
+    final textColor = Colors.white70; 
 
     return Column(
       children: [
         const SizedBox(height: 12),
-        Text("Dev Tools (FAKE)", style: TextStyle(fontWeight: FontWeight.bold)),
+        Text("Dev Tools (FAKE)", style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _btn(context, "Lobby", GamePhase.lobby),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             _btn(context, "Question", GamePhase.question),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             _btn(context, "Results", GamePhase.results),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             _btn(context, "End", GamePhase.end),
           ],
         ),
-        Text("Actual: ${phase.toString().split('.').last}"),
-        SizedBox(height: 12),
+        Text("Actual: ${phase.toString().split('.').last}", style: TextStyle(color: textColor)),
+        const SizedBox(height: 12),
       ],
     );
   }
 
   Widget _btn(BuildContext context, String label, GamePhase phase) {
     return TextButton(
+      // Usamos un color de texto más visible para el botón
+      style: TextButton.styleFrom(foregroundColor: Colors.lightBlueAccent), 
       onPressed: () => _forcePhase(context, phase),
       child: Text("DEV: $label"),
     );
@@ -55,18 +53,27 @@ class DevPhaseControls extends StatelessWidget {
     final bloc = context.read<GameBloc>();
     final state = bloc.state.gameState;
 
-    final fakeSocket = RepositoryProvider.of<FakeSocketDatasource>(context, listen: false);
+    // Asegúrate de que FakeSocketDatasource esté accesible
+    try {
+      final fakeSocket = RepositoryProvider.of<FakeSocketDatasource>(context, listen: false);
 
-    print("[DevTools] Force → $target");
+      debugPrint("[DevTools] Force → $target");
 
-    final raw = _buildRawEvent(state, target);
-    print("[DevTools] simulateIncoming: $raw");
+      final raw = _buildRawEvent(state, target);
+      debugPrint("[DevTools] simulateIncoming: $raw");
 
-    fakeSocket.simulateIncoming(raw);
+      fakeSocket.simulateIncoming(raw);
+    } catch (e) {
+      // Manejo de error si FakeSocketDatasource no está en el árbol
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: FakeSocketDatasource no encontrado en el árbol de widgets.', style: TextStyle(color: Colors.white))),
+      );
+    }
   }
 
-  /// Crea eventos RAW idénticos a los que emite el backend real.
+  /// Crea eventos RAW idénticos a los que emite el backend real. (Sin cambios funcionales)
   Map<String, dynamic> _buildRawEvent(GameStateEntity s, GamePhase target) {
+    // ... Lógica de construcción de RAW Eventos (sin cambios)
     switch (target) {
       case GamePhase.lobby:
         return {

@@ -12,59 +12,83 @@ class LobbyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final darkBackground = const Color(0xFF222222);
+    final kahootYellow = const Color(0xFFFFD54F);
+
     return BlocListener<GameBloc, GameUiState>(
       listener: (context, state) {
-        if (state.isQuestion) {
-          Navigator.of(context).pushReplacementNamed('/player_question');
-        } else if (state.isResults) {
-          Navigator.of(context).pushReplacementNamed('/player_results');
-        } else if (state.isEnd) {
-          Navigator.of(context).pushReplacementNamed('/podium');
-        }
+        // 🚀 CORRECCIÓN CLAVE: Diferir la navegación 🚀
+        // Esto permite que el estado del widget se estabilice antes de cambiar de ruta.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (state.isQuestion) {
+            // Usar rootNavigator: true es a menudo más seguro.
+            Navigator.of(context, rootNavigator: true).pushReplacementNamed('/player_question');
+          } else if (state.isResults) {
+            Navigator.of(context, rootNavigator: true).pushReplacementNamed('/player_results');
+          } else if (state.isEnd) {
+            Navigator.of(context, rootNavigator: true).pushReplacementNamed('/podium');
+          }
+        });
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Lobby')),
+        backgroundColor: darkBackground,
+        appBar: AppBar(
+          backgroundColor: darkBackground,
+          title: const Text('Lobby', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              context.read<GameBloc>().add(GameEventDisconnect());
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+          ),
+        ),
         body: BlocBuilder<GameBloc, GameUiState>(builder: (context, state) {
           final isHost = state.gameState.players.any((p) => p.isHost);
           return Column(
             children: [
-              if (state.isLoading) const LinearProgressIndicator(),
+              if (state.isLoading) const LinearProgressIndicator(color: Colors.red),
               Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(state.gameState.quizTitle ?? 'Quiz', style: Theme.of(context).textTheme.titleLarge),
+                    Text(state.gameState.quizTitle ?? 'Quiz', style: Theme.of(context).textTheme.titleLarge!.copyWith(color: kahootYellow, fontSize: 24)),
                     ElevatedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.share),
+                      icon: const Icon(Icons.share, color: Colors.brown),
                       label: const Text('Invitar'),
-                      style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kahootYellow,
+                        foregroundColor: Colors.brown,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
                     )
                   ],
                 ),
               ),
               Expanded(child: PlayerListWidget(players: state.gameState.players)),
-              const SizedBox(height: 8),
               const DevPhaseControls(),
-              const SizedBox(height: 8),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: isHost ? Colors.green.shade700 : Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                     onPressed: state.isLoading
                         ? null
                         : () {
                             if (isHost) {
                               context.read<GameBloc>().add(GameEventHostStartGame());
                             } else {
-                              // show waiting snackbar
                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Esperando a que el host inicie el juego')));
                             }
                           },
-                    child: state.isLoading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(isHost ? 'Iniciar juego' : 'Esperando al host'),
+                    child: state.isLoading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(isHost ? 'Iniciar juego' : 'Esperando al host', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),

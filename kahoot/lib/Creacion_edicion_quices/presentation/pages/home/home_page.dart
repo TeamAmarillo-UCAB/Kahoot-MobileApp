@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../create/create_kahoot_page.dart';
+import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
+
+
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -52,10 +55,10 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFFFD54F),
+                  backgroundColor: const Color(0xFFFFD54F),
                   foregroundColor: Colors.brown,
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
                 ),
                 onPressed: () {
                   Navigator.of(context).push(
@@ -74,7 +77,12 @@ class HomePage extends StatelessWidget {
         unselectedItemColor: Colors.brown.withOpacity(0.7),
         currentIndex: 2,
         onTap: (index) {
-          if (index == 3) {
+          if (index == 2) { // Índice de "Unirse"
+            // ✅ Navegación al módulo de juego (Wrapper)
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GameModuleWrapper()),
+            );
+          } else if (index == 3) {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const CreateKahootPage()),
             );
