@@ -148,7 +148,7 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
     urlToFetch = 'https://backcomun-production.up.railway.app/media/$idOrUrl';
 
     try {
-      print('🌐 Descargando bytes para vista previa desde: $urlToFetch');
+      print('Descargando bytes para vista previa desde: $urlToFetch');
 
       // Ejecuta la solicitud
       final response = await dio.get(
