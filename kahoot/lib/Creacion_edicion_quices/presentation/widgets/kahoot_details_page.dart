@@ -53,7 +53,6 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       initialAuthorId: 'author123',
     );
 
-    // Prefill if editing an existing kahoot
     final k = widget.initialKahoot;
     if (k != null) {
       _titleController.text = k.title;

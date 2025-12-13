@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 
-const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backcomun-production.up.railway.app');
+const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api');
 
 void main() {
   runApp(const MyApp());
