@@ -67,7 +67,7 @@ class _KahootViewPageState extends State<KahootViewPage> {
           TextButton.icon(
             onPressed: () async {
               final result = await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: kahoot)),
+                MaterialPageRoute(builder: (_) => KahootDetailsPage()),
               );
               Navigator.of(context).pop(result);
             },
@@ -131,7 +131,7 @@ class _KahootViewPageState extends State<KahootViewPage> {
                                 TextButton.icon(
                                   onPressed: () async {
                                     final result = await Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: kahoot)),
+                                      MaterialPageRoute(builder: (_) => KahootDetailsPage()),
                                     );
                                     Navigator.of(context).pop(result);
                                   },

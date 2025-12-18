@@ -23,18 +23,17 @@ class KahootDatasourceImpl implements KahootDatasource {
   ) async {
     // Build body following backend contract; map empty strings to nulls where applicable
     Map<String, dynamic> body = {
-      'authorId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
       'title': title,
       'description': description,
       'coverImageId': image.isEmpty ? null : image,
-      'visibility': "private", // backend expects 'private' | 'public'
+      'visibility': "private",
       'status': 'draft',
       'category': 'Tecnología',
       'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
       'questions': question.map((q) {
         final String qt = (q.title.isNotEmpty ? q.title : q.text);
         final String qMedia = q.mediaId;
-        final String qType = _mapQuestionType(q.type);
+        final String qType = _mapQuestionTypeV2(q.type);
         final answersMapped = q.answer.asMap().entries.map((entry) {
           final int idx = entry.key;
           final Answer a = entry.value;
@@ -43,7 +42,6 @@ class KahootDatasourceImpl implements KahootDatasource {
           String? answerText;
           String? mediaId;
           if (text.isNotEmpty && media.isNotEmpty) {
-            // Priorizar texto si ambos existen
             answerText = text;
             mediaId = null;
           } else if (text.isNotEmpty) {
@@ -53,7 +51,6 @@ class KahootDatasourceImpl implements KahootDatasource {
             answerText = null;
             mediaId = media;
           } else {
-            // Si es true/false y ambos vacíos, poner etiquetas por defecto
             if (qType == 'true_false') {
               answerText = idx == 0 ? 'Verdadero' : 'Falso';
               mediaId = null;
@@ -63,16 +60,16 @@ class KahootDatasourceImpl implements KahootDatasource {
             }
           }
           return {
-            'answerText': answerText,
+            'text': answerText,
             'mediaId': mediaId,
             'isCorrect': a.isCorrect,
           };
         }).toList();
 
         return {
-          'questionText': qt,
+          'text': qt,
           'mediaId': qMedia.isEmpty ? null : qMedia,
-          'questionType': qType,
+          'type': qType,
           'timeLimit': q.timeLimitSeconds,
           'points': q.points,
           'answers': answersMapped,
@@ -113,105 +110,121 @@ class KahootDatasourceImpl implements KahootDatasource {
       existing = null;
     }
     final Map<String, dynamic> body = { 
-      'authorId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
-        'title': kahoot.title.isNotEmpty
+      'title': kahoot.title.isNotEmpty
           ? kahoot.title
           : (existing?.title ?? kahoot.title),
-        'description': kahoot.description.isNotEmpty
+      'description': kahoot.description.isNotEmpty
           ? kahoot.description
           : (existing?.description ?? kahoot.description),
-        'coverImageId': kahoot.image.isNotEmpty
+      'coverImageId': kahoot.image.isNotEmpty
           ? kahoot.image
           : ((existing?.image ?? '') .isNotEmpty ? existing!.image : null),
       'visibility': "private",
       'status': 'draft',
       'category': 'Tecnología',
-      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4", 
-      'questions': kahoot.question.asMap().entries.map((entry) {
-        final int qIdx = entry.key;
-        final Question q = entry.value;
-        final Question? exQ = (existing != null && existing.question.length > qIdx)
-          ? existing.question[qIdx]
-            : null;
-        final String qtCandidate = q.text.isNotEmpty
-            ? q.text
-            : (q.title.isNotEmpty ? q.title : '');
-        final String qt = qtCandidate.isNotEmpty
-            ? qtCandidate
-            : ((exQ?.text ?? exQ?.title ?? ''));
-        final String qMedia = q.mediaId;
-        final String qType = _mapQuestionType(q.type);
-        // Mapear respuestas con índice para manejar true/false por defecto
-        final answersMappedAll = q.answer.asMap().entries.map((aEntry) {
-          final int idx = aEntry.key;
-          final Answer a = aEntry.value;
-          final Answer? exA = (exQ != null && exQ.answer.length > idx)
-              ? exQ.answer[idx]
-              : null;
-          final String text = a.text.trim();
-          final String media = a.image.trim();
-          String? answerText;
-          String? mediaId;
-          if (text.isNotEmpty && media.isNotEmpty) {
-            answerText = text;
-            mediaId = null;
-          } else if (text.isNotEmpty) {
-            answerText = text;
-            mediaId = null;
-          } else if (media.isNotEmpty) {
-            answerText = null;
-            mediaId = media;
-          } else {
-            // Ambos vacíos: si es true/false, poner etiquetas por defecto
-            if (qType == 'true_false') {
-              answerText = idx == 0 ? 'Verdadero' : 'Falso';
-              mediaId = null;
-            } else {
-              // Preserve existing answerText/mediaId if available
-              final String exText = (exA?.text ?? '').trim();
-              final String exMedia = (exA?.image ?? '').trim();
-              if (exText.isNotEmpty) {
-                answerText = exText;
-                mediaId = null;
-              } else if (exMedia.isNotEmpty) {
-                answerText = null;
-                mediaId = exMedia;
-              } else {
-                answerText = null;
-                mediaId = null;
-              }
-            }
-          }
-          return {
-            'answerText': answerText,
-            'mediaId': mediaId,
-            'isCorrect': a.isCorrect,
-          };
-        }).toList();
-
-        // Filtrar respuestas inválidas (ambos nulos) para cumplir la regla backend
-        final answersMapped = answersMappedAll
-            .where((a) => a['answerText'] != null || a['mediaId'] != null)
-            .toList();
-
-        // Debug por pregunta
-        // ignore: avoid_print
-        print('Pregunta #' + qIdx.toString() + ' text="' + (qt) + '" respuestas_validas=' + answersMapped.length.toString());
-
-        return {
-          'questionText': qt,
-            'mediaId': qMedia.isNotEmpty
-              ? qMedia
-              : (((exQ?.mediaId ?? '')).isNotEmpty ? exQ!.mediaId : null),
-          'questionType': qType,
+      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
+      // Combinar preguntas existentes y nuevas (sin duplicar por texto)
+      'questions': (() {
+        final List<Map<String, dynamic>> existingQuestions = (existing?.question.map((q) => {
+          'text': q.text,
+          'mediaId': q.mediaId.isNotEmpty ? q.mediaId : null,
+          'type': _mapQuestionTypeV2(q.type),
           'timeLimit': q.timeLimitSeconds,
           'points': q.points,
-          'answers': answersMapped,
-        };
-      })
-      // Omitir preguntas sin texto luego del merge
-      .where((qMap) => ((qMap['questionText'] as String?) ?? '').trim().isNotEmpty)
-      .toList(),
+          'answers': q.answer.map((a) => {
+            'text': a.text,
+            'mediaId': a.image.isNotEmpty ? a.image : null,
+            'isCorrect': a.isCorrect,
+          }).toList(),
+        }).toList() ?? []);
+        final List<Map<String, dynamic>> newQuestions = kahoot.question.asMap().entries.map((entry) {
+          final int qIdx = entry.key;
+          final Question q = entry.value;
+          final Question? exQ = (existing != null && existing.question.length > qIdx)
+              ? existing.question[qIdx]
+              : null;
+          final String qtCandidate = q.text.isNotEmpty
+              ? q.text
+              : (q.title.isNotEmpty ? q.title : '');
+          final String qt = qtCandidate.isNotEmpty
+              ? qtCandidate
+              : ((exQ?.text ?? exQ?.title ?? ''));
+          final String qMedia = q.mediaId;
+          final String qType = _mapQuestionTypeV2(q.type);
+          final answersMappedAll = q.answer.asMap().entries.map((aEntry) {
+            final int idx = aEntry.key;
+            final Answer a = aEntry.value;
+            final Answer? exA = (exQ != null && exQ.answer.length > idx)
+                ? exQ.answer[idx]
+                : null;
+            final String text = a.text.trim();
+            final String media = a.image.trim();
+            String? answerText;
+            String? mediaId;
+            if (text.isNotEmpty && media.isNotEmpty) {
+              answerText = text;
+              mediaId = null;
+            } else if (text.isNotEmpty) {
+              answerText = text;
+              mediaId = null;
+            } else if (media.isNotEmpty) {
+              answerText = null;
+              mediaId = media;
+            } else {
+              if (qType == 'true_false') {
+                answerText = idx == 0 ? 'Verdadero' : 'Falso';
+                mediaId = null;
+              } else {
+                final String exText = (exA?.text ?? '').trim();
+                final String exMedia = (exA?.image ?? '').trim();
+                if (exText.isNotEmpty) {
+                  answerText = exText;
+                  mediaId = null;
+                } else if (exMedia.isNotEmpty) {
+                  answerText = null;
+                  mediaId = exMedia;
+                } else {
+                  answerText = null;
+                  mediaId = null;
+                }
+              }
+            }
+            return {
+              'text': answerText,
+              'mediaId': mediaId,
+              'isCorrect': a.isCorrect,
+            };
+          }).toList();
+          final answersMapped = answersMappedAll
+              .where((a) => a['text'] != null || a['mediaId'] != null)
+              .toList();
+          print('Pregunta #' + qIdx.toString() + ' text="' + (qt) + '" respuestas_validas=' + answersMapped.length.toString());
+          return {
+            'text': qt,
+            'mediaId': qMedia.isNotEmpty
+                ? qMedia
+                : (((exQ?.mediaId ?? '')).isNotEmpty ? exQ!.mediaId : null),
+            'type': qType,
+            'timeLimit': q.timeLimitSeconds,
+            'points': q.points,
+            'answers': answersMapped,
+          };
+        })
+        // Omitir preguntas sin texto luego del merge
+        .where((qMap) => ((qMap['text'] as String?) ?? '').trim().isNotEmpty)
+        .toList();
+        // Combinar sin duplicar por texto
+        final Set<String> seenTexts = {};
+        final List<Map<String, dynamic>> combined = [];
+        for (final q in [...existingQuestions, ...newQuestions]) {
+          final t = (q['text'] as String?)?.trim() ?? '';
+          if (t.isNotEmpty && !seenTexts.contains(t)) {
+            seenTexts.add(t);
+            combined.add(q);
+          }
+        }
+        return combined;
+      })(),
     };
 
     // Debug: log PUT payload before sending
@@ -270,16 +283,16 @@ class KahootDatasourceImpl implements KahootDatasource {
           final qm = q as Map<String, dynamic>;
           final answersRaw = (qm['answers'] as List?) ?? const [];
           return Question(
-            text: (qm['questionText'] as String?) ?? '',
-            title: (qm['questionText'] as String?) ?? '',
+            text: (qm['text'] as String?) ?? '',
+            title: (qm['text'] as String?) ?? '',
             mediaId: (qm['mediaId'] as String?) ?? '',
-            type: QuestionTypeX.fromString((qm['questionType'] as String?) ?? 'quiz'),
+            type: QuestionTypeX.fromString((qm['type'] as String?) ?? 'quiz_single'),
             points: (qm['points'] as int?) ?? 0,
             timeLimitSeconds: (qm['timeLimit'] as int?) ?? 0,
             answer: answersRaw.map((a) {
               final am = a as Map<String, dynamic>;
               return Answer(
-                text: (am['answerText'] as String?) ?? '',
+                text: (am['text'] as String?) ?? '',
                 image: (am['mediaId'] as String?) ?? '',
                 isCorrect: (am['isCorrect'] as bool?) ?? false,
                 questionId: '',
@@ -289,8 +302,8 @@ class KahootDatasourceImpl implements KahootDatasource {
         }).toList();
 
         return Kahoot(
-          kahootId: (m['kahootId'] as String?) ?? (m['id'] as String? ?? ''),
-          authorId: (m['authorId'] as String?) ?? '',
+          kahootId: '',
+          authorId: '',
           title: (m['title'] as String?) ?? '',
           description: (m['description'] as String?) ?? '',
           visibility: KahootVisibilityX.fromString((m['visibility'] as String?) ?? 'private'),
@@ -338,8 +351,8 @@ class KahootDatasourceImpl implements KahootDatasource {
           final qm = q as Map<String, dynamic>;
           final answersRaw = (qm['answers'] as List?) ?? const [];
           return Question(
-            text: (qm['questionText'] as String?) ?? '',
-            title: (qm['questionText'] as String?) ?? '',
+            text: (qm['text'] as String?) ?? '',
+            title: (qm['text'] as String?) ?? '',
             mediaId: (qm['mediaId'] as String?) ?? '',
             type: QuestionTypeX.fromString((qm['questionType'] as String?) ?? 'quiz'),
             points: (qm['points'] as int?) ?? 0,
@@ -347,7 +360,7 @@ class KahootDatasourceImpl implements KahootDatasource {
             answer: answersRaw.map((a) {
               final am = a as Map<String, dynamic>;
               return Answer(
-                text: (am['answerText'] as String?) ?? '',
+                text: (am['text'] as String?) ?? '',
                 image: (am['mediaId'] as String?) ?? '',
                 isCorrect: (am['isCorrect'] as bool?) ?? false,
                 questionId: '',
@@ -389,8 +402,8 @@ class KahootDatasourceImpl implements KahootDatasource {
         final qm = q as Map<String, dynamic>;
         final answersRaw = (qm['answers'] as List?) ?? const [];
         return Question(
-          text: (qm['questionText'] as String?) ?? '',
-          title: (qm['questionText'] as String?) ?? '',
+          text: (qm['text'] as String?) ?? '',
+          title: (qm['text'] as String?) ?? '',
           mediaId: (qm['mediaId'] as String?) ?? '',
           type: QuestionTypeX.fromString((qm['questionType'] as String?) ?? 'quiz'),
           points: (qm['points'] as int?) ?? 0,
@@ -398,7 +411,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           answer: answersRaw.map((a) {
             final am = a as Map<String, dynamic>;
             return Answer(
-              text: (am['answerText'] as String?) ?? '',
+              text: (am['text'] as String?) ?? '',
               image: (am['mediaId'] as String?) ?? '',
               isCorrect: (am['isCorrect'] as bool?) ?? false,
               questionId: '',
@@ -422,14 +435,15 @@ class KahootDatasourceImpl implements KahootDatasource {
   }
 }
 
-String _mapQuestionType(QuestionType t) {
+String _mapQuestionTypeV2(QuestionType t) {
   switch (t) {
     case QuestionType.true_false:
       return 'true_false';
     case QuestionType.quiz_single:
+      return 'single';
     case QuestionType.quiz_multiple:
-      return 'quiz';
+      return 'multiple';
     default:
-      return 'quiz';
+      return 'single';
   }
 }
