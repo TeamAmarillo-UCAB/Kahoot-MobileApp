@@ -1,25 +1,22 @@
 class GameSummary {
-  final String attemptId;
-  final int finalScore;
-  final int totalCorrect;
+  final String playerName;
+  final int totalScore;
+  final int correctAnswers;
   final int totalQuestions;
-  final int accuracyPercentage;
 
   GameSummary({
-    required this.attemptId,
-    required this.finalScore,
-    required this.totalCorrect,
+    required this.playerName,
+    required this.totalScore,
+    required this.correctAnswers,
     required this.totalQuestions,
-    required this.accuracyPercentage,
   });
 
   factory GameSummary.fromJson(Map<String, dynamic> json) {
     return GameSummary(
-      attemptId: json['attemptId'],
-      finalScore: json['finalScore'] ?? 0,
-      totalCorrect: json['totalCorrect'] ?? 0,
+      playerName: json['playerName'] ?? 'Jugador',
+      totalScore: json['totalScore'] ?? 0,
+      correctAnswers: json['correctAnswers'] ?? 0,
       totalQuestions: json['totalQuestions'] ?? 0,
-      accuracyPercentage: json['accuracyPercentage'] ?? 0,
     );
   }
 }
