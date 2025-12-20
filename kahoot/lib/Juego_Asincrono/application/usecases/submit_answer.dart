@@ -1,4 +1,5 @@
 import '../../domain/repositories/game_repository.dart';
+import '../../domain/entities/attempt.dart';
 import '../../core/result.dart';
 
 class SubmitAnswer {
@@ -6,16 +7,15 @@ class SubmitAnswer {
 
   SubmitAnswer(this.repository);
 
-  /// Envía la respuesta del usuario.
-  /// [answerIndex] se usa para Quiz y True/False.
-  /// [textAnswer] se usa para Short Answer.
-  Future<Result<Map<String, dynamic>>> call({
+  Future<Result<Attempt>> call({
     required String attemptId,
     required String slideId,
     required List<int> answerIndex,
     required int timeElapsed,
     String? textAnswer,
   }) async {
+    // Simplemente delegamos la responsabilidad al repositorio
+    // El Bloc ahora recibirá un Result<Attempt>
     return await repository.submitAnswer(
       attemptId: attemptId,
       slideId: slideId,

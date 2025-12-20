@@ -2,21 +2,22 @@ import '../entities/attempt.dart';
 import '../entities/game_summary.dart';
 
 abstract class GameDatasource {
-  /// Inicia un nuevo intento para un Kahoot específico
+  /// Llama al endpoint POST /attempts
   Future<Attempt> startAttempt(String kahootId);
 
-  /// Obtiene el estado actual de un intento
+  /// Llama al endpoint GET /attempts/{id}
   Future<Attempt> getAttemptStatus(String attemptId);
 
-  /// Envía la respuesta del usuario y recibe el feedback + siguiente slide
+  /// Llama al endpoint POST /attempts/{id}/answer
+  /// Devuelve el JSON crudo (Map) para que el repositorio lo procese
   Future<Map<String, dynamic>> submitAnswer({
     required String attemptId,
     required String slideId,
     required List<int> answerIndex,
     required int timeElapsedSeconds,
-    String? textAnswer, // Opcional para Short Answer
+    String? textAnswer,
   });
 
-  /// Obtiene el resumen final de la partida
+  /// Llama al endpoint GET /attempts/{id}/summary
   Future<GameSummary> getSummary(String attemptId);
 }

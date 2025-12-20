@@ -3,15 +3,15 @@ import '../entities/attempt.dart';
 import '../entities/game_summary.dart';
 
 abstract class GameRepository {
-  /// Inicia el juego y devuelve el objeto Attempt con la primera pregunta
+  /// Inicia un nuevo intento de juego para un Kahoot específico
   Future<Result<Attempt>> startAttempt(String kahootId);
 
-  /// Recupera el estado de un juego en curso
+  /// Recupera el estado actual de un intento (útil para reconexión)
   Future<Result<Attempt>> getAttemptStatus(String attemptId);
 
-  /// Envía la respuesta y devuelve un Mapa con:
-  /// 'wasCorrect', 'pointsEarned', 'updatedScore', 'attemptState' y 'nextSlide'
-  Future<Result<Map<String, dynamic>>> submitAnswer({
+  /// Envía la respuesta del usuario y devuelve el resultado actualizado
+  /// (Incluye feedback, puntos y la siguiente pregunta)
+  Future<Result<Attempt>> submitAnswer({
     required String attemptId,
     required String slideId,
     required List<int> answerIndex,
@@ -19,6 +19,6 @@ abstract class GameRepository {
     String? textAnswer,
   });
 
-  /// Devuelve los datos finales del juego
+  /// Obtiene los resultados finales una vez el juego ha terminado
   Future<Result<GameSummary>> getSummary(String attemptId);
 }

@@ -30,7 +30,7 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> submitAnswer({
+  Future<Result<Attempt>> submitAnswer({
     required String attemptId,
     required String slideId,
     required List<int> answerIndex,
@@ -38,6 +38,7 @@ class GameRepositoryImpl implements GameRepository {
     String? textAnswer,
   }) async {
     try {
+      // Llamamos al datasource que nos devuelve el JSON (Map)
       final data = await datasource.submitAnswer(
         attemptId: attemptId,
         slideId: slideId,
@@ -45,7 +46,12 @@ class GameRepositoryImpl implements GameRepository {
         timeElapsedSeconds: timeElapsed,
         textAnswer: textAnswer,
       );
-      return Result.success(data);
+
+      // Convertimos ese JSON directamente en una entidad Attempt
+      // que ya contiene el feedbackMessage y el nextSlide
+      final updatedAttempt = Attempt.fromJson(data);
+
+      return Result.success(updatedAttempt);
     } catch (e) {
       return Result.makeError(Exception('Error al enviar la respuesta: $e'));
     }

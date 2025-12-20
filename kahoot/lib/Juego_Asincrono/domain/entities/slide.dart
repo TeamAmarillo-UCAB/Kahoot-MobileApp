@@ -1,24 +1,13 @@
-enum QuestionType {
-  quiz_single,
-  quiz_multiple,
-  true_false,
-  short_answer,
-  slide,
-}
+enum QuestionType { quiz_single, quiz_multiple, true_false, short_answer }
 
 class SlideOption {
   final String index;
   final String? text;
-  final String? mediaId;
 
-  SlideOption({required this.index, this.text, this.mediaId});
+  SlideOption({required this.index, this.text});
 
   factory SlideOption.fromJson(Map<String, dynamic> json) {
-    return SlideOption(
-      index: json['index'].toString(),
-      text: json['text'],
-      mediaId: json['mediaID'],
-    );
+    return SlideOption(index: json['index'].toString(), text: json['text']);
   }
 }
 
@@ -26,32 +15,44 @@ class Slide {
   final String slideId;
   final QuestionType type;
   final String questionText;
-  final int timeLimitSeconds;
-  final String? mediaId;
   final List<SlideOption> options;
+  final int currentNumber;
+  final int totalQuestions;
 
   Slide({
     required this.slideId,
     required this.type,
     required this.questionText,
-    required this.timeLimitSeconds,
-    this.mediaId,
     required this.options,
+    required this.currentNumber,
+    required this.totalQuestions,
   });
 
-  factory Slide.fromJson(Map<String, dynamic> json) {
+  factory Slide.fromJson(
+    Map<String, dynamic> json, {
+    int? current,
+    int? total,
+  }) {
     return Slide(
-      slideId: json['slideId'],
-      type: QuestionType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['questionType'],
-        orElse: () => QuestionType.quiz_single,
-      ),
+      slideId: json['slideId'] ?? '',
+      type: _parseType(json['questionType']),
       questionText: json['questionText'] ?? '',
-      timeLimitSeconds: json['timeLimitSeconds'] ?? 20,
-      mediaId: json['mediaID'],
+      currentNumber: current ?? json['currentQuestionNumber'] ?? 0,
+      totalQuestions: total ?? json['totalQuestions'] ?? 0,
       options: (json['options'] as List? ?? [])
           .map((o) => SlideOption.fromJson(o))
           .toList(),
     );
+  }
+
+  static QuestionType _parseType(String? type) {
+    switch (type) {
+      case 'true_false':
+        return QuestionType.true_false;
+      case 'short_answer':
+        return QuestionType.short_answer;
+      default:
+        return QuestionType.quiz_single;
+    }
   }
 }
