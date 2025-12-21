@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/usecases/start_attempt.dart';
 import '../../application/usecases/submit_answer.dart';
@@ -12,7 +13,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   final SubmitAnswer submitAnswer;
   final GetSummary getSummary;
 
-  late dynamic _lastAttempt; // Te sugiero tipar esto como 'Attempt?' en el futuro
+  late dynamic
+  _lastAttempt; // Te sugiero tipar esto como 'Attempt?' en el futuro
 
   GameBloc({
     required this.startAttempt,
@@ -20,17 +22,39 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     required this.submitAnswer,
     required this.getSummary,
   }) : super(GameInitial()) {
-
     // Lógica existente de Iniciar Juego
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-      final res = await startAttempt(event.kahootId);
-      if (res.isSuccessful()) {
-        _lastAttempt = res.getValue();
-        emit(ShowingQuestion(attempt: _lastAttempt));
-      } else {
-        // Manejo básico de error
-        emit(GameError("No se pudo iniciar el juego")); 
+      try {
+        final res = await startAttempt(event.kahootId);
+        if (res.isSuccessful()) {
+          _lastAttempt = res.getValue();
+          emit(ShowingQuestion(attempt: _lastAttempt));
+        } else {
+          emit(GameError("Error lógico del servidor"));
+        }
+      } catch (e) {
+        String errorMessage = "Error desconocido";
+
+        // Si el error viene de Dio (Red/HTTP)
+        if (e is DioException) {
+          final statusCode = e.response?.statusCode;
+          if (statusCode == 401) {
+            errorMessage = "Error 401: No estás autenticado (Falta el Token)";
+          } else if (statusCode == 404) {
+            errorMessage = "Error 404: El Kahoot ID no existe en el servidor";
+          } else {
+            errorMessage = "Error HTTP $statusCode: ${e.message}";
+          }
+        } else {
+          // Si el error es de parseo (nuestros modelos fallaron)
+          errorMessage = "Error de Datos: $e";
+        }
+
+        print(
+          "DEBUG LOG: $errorMessage",
+        ); // Esto lo verás en la consola de VS Code/Android Studio
+        emit(GameError(errorMessage));
       }
     });
 
@@ -39,16 +63,16 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       emit(GameLoading());
       // 1. Llamamos al caso de uso para obtener el estado actual
       final res = await getAttemptStatus(event.attemptId);
-      
+
       if (res.isSuccessful()) {
         _lastAttempt = res.getValue();
 
         // 2. Verificamos el estado en el que vino la partida
         if (_lastAttempt.state == 'COMPLETED') {
           // Si ya estaba completado, disparamos la lógica de resumen
-          // Podemos reutilizar la lógica llamando al evento OnNextQuestion 
+          // Podemos reutilizar la lógica llamando al evento OnNextQuestion
           // o llamando a getSummary directamente.
-          add(OnNextQuestion()); 
+          add(OnNextQuestion());
         } else {
           // Si está IN_PROGRESS, mostramos la slide que toque (nextSlide)
           // Nota: El endpoint getAttemptStatus devuelve 'nextSlide' según la doc.
@@ -78,7 +102,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     });
 
     on<OnNextQuestion>((event, emit) async {
-       // (Tu código existente sin cambios)
+      // (Tu código existente sin cambios)
       if (_lastAttempt.state == 'COMPLETED') {
         emit(GameLoading());
         final summaryRes = await getSummary(_lastAttempt.attemptId);

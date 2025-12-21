@@ -24,21 +24,27 @@ class Attempt {
   });
 
   factory Attempt.fromJson(Map<String, dynamic> json) {
+    // 1. Buscamos el slide en cualquiera de sus posibles nombres
     final slideData = json['nextSlide'] ?? json['firstSlide'];
 
     return Attempt(
-      attemptId: json['attemptId'],
+      // 2. Manejamos que a veces es 'id' (según tu JSON previo) y a veces 'attemptId'
+      attemptId: json['attemptId'] ?? json['id'] ?? '',
       playerName: json['playerName'] ?? 'Jugador',
-      currentScore: json['currentScore'] ?? 0,
-      state: json['state'] ?? 'IN_PROGRESS',
+      // 3. El score cambia de nombre según el endpoint
+      currentScore: json['currentScore'] ?? json['updatedScore'] ?? 0,
+      // 4. El estado también cambia de nombre
+      state: json['state'] ?? json['attemptState'] ?? 'IN_PROGRESS',
       lastWasCorrect: json['wasCorrect'],
       lastPointsEarned: json['pointsEarned'],
       feedbackMessage: json['feedbackMessage'],
       nextSlide: slideData != null
           ? Slide.fromJson(
               slideData,
-              current: json['currentQuestionNumber'],
-              total: json['totalQuestions'],
+              // 5. Si el JSON no trae estos datos, ponemos valores por defecto
+              // para evitar el crash de 'null' en campos int.
+              current: json['currentQuestionNumber'] ?? 1,
+              total: json['totalQuestions'] ?? 1,
             )
           : null,
     );

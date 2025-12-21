@@ -1,4 +1,10 @@
-enum QuestionType { quiz_single, quiz_multiple, true_false, short_answer , slide}
+enum QuestionType {
+  quiz_single,
+  quiz_multiple,
+  true_false,
+  short_answer,
+  slide,
+}
 
 class SlideOption {
   final String index;
@@ -13,9 +19,10 @@ class SlideOption {
 
   factory SlideOption.fromJson(Map<String, dynamic> json) {
     return SlideOption(
-      index: json['index'].toString(),
+      // Usamos '??' para que si index es null, no intente hacer .toString()
+      index: (json['index'] ?? '').toString(),
       text: json['text'],
-      mediaId: json['mediaID'], // <--- MAPEADO DEL JSON
+      mediaId: json['mediaID'], // Coincide con el spec mediaID
     );
   }
 }
@@ -45,12 +52,15 @@ class Slide {
     int? total,
   }) {
     return Slide(
-      slideId: json['slideId'] ?? '',
+      // En el spec dice 'slideId', pero si el server manda 'id' lo capturamos
+      slideId: json['slideId'] ?? json['id'] ?? '',
+      // Usamos 'questionType' según el spec
       type: _parseType(json['questionType']),
       questionText: json['questionText'] ?? '',
-      mediaId: json['mediaID'], // <--- MAPEADO DEL JSON
-      currentNumber: current ?? json['currentQuestionNumber'] ?? 0,
-      totalQuestions: total ?? json['totalQuestions'] ?? 0,
+      mediaId: json['mediaID'], // Mayúsculas según tu spec
+      // Evitamos el error de tipos asegurando que nunca sea null
+      currentNumber: current ?? 1,
+      totalQuestions: total ?? 1,
       options: (json['options'] as List? ?? [])
           .map((o) => SlideOption.fromJson(o))
           .toList(),
@@ -58,13 +68,18 @@ class Slide {
   }
 
   static QuestionType _parseType(String? type) {
-    // ... (Tu lógica existente para parsear tipos)
-    switch (type) {
-      case 'quiz_multiple': return QuestionType.quiz_multiple;
-      case 'true_false': return QuestionType.true_false;
-      case 'short_answer': return QuestionType.short_answer;
-      case 'slide': return QuestionType.slide;
-      default: return QuestionType.quiz_single;
+    switch (type?.toLowerCase()) {
+      // Usar toLowerCase() ayuda a que sea más flexible
+      case 'quiz_multiple':
+        return QuestionType.quiz_multiple;
+      case 'true_false':
+        return QuestionType.true_false;
+      case 'short_answer':
+        return QuestionType.short_answer;
+      case 'slide':
+        return QuestionType.slide;
+      default:
+        return QuestionType.quiz_single;
     }
   }
 }
