@@ -1,50 +1,64 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/attempt.dart';
 import '../blocs/game_bloc.dart';
 import '../blocs/game_event.dart';
-import '../../domain/entities/attempt.dart';
+import '../utils/game_constants.dart';
 
-class FeedbackView extends StatelessWidget {
+class FeedbackView extends StatefulWidget {
   final Attempt attempt;
   const FeedbackView({super.key, required this.attempt});
 
   @override
+  State<FeedbackView> createState() => _FeedbackViewState();
+}
+
+class _FeedbackViewState extends State<FeedbackView> {
+  @override
+  void initState() {
+    super.initState();
+    Timer(const Duration(seconds: 2), () {
+      context.read<GameBloc>().add(OnNextQuestion());
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isCorrect = attempt.lastWasCorrect ?? false;
+    final correct = widget.attempt.lastWasCorrect ?? false;
+    final color = correct
+        ? GameColors.correctGreen
+        : GameColors.wrongRed;
 
     return Container(
-      color: isCorrect ? const Color(0xFF26890C) : const Color(0xFFE21B3C),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            isCorrect ? "CORRECTO" : "INCORRECTO", //
-            style: const TextStyle(
+      color: color,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              correct ? Icons.check_circle : Icons.cancel,
+              size: 100,
               color: Colors.white,
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "+ ${attempt.lastPointsEarned}", // [cite: 20, 33, 48, 76]
-            style: const TextStyle(color: Colors.white, fontSize: 30),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            attempt.feedbackMessage ?? "", // [cite: 23, 33, 49, 76]
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 20,
-              fontStyle: FontStyle.italic,
+            const SizedBox(height: 20),
+            Text(
+              correct ? "CORRECTO" : "INCORRECTO",
+              style: const TextStyle(
+                fontSize: 36,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 40),
-          ElevatedButton(
-            onPressed: () => context.read<GameBloc>().add(OnNextQuestion()),
-            child: const Text("SIGUIENTE"),
-          ),
-        ],
+            Text(
+              "+${widget.attempt.lastPointsEarned}",
+              style: const TextStyle(
+                fontSize: 28,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

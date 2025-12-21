@@ -1,4 +1,4 @@
-import '../../core/result.dart';
+import '../../../common/core/result.dart';
 import '../entities/attempt.dart';
 import '../entities/game_summary.dart';
 

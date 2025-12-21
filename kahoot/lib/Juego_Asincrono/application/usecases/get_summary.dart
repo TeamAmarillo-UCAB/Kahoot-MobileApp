@@ -1,6 +1,6 @@
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/entities/game_summary.dart';
-import '../../core/result.dart';
+import '../../../common/core/result.dart';
 
 class GetSummary {
   final GameRepository repository;

@@ -3,7 +3,7 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
-import '../../core/result.dart';
+import '../../../common/core/result.dart';
 
 
 class KahootRepositoryImpl implements KahootRepository{

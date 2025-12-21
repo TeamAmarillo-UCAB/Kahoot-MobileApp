@@ -1,7 +1,7 @@
 import '../entities/question.dart';
 import '../entities/answer.dart';
 import '../entities/kahoot.dart';
-import '../../core/result.dart';
+import '../../../common/core/result.dart';
 
 abstract class KahootRepository {
   Future<Result<void>> createKahoot(String kahootId, String authorId, String title, String description, String image, String visibility, String theme, List<Question> question, List<Answer> answer);
