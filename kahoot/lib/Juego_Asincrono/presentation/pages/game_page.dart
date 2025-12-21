@@ -14,6 +14,7 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF46178F),
       body: BlocBuilder<GameBloc, GameState>(
         builder: (context, state) {
           return KahootSlideTransition(child: _buildState(context, state));
