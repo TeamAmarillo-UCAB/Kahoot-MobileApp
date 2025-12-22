@@ -42,7 +42,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     });
 
     on<OnSubmitAnswer>((event, emit) async {
-      // CAPTURA DE SEGURIDAD: Guardamos las referencias antes de llamar a la API
       final String? currentAttemptId = _currentAttempt?.id;
       final String? currentSlideId = _currentAttempt?.nextSlide?.slideId;
 
@@ -61,9 +60,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       if (result.isSuccessful()) {
         final nextAttemptState = result.getValue();
 
-        // MANTENIMIENTO DE ESTADO:
-        // Si el servidor no devuelve el attemptId en la respuesta del POST,
-        // nos aseguramos de no perder el que ya teníamos.
         _currentAttempt = Attempt(
           id: nextAttemptState.id.isEmpty
               ? currentAttemptId
@@ -81,7 +77,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           ),
         );
       } else {
-        // Si hay error lógico del servidor, lo mostramos sin resetear el contador
         emit(GameError("Error del servidor al procesar la respuesta"));
       }
     });

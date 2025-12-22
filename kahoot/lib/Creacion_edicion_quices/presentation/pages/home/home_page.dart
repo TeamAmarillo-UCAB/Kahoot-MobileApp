@@ -16,7 +16,7 @@ import '../../../../Juego_Asincrono/presentation/pages/game_page.dart';
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
   //KAHOOT DE PRUEBAAAAA
-  final String currentKahootId = "4e1bc8f8-5fc5-44d0-bbd0-c4fbbd0da9cf";
+  final String currentKahootId = "3b01e174-6853-4dc0-b846-e6788eee44ad";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,8 +102,6 @@ class HomePage extends StatelessWidget {
         currentIndex: 2,
         onTap: (index) {
           if (index == 2) {
-            // Índice de "Unirse"
-            // ✅ Navegación al módulo de juego (Wrapper)
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const GameModuleWrapper()),
             );
@@ -112,24 +110,20 @@ class HomePage extends StatelessWidget {
               context,
             ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
           } else if (index == 4) {
-            // ... dentro de tu onTap: if (index == 4) ...
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => BlocProvider(
                   create: (context) {
-                    // 1. Instanciamos Dio con el Placeholder del Token
                     final dio = Dio(
                       BaseOptions(
                         baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
                       ),
                     );
 
-                    // --- BLOQUE PARA EL TOKEN ---
                     dio.interceptors.add(
                       InterceptorsWrapper(
                         onRequest: (options, handler) {
-                          // 💡 PLACEHOLDER: Cuando tengas el token real,
-                          // cámbialo aquí o tráelo de un SecureStorage/Provider.
+                          // PARA CUANDO ESTÉ EL TOKENNNNNNN
                           const String token = "TU_TOKEN_AQUI";
 
                           if (token.isNotEmpty && token != "TU_TOKEN_AQUI") {
@@ -138,8 +132,6 @@ class HomePage extends StatelessWidget {
                           return handler.next(options);
                         },
                         onError: (DioException e, handler) {
-                          // Si el backend te saca un 401, aquí podrías
-                          // manejar el cierre de sesión automáticamente.
                           return handler.next(e);
                         },
                       ),
