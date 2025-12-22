@@ -6,6 +6,9 @@ import '../../../application/usecases/kahoot/get_kahoot_by_kahoot_id.dart';
 import '../../../infrastructure/datasource/kahoot_datasource_impl.dart';
 import '../../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../../../main.dart';
+import 'create_kahoot_page.dart';
+import '../home/home_page.dart';
+import '../../../../biblioteca_gestion_de_contenido/presentacion/pages/biblioteca_page.dart';
 
 class KahootViewPage extends StatefulWidget {
   final Kahoot kahoot;
@@ -67,7 +70,7 @@ class _KahootViewPageState extends State<KahootViewPage> {
           TextButton.icon(
             onPressed: () async {
               final result = await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => KahootDetailsPage()),
+                MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: kahoot)),
               );
               Navigator.of(context).pop(result);
             },
@@ -114,6 +117,10 @@ class _KahootViewPageState extends State<KahootViewPage> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFB300),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFA46000), width: 1),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +138,7 @@ class _KahootViewPageState extends State<KahootViewPage> {
                                 TextButton.icon(
                                   onPressed: () async {
                                     final result = await Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => KahootDetailsPage()),
+                                      MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: kahoot)),
                                     );
                                     Navigator.of(context).pop(result);
                                   },
@@ -162,6 +169,10 @@ class _KahootViewPageState extends State<KahootViewPage> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFB300),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFA46000), width: 1),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +188,11 @@ class _KahootViewPageState extends State<KahootViewPage> {
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 8),
                                   padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: const Color(0xFF444444), borderRadius: BorderRadius.circular(8)),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF444444),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0x22FFFFFF)),
+                                  ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
@@ -204,6 +219,23 @@ class _KahootViewPageState extends State<KahootViewPage> {
                     ],
                   ),
                 ),
+      bottomNavigationBar: _FooterNav(
+        onHome: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        },
+        onCreate: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CreateKahootPage()),
+          );
+        },
+        onLibrary: () {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const BibliotecaPage()),
+          );
+        },
+      ),
     );
   }
 }
@@ -225,10 +257,66 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$label: ', style: const TextStyle(color: Colors.white70)),
+          Text('$label: ', style: const TextStyle(color: Colors.white)),
           Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       ),
     );
+  }
+}
+
+class _FooterNav extends StatelessWidget {
+  final VoidCallback onCreate;
+  final VoidCallback? onHome;
+  final VoidCallback? onLibrary;
+  const _FooterNav({required this.onCreate, this.onHome, this.onLibrary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFFFD54F),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _BottomNavItem(icon: Icons.home, label: 'Inicio', selected: true, iconSize: 28, onTap: onHome),
+          const _BottomNavItem(icon: Icons.search, label: 'Descubre', iconSize: 28),
+          const _BottomNavItem(icon: Icons.group, label: 'Unirse', iconSize: 28),
+          _BottomNavItem(icon: Icons.add_box, label: 'Crear', iconSize: 30, onTap: onCreate),
+          _BottomNavItem(icon: Icons.library_books, label: 'Biblioteca', iconSize: 28, onTap: onLibrary),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final double iconSize;
+  final VoidCallback? onTap;
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    this.selected = false,
+    this.iconSize = 24,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? Colors.brown : Colors.black87;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: iconSize),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: color, fontWeight: selected ? FontWeight.bold : FontWeight.w600, fontSize: 12)),
+      ],
+    );
+    return onTap != null
+        ? InkWell(onTap: onTap, child: Padding(padding: const EdgeInsets.all(4), child: content))
+        : content;
   }
 }
