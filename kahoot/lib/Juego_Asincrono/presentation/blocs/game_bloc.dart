@@ -24,7 +24,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   }) : super(GameInitial()) {
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-
       final result = await startAttempt(event.kahootId);
 
       if (result.isSuccessful()) {
@@ -43,17 +42,37 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     });
 
     on<OnSubmitAnswer>((event, emit) async {
-      if (_currentAttempt == null || _currentAttempt!.nextSlide == null) return;
+      // CAPTURA DE SEGURIDAD: Guardamos las referencias antes de llamar a la API
+      final String? currentAttemptId = _currentAttempt?.id;
+      final String? currentSlideId = _currentAttempt?.nextSlide?.slideId;
+
+      if (currentAttemptId == null || currentSlideId == null) {
+        emit(GameError("Error de sincronización: No hay slide activo"));
+        return;
+      }
 
       final result = await submitAnswer(
-        attemptId: _currentAttempt!.id,
-        slideId: _currentAttempt!.nextSlide!.slideId,
+        attemptId: currentAttemptId,
+        slideId: currentSlideId,
         answerIndex: event.answerIndexes,
         timeElapsed: event.timeSeconds,
       );
 
       if (result.isSuccessful()) {
-        _currentAttempt = result.getValue();
+        final nextAttemptState = result.getValue();
+
+        // MANTENIMIENTO DE ESTADO:
+        // Si el servidor no devuelve el attemptId en la respuesta del POST,
+        // nos aseguramos de no perder el que ya teníamos.
+        _currentAttempt = Attempt(
+          id: nextAttemptState.id.isEmpty
+              ? currentAttemptId
+              : nextAttemptState.id,
+          state: nextAttemptState.state,
+          currentScore: nextAttemptState.currentScore,
+          nextSlide: nextAttemptState.nextSlide,
+          lastWasCorrect: nextAttemptState.lastWasCorrect,
+        );
 
         emit(
           ShowingFeedback(
@@ -62,7 +81,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           ),
         );
       } else {
-        emit(GameError("Error al procesar la respuesta"));
+        // Si hay error lógico del servidor, lo mostramos sin resetear el contador
+        emit(GameError("Error del servidor al procesar la respuesta"));
       }
     });
 
@@ -71,13 +91,11 @@ class GameBloc extends Bloc<GameEvent, GameState> {
 
       if (_currentAttempt!.isFinished) {
         emit(GameLoading());
-
         final result = await getGameSummary(_currentAttempt!.id);
-
         if (result.isSuccessful()) {
           emit(GameSummaryState(result.getValue()));
         } else {
-          emit(GameError("Error al obtener el resumen final"));
+          emit(GameError("Error al obtener el resumen"));
         }
       } else {
         _counter++;
