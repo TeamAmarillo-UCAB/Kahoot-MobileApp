@@ -25,7 +25,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
 
-      // Llamada al caso de uso StartAttempt (POST /attempts)
       final result = await startAttempt(event.kahootId);
 
       if (result.isSuccessful()) {
@@ -46,19 +45,16 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<OnSubmitAnswer>((event, emit) async {
       if (_currentAttempt == null || _currentAttempt!.nextSlide == null) return;
 
-      // Llamada al caso de uso SubmitAnswer (POST /attempts/{id}/answer)
       final result = await submitAnswer(
         attemptId: _currentAttempt!.id,
         slideId: _currentAttempt!.nextSlide!.slideId,
-        answerIndex:
-            event.answerIndexes, // Sincronizado con el nombre en el UseCase
+        answerIndex: event.answerIndexes,
         timeElapsed: event.timeSeconds,
       );
 
       if (result.isSuccessful()) {
         _currentAttempt = result.getValue();
 
-        // El datasource mapea 'wasCorrect' y lo pone en la entidad Attempt
         emit(
           ShowingFeedback(
             attempt: _currentAttempt!,
@@ -73,11 +69,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<OnNextQuestion>((event, emit) async {
       if (_currentAttempt == null) return;
 
-      // Verificamos si el estado de la entidad es 'COMPLETED'
       if (_currentAttempt!.isFinished) {
         emit(GameLoading());
 
-        // Llamada al caso de uso GetSummary (GET /attempts/{id}/summary)
         final result = await getGameSummary(_currentAttempt!.id);
 
         if (result.isSuccessful()) {
@@ -86,7 +80,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           emit(GameError("Error al obtener el resumen final"));
         }
       } else {
-        // Si no ha terminado, incrementamos contador y mostramos siguiente slide
         _counter++;
         emit(
           QuizState(

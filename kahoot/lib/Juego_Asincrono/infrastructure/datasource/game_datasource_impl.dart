@@ -20,8 +20,7 @@ class GameDatasourceImpl implements GameDatasource {
   Future<Map<String, dynamic>> submitAnswer({
     required String attemptId,
     required String slideId,
-    required List<int>
-    answerIndex, // Aquí recibimos la lista de seleccionados [0, 1, 2...]
+    required List<int> answerIndex,
     required int timeElapsedSeconds,
     String? textAnswer,
   }) async {
@@ -29,7 +28,7 @@ class GameDatasourceImpl implements GameDatasource {
       '/attempts/$attemptId/answer',
       data: {
         'slideId': slideId,
-        'answerIndex': answerIndex, // Se envía como array en el JSON: [0, 2]
+        'answerIndex': answerIndex,
         'timeElapsedSeconds': timeElapsedSeconds,
         if (textAnswer != null) 'textAnswer': textAnswer,
       },

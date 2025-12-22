@@ -15,7 +15,6 @@ class GameSummary {
       correctAnswers: _parseInt(
         json['correctAnswers'] ?? json['totalCorrect'] ?? 0,
       ),
-      // Mapeamos 'accuracyPercentage' si existe
       accuracy: _parseDouble(
         json['accuracy'] ?? json['accuracyPercentage'] ?? 0.0,
       ),

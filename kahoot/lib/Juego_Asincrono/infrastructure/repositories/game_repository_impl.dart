@@ -47,7 +47,6 @@ class GameRepositoryImpl implements GameRepository {
         textAnswer: textAnswer,
       );
 
-      // Aquí es donde convertimos el JSON del Datasource a Entidad
       final updatedAttempt = Attempt.fromJson(data);
       return Result.success(updatedAttempt);
     } catch (e) {

@@ -14,7 +14,6 @@ class GameSummaryPage extends StatelessWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            // Usamos los colores definidos en GameColors
             colors: [Color(0xFF46178F), GameColors.blue],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -24,8 +23,6 @@ class GameSummaryPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Podrías usar GameAssets.iconTrophy si es una imagen,
-              // o el Icon con colores de la paleta
               const Icon(
                 Icons.emoji_events,
                 color: GameColors.yellow,
@@ -43,7 +40,6 @@ class GameSummaryPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // Tarjeta de Puntaje Total
               _buildStatCard(
                 label: "Puntaje Total",
                 value: summary.totalScore.toString(),
@@ -53,7 +49,6 @@ class GameSummaryPage extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Fila de estadísticas secundarias
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -75,7 +70,6 @@ class GameSummaryPage extends StatelessWidget {
 
               const SizedBox(height: 60),
 
-              // Botón de Salida estilizado
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: SizedBox(

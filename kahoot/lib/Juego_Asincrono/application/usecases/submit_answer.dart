@@ -14,8 +14,6 @@ class SubmitAnswer {
     required int timeElapsed,
     String? textAnswer,
   }) async {
-    // Simplemente delegamos la responsabilidad al repositorio
-    // El Bloc ahora recibirá un Result<Attempt>
     return await repository.submitAnswer(
       attemptId: attemptId,
       slideId: slideId,
