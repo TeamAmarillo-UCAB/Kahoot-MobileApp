@@ -15,7 +15,8 @@ import '../../../../Juego_Asincrono/presentation/pages/game_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
-
+  //KAHOOT DE PRUEBAAAAA
+  final String currentKahootId = "4e1bc8f8-5fc5-44d0-bbd0-c4fbbd0da9cf";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,12 +153,12 @@ class HomePage extends StatelessWidget {
 
                     return GameBloc(
                       startAttempt: StartAttempt(repository),
-                      getAttemptStatus: GetAttemptStatus(repository),
                       submitAnswer: SubmitAnswer(repository),
-                      getSummary: GetSummary(repository),
-                    )..add(OnStartGame("3469833d-a967-4866-9654-d51929afafcc"));
+                      getGameSummary: GetSummary(repository),
+                      getAttemptStatus: GetAttemptStatus(repository),
+                    )..add(OnStartGame(currentKahootId));
                   },
-                  child: const GamePage(),
+                  child: GamePage(kahootId: currentKahootId),
                 ),
               ),
             );

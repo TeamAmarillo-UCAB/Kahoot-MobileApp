@@ -7,22 +7,31 @@ class GameInitial extends GameState {}
 
 class GameLoading extends GameState {}
 
-class ShowingQuestion extends GameState {
+class GameError extends GameState {
+  final String message;
+  GameError(this.message);
+}
+
+class QuizState extends GameState {
   final Attempt attempt;
-  ShowingQuestion({required this.attempt});
+  final int currentNumber;
+  final int totalQuestions;
+
+  QuizState({
+    required this.attempt,
+    required this.currentNumber,
+    required this.totalQuestions,
+  });
 }
 
 class ShowingFeedback extends GameState {
   final Attempt attempt;
-  ShowingFeedback({required this.attempt});
+  final bool wasCorrect;
+
+  ShowingFeedback({required this.attempt, required this.wasCorrect});
 }
 
-class GameFinished extends GameState {
+class GameSummaryState extends GameState {
   final GameSummary summary;
-  GameFinished({required this.summary});
-}
-
-class GameError extends GameState {
-  final String message;
-  GameError(this.message);
+  GameSummaryState(this.summary);
 }

@@ -5,20 +5,12 @@ class OnStartGame extends GameEvent {
   OnStartGame(this.kahootId);
 }
 
-class OnResumeGame extends GameEvent {
-  final String attemptId;
-  OnResumeGame(this.attemptId);
-}
-
 class OnSubmitAnswer extends GameEvent {
   final List<int> answerIndexes;
   final int timeSeconds;
-  final String? textAnswer;
-  OnSubmitAnswer({
-    required this.answerIndexes,
-    required this.timeSeconds,
-    this.textAnswer,
-  });
+  OnSubmitAnswer({required this.answerIndexes, required this.timeSeconds});
 }
 
 class OnNextQuestion extends GameEvent {}
+
+class OnFinishGame extends GameEvent {}

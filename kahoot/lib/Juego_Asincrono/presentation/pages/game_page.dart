@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kahoot/Juego_Asincrono/presentation/blocs/game_event.dart';
 import '../blocs/game_bloc.dart';
 import '../blocs/game_state.dart';
+import '../blocs/game_event.dart';
 import '../widgets/quiz_view.dart';
 import '../widgets/feedback_view.dart';
 import '../widgets/slide_trasition.dart';
 import 'game_summary_page.dart';
 
 class GamePage extends StatelessWidget {
-  const GamePage({super.key});
+  final String kahootId;
+  const GamePage({super.key, required this.kahootId});
 
   @override
   Widget build(BuildContext context) {
@@ -17,60 +18,83 @@ class GamePage extends StatelessWidget {
       backgroundColor: const Color(0xFF46178F),
       body: BlocBuilder<GameBloc, GameState>(
         builder: (context, state) {
-          return KahootSlideTransition(child: _buildState(context, state));
+          return KahootSlideTransition(
+            child: _buildStateWrapper(context, state),
+          );
         },
       ),
     );
   }
 
-  Widget _buildState(BuildContext context, GameState state) {
-    if (state is GameInitial || state is GameLoading) {
+  Widget _buildStateWrapper(BuildContext context, GameState state) {
+    if (state is GameLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.deepPurple),
+        key: ValueKey('loading_state'),
+        child: CircularProgressIndicator(color: Colors.white),
       );
     }
 
-    if (state is ShowingQuestion) {
-      return QuizView(attempt: state.attempt);
+    if (state is QuizState) {
+      return QuizView(
+        key: ValueKey('quiz_${state.currentNumber}'),
+        attempt: state.attempt,
+        currentNumber: state.currentNumber,
+        totalQuestions: state.totalQuestions,
+      );
     }
 
     if (state is ShowingFeedback) {
-      return FeedbackView(attempt: state.attempt);
-    }
-
-    if (state is GameFinished) {
-      return GameSummaryPage(summary: state.summary);
-    }
-
-    // --- NUEVO: Manejo de errores visual ---
-    if (state is GameError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 60),
-            const SizedBox(height: 16),
-            Text(
-              state.message,
-              style: const TextStyle(color: Colors.black, fontSize: 18),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.read<GameBloc>().add(
-                OnStartGame("3469833d-a967-4866-9654-d51929afafcc"),
-              ),
-              child: const Text("Reintentar"),
-            ),
-          ],
-        ),
+      return FeedbackView(
+        key: const ValueKey('feedback_state'),
+        attempt: state.attempt,
+        wasCorrect: state.wasCorrect,
       );
     }
 
-    return const Center(
-      child: Text(
-        "Estado no reconocido",
-        style: TextStyle(color: Colors.black),
+    if (state is GameSummaryState) {
+      return GameSummaryPage(
+        key: const ValueKey('summary_state'),
+        summary: state.summary,
+      );
+    }
+
+    if (state is GameError) {
+      return Center(
+        key: const ValueKey('error_state'),
+        child: _ErrorBody(message: state.message, kahootId: kahootId),
+      );
+    }
+
+    return const SizedBox.shrink(key: ValueKey('empty_state'));
+  }
+}
+
+class _ErrorBody extends StatelessWidget {
+  final String message;
+  final String kahootId;
+  const _ErrorBody({required this.message, required this.kahootId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.white, size: 80),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () =>
+                context.read<GameBloc>().add(OnStartGame(kahootId)),
+            child: const Text("Reintentar"),
+          ),
+        ],
       ),
     );
   }

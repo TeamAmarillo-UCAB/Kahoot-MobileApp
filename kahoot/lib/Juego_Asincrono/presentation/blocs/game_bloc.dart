@@ -1,116 +1,100 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/usecases/start_attempt.dart';
 import '../../application/usecases/submit_answer.dart';
 import '../../application/usecases/get_summary.dart';
-import '../../application/usecases/get_attempt_status.dart'; // <--- IMPORTAR
+import '../../application/usecases/get_attempt_status.dart';
 import 'game_event.dart';
 import 'game_state.dart';
+import '../../domain/entities/attempt.dart';
 
 class GameBloc extends Bloc<GameEvent, GameState> {
   final StartAttempt startAttempt;
-  final GetAttemptStatus getAttemptStatus; // <--- NUEVA DEPENDENCIA
   final SubmitAnswer submitAnswer;
-  final GetSummary getSummary;
+  final GetSummary getGameSummary;
+  final GetAttemptStatus getAttemptStatus;
 
-  late dynamic
-  _lastAttempt; // Te sugiero tipar esto como 'Attempt?' en el futuro
+  Attempt? _currentAttempt;
+  int _counter = 1;
 
   GameBloc({
     required this.startAttempt,
-    required this.getAttemptStatus, // <--- RECIBIR EN CONSTRUCTOR
     required this.submitAnswer,
-    required this.getSummary,
+    required this.getGameSummary,
+    required this.getAttemptStatus,
   }) : super(GameInitial()) {
-    // Lógica existente de Iniciar Juego
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-      try {
-        final res = await startAttempt(event.kahootId);
-        if (res.isSuccessful()) {
-          _lastAttempt = res.getValue();
-          emit(ShowingQuestion(attempt: _lastAttempt));
-        } else {
-          emit(GameError("Error lógico del servidor"));
-        }
-      } catch (e) {
-        String errorMessage = "Error desconocido";
 
-        // Si el error viene de Dio (Red/HTTP)
-        if (e is DioException) {
-          final statusCode = e.response?.statusCode;
-          if (statusCode == 401) {
-            errorMessage = "Error 401: No estás autenticado (Falta el Token)";
-          } else if (statusCode == 404) {
-            errorMessage = "Error 404: El Kahoot ID no existe en el servidor";
-          } else {
-            errorMessage = "Error HTTP $statusCode: ${e.message}";
-          }
-        } else {
-          // Si el error es de parseo (nuestros modelos fallaron)
-          errorMessage = "Error de Datos: $e";
-        }
+      // Llamada al caso de uso StartAttempt (POST /attempts)
+      final result = await startAttempt(event.kahootId);
 
-        print(
-          "DEBUG LOG: $errorMessage",
-        ); // Esto lo verás en la consola de VS Code/Android Studio
-        emit(GameError(errorMessage));
-      }
-    });
-
-    // --- NUEVA LÓGICA: REANUDAR JUEGO ---
-    on<OnResumeGame>((event, emit) async {
-      emit(GameLoading());
-      // 1. Llamamos al caso de uso para obtener el estado actual
-      final res = await getAttemptStatus(event.attemptId);
-
-      if (res.isSuccessful()) {
-        _lastAttempt = res.getValue();
-
-        // 2. Verificamos el estado en el que vino la partida
-        if (_lastAttempt.state == 'COMPLETED') {
-          // Si ya estaba completado, disparamos la lógica de resumen
-          // Podemos reutilizar la lógica llamando al evento OnNextQuestion
-          // o llamando a getSummary directamente.
-          add(OnNextQuestion());
-        } else {
-          // Si está IN_PROGRESS, mostramos la slide que toque (nextSlide)
-          // Nota: El endpoint getAttemptStatus devuelve 'nextSlide' según la doc.
-          emit(ShowingQuestion(attempt: _lastAttempt));
-        }
+      if (result.isSuccessful()) {
+        _currentAttempt = result.getValue();
+        _counter = 1;
+        emit(
+          QuizState(
+            attempt: _currentAttempt!,
+            currentNumber: _counter,
+            totalQuestions: 0,
+          ),
+        );
       } else {
-        emit(GameError("No se pudo recuperar la partida"));
+        emit(GameError("Error al iniciar la partida"));
       }
     });
-    // -------------------------------------
 
     on<OnSubmitAnswer>((event, emit) async {
-      // (Tu código existente sin cambios)
-      // Solo asegúrate de manejar errores si res no es exitoso
-      final res = await submitAnswer(
-        attemptId: _lastAttempt.attemptId,
-        slideId: _lastAttempt.nextSlide!.slideId,
-        answerIndex: event.answerIndexes,
+      if (_currentAttempt == null || _currentAttempt!.nextSlide == null) return;
+
+      // Llamada al caso de uso SubmitAnswer (POST /attempts/{id}/answer)
+      final result = await submitAnswer(
+        attemptId: _currentAttempt!.id,
+        slideId: _currentAttempt!.nextSlide!.slideId,
+        answerIndex:
+            event.answerIndexes, // Sincronizado con el nombre en el UseCase
         timeElapsed: event.timeSeconds,
-        textAnswer: event.textAnswer,
       );
 
-      if (res.isSuccessful()) {
-        _lastAttempt = res.getValue();
-        emit(ShowingFeedback(attempt: _lastAttempt));
+      if (result.isSuccessful()) {
+        _currentAttempt = result.getValue();
+
+        // El datasource mapea 'wasCorrect' y lo pone en la entidad Attempt
+        emit(
+          ShowingFeedback(
+            attempt: _currentAttempt!,
+            wasCorrect: _currentAttempt!.lastWasCorrect ?? false,
+          ),
+        );
+      } else {
+        emit(GameError("Error al procesar la respuesta"));
       }
     });
 
     on<OnNextQuestion>((event, emit) async {
-      // (Tu código existente sin cambios)
-      if (_lastAttempt.state == 'COMPLETED') {
+      if (_currentAttempt == null) return;
+
+      // Verificamos si el estado de la entidad es 'COMPLETED'
+      if (_currentAttempt!.isFinished) {
         emit(GameLoading());
-        final summaryRes = await getSummary(_lastAttempt.attemptId);
-        if (summaryRes.isSuccessful()) {
-          emit(GameFinished(summary: summaryRes.getValue()));
+
+        // Llamada al caso de uso GetSummary (GET /attempts/{id}/summary)
+        final result = await getGameSummary(_currentAttempt!.id);
+
+        if (result.isSuccessful()) {
+          emit(GameSummaryState(result.getValue()));
+        } else {
+          emit(GameError("Error al obtener el resumen final"));
         }
       } else {
-        emit(ShowingQuestion(attempt: _lastAttempt));
+        // Si no ha terminado, incrementamos contador y mostramos siguiente slide
+        _counter++;
+        emit(
+          QuizState(
+            attempt: _currentAttempt!,
+            currentNumber: _counter,
+            totalQuestions: 0,
+          ),
+        );
       }
     });
   }

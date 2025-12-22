@@ -13,6 +13,7 @@ class GameRepositoryImpl implements GameRepository {
   Future<Result<Attempt>> startAttempt(String kahootId) async {
     try {
       final attempt = await datasource.startAttempt(kahootId);
+      // Suponiendo que el datasource ya devuelve la entidad Attempt
       return Result.success(attempt);
     } catch (e) {
       return Result.makeError(Exception('No se pudo iniciar el juego: $e'));
@@ -38,7 +39,6 @@ class GameRepositoryImpl implements GameRepository {
     String? textAnswer,
   }) async {
     try {
-      // Llamamos al datasource que nos devuelve el JSON (Map)
       final data = await datasource.submitAnswer(
         attemptId: attemptId,
         slideId: slideId,
@@ -47,10 +47,8 @@ class GameRepositoryImpl implements GameRepository {
         textAnswer: textAnswer,
       );
 
-      // Convertimos ese JSON directamente en una entidad Attempt
-      // que ya contiene el feedbackMessage y el nextSlide
+      // Aquí es donde convertimos el JSON del Datasource a Entidad
       final updatedAttempt = Attempt.fromJson(data);
-
       return Result.success(updatedAttempt);
     } catch (e) {
       return Result.makeError(Exception('Error al enviar la respuesta: $e'));
