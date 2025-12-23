@@ -54,16 +54,19 @@ class GameSummaryPage extends StatelessWidget {
                 children: [
                   _buildStatCard(
                     label: "Correctas",
-                    value: "${summary.correctAnswers}",
+                    value:
+                        "${summary.correctAnswers}" +
+                        "/" +
+                        "${((summary.correctAnswers * 100) / summary.accuracy).toInt()}",
                     isPrimary: false,
                     color: GameColors.correctGreen,
                   ),
                   const SizedBox(width: 16),
                   _buildStatCard(
                     label: "Precisión",
-                    value: "${(summary.accuracy * 100).toInt()}%",
+                    value: "${(summary.accuracy).toInt()}%",
                     isPrimary: false,
-                    color: GameColors.blue,
+                    color: Colors.white,
                   ),
                 ],
               ),
