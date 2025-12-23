@@ -95,6 +95,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
               : nextAttemptState.id,
           state: nextAttemptState.state,
           currentScore: nextAttemptState.currentScore,
+          lastPointsEarned: nextAttemptState.lastPointsEarned,
           nextSlide: nextAttemptState.nextSlide,
           lastWasCorrect: nextAttemptState.lastWasCorrect,
         );

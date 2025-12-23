@@ -26,7 +26,7 @@ class _FeedbackViewState extends State<FeedbackView> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 2), () {
+    _timer = Timer(const Duration(seconds: 3), () {
       if (mounted) {
         context.read<GameBloc>().add(OnNextQuestion());
       }
@@ -45,6 +45,15 @@ class _FeedbackViewState extends State<FeedbackView> {
         ? GameColors.correctGreen
         : GameColors.wrongRed;
 
+    final message = widget.wasCorrect
+        ? "¡Sigue así!"
+        : "No te preocupes, sigue avanzando";
+
+    // Determinamos el texto de puntos a mostrar
+    final pointsText = widget.wasCorrect
+        ? "+ ${widget.attempt.lastPointsEarned} puntos"
+        : "+ 0 puntos";
+
     return Material(
       color: bgColor,
       child: Center(
@@ -58,29 +67,38 @@ class _FeedbackViewState extends State<FeedbackView> {
               size: 150,
               color: Colors.white,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Text(
               widget.wasCorrect ? "CORRECTO" : "INCORRECTO",
               style: const TextStyle(
-                fontSize: 45,
+                fontSize: 40,
                 color: Colors.white,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            const SizedBox(height: 30),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              decoration: BoxDecoration(
-                color: Colors.black12,
-                borderRadius: BorderRadius.circular(30),
-              ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                "Puntaje: ${widget.attempt.currentScore}",
+                message,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 26,
+                  fontSize: 22,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
                 ),
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            // PUNTOS GANADOS (Ahora siempre visible)
+            Text(
+              pointsText,
+              style: const TextStyle(
+                fontSize: 32,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
