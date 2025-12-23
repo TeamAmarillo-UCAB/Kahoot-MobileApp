@@ -16,7 +16,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   final GetAttemptStatus getAttemptStatus;
 
   Attempt? _currentAttempt;
-  String? _currentKahootId; // Guardamos el ID del Kahoot actual
+  String? _currentKahootId;
   int _counter = 1;
 
   GameBloc({
@@ -27,11 +27,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   }) : super(GameInitial()) {
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-      _currentKahootId = event.kahootId; // Seteamos el ID del Kahoot
+      _currentKahootId = event.kahootId;
 
       final prefs = await SharedPreferences.getInstance();
 
-      // USAMOS SIEMPRE LA MISMA LLAVE BASADA EN EL KAHOOT ID
       final String? savedAttemptId = prefs.getString(
         'last_attempt_$_currentKahootId',
       );
@@ -46,7 +45,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           result = await startAttempt(_currentKahootId!);
           _counter = 1;
         } else {
-          // RESTAURACIÓN EXITOSA: Recuperamos el contador guardado
           _counter = savedCounter ?? 1;
         }
       } else {
@@ -57,7 +55,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       if (result.isSuccessful()) {
         _currentAttempt = result.getValue();
 
-        // Guardamos el estado inicial de la recuperación/inicio
         await prefs.setString(
           'last_attempt_$_currentKahootId',
           _currentAttempt!.id,
@@ -127,7 +124,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       if (_currentAttempt!.isFinished) {
         emit(GameLoading());
 
-        // LIMPIEZA TOTAL usando el ID del Kahoot
         await prefs.remove('last_attempt_$_currentKahootId');
         await prefs.remove('last_counter_$_currentKahootId');
 
@@ -138,7 +134,6 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           emit(GameError("Error al obtener el resumen"));
         }
       } else {
-        // INCREMENTO Y GUARDADO SEGURO
         _counter++;
         await prefs.setInt('last_counter_$_currentKahootId', _counter);
 

@@ -62,15 +62,4 @@ class GameRepositoryImpl implements GameRepository {
       return Result.makeError(Exception('Error al obtener el resumen: $e'));
     }
   }
-
-  @override
-  Future<Result<String?>> checkActiveAttempt(String kahootId) async {
-    try {
-      final data = await datasource.checkActiveAttempt(kahootId);
-      final String? attemptId = data['state']?['attemptId'];
-      return Result.success(attemptId);
-    } catch (e) {
-      return Result.makeError(Exception('Error al inspeccionar el Kahoot: $e'));
-    }
-  }
 }

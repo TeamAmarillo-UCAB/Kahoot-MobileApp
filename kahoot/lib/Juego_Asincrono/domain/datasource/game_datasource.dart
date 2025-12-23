@@ -15,6 +15,4 @@ abstract class GameDatasource {
   });
 
   Future<GameSummary> getSummary(String attemptId);
-
-  Future<Map<String, dynamic>> checkActiveAttempt(String kahootId);
 }
