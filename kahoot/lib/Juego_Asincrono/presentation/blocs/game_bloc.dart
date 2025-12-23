@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kahoot/common/core/result.dart';
 import '../../application/usecases/start_attempt.dart';
 import '../../application/usecases/submit_answer.dart';
 import '../../application/usecases/get_summary.dart';
 import '../../application/usecases/get_attempt_status.dart';
-import '../../application/usecases/check_active_attempt.dart';
 import 'game_event.dart';
 import 'game_state.dart';
 import '../../domain/entities/attempt.dart';
@@ -14,9 +14,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   final SubmitAnswer submitAnswer;
   final GetSummary getGameSummary;
   final GetAttemptStatus getAttemptStatus;
-  final CheckActiveAttempt checkActiveAttempt;
 
   Attempt? _currentAttempt;
+  String? _currentKahootId; // Guardamos el ID del Kahoot actual
   int _counter = 1;
 
   GameBloc({
@@ -24,33 +24,45 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     required this.submitAnswer,
     required this.getGameSummary,
     required this.getAttemptStatus,
-    required this.checkActiveAttempt,
   }) : super(GameInitial()) {
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-      /* PARA CUANDO SE TENGA EL TOKEN Y SE PUEDA RESTAURAR EL PROGRESO
-      final activeCheckResult = await checkActiveAttempt(event.kahootId);
-      String? existingAttemptId;
+      _currentKahootId = event.kahootId; // Seteamos el ID del Kahoot
 
-      if (activeCheckResult.isSuccessful()) {
-        existingAttemptId = activeCheckResult.getValue();
-      }
+      final prefs = await SharedPreferences.getInstance();
+
+      // USAMOS SIEMPRE LA MISMA LLAVE BASADA EN EL KAHOOT ID
+      final String? savedAttemptId = prefs.getString(
+        'last_attempt_$_currentKahootId',
+      );
+      final int? savedCounter = prefs.getInt('last_counter_$_currentKahootId');
 
       Result<Attempt> result;
 
-      if (existingAttemptId != null && existingAttemptId.isNotEmpty) {
-        result = await getAttemptStatus(existingAttemptId);
+      if (savedAttemptId != null && savedAttemptId.isNotEmpty) {
+        result = await getAttemptStatus(savedAttemptId);
+
+        if (!result.isSuccessful() || result.getValue().isFinished) {
+          result = await startAttempt(_currentKahootId!);
+          _counter = 1;
+        } else {
+          // RESTAURACIÓN EXITOSA: Recuperamos el contador guardado
+          _counter = savedCounter ?? 1;
+        }
       } else {
-        result = await startAttempt(event.kahootId);
+        result = await startAttempt(_currentKahootId!);
+        _counter = 1;
       }
-      */
-      Result<Attempt> result;
-      result = await startAttempt(event.kahootId);
 
       if (result.isSuccessful()) {
         _currentAttempt = result.getValue();
 
-        _counter = 1;
+        // Guardamos el estado inicial de la recuperación/inicio
+        await prefs.setString(
+          'last_attempt_$_currentKahootId',
+          _currentAttempt!.id,
+        );
+        await prefs.setInt('last_counter_$_currentKahootId', _counter);
 
         emit(
           QuizState(
@@ -68,10 +80,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       final String? currentAttemptId = _currentAttempt?.id;
       final String? currentSlideId = _currentAttempt?.nextSlide?.slideId;
 
-      if (currentAttemptId == null || currentSlideId == null) {
-        emit(GameError("Error de sincronización: No hay slide activo"));
-        return;
-      }
+      if (currentAttemptId == null || currentSlideId == null) return;
 
       final result = await submitAnswer(
         attemptId: currentAttemptId,
@@ -100,15 +109,28 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           ),
         );
       } else {
-        emit(GameError("Error del servidor al procesar la respuesta"));
+        emit(
+          QuizState(
+            attempt: _currentAttempt!,
+            currentNumber: _counter,
+            totalQuestions: 0,
+          ),
+        );
       }
     });
 
     on<OnNextQuestion>((event, emit) async {
-      if (_currentAttempt == null) return;
+      if (_currentAttempt == null || _currentKahootId == null) return;
+
+      final prefs = await SharedPreferences.getInstance();
 
       if (_currentAttempt!.isFinished) {
         emit(GameLoading());
+
+        // LIMPIEZA TOTAL usando el ID del Kahoot
+        await prefs.remove('last_attempt_$_currentKahootId');
+        await prefs.remove('last_counter_$_currentKahootId');
+
         final result = await getGameSummary(_currentAttempt!.id);
         if (result.isSuccessful()) {
           emit(GameSummaryState(result.getValue()));
@@ -116,7 +138,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           emit(GameError("Error al obtener el resumen"));
         }
       } else {
+        // INCREMENTO Y GUARDADO SEGURO
         _counter++;
+        await prefs.setInt('last_counter_$_currentKahootId', _counter);
+
         emit(
           QuizState(
             attempt: _currentAttempt!,

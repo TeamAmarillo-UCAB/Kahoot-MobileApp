@@ -5,7 +5,6 @@ import 'package:kahoot/Juego_Asincrono/application/usecases/get_attempt_status.d
 import 'package:kahoot/Juego_Asincrono/application/usecases/get_summary.dart';
 import 'package:kahoot/Juego_Asincrono/application/usecases/start_attempt.dart';
 import 'package:kahoot/Juego_Asincrono/application/usecases/submit_answer.dart';
-import 'package:kahoot/Juego_Asincrono/application/usecases/check_active_attempt.dart';
 import 'package:kahoot/Juego_Asincrono/infrastructure/datasource/game_datasource_impl.dart';
 import 'package:kahoot/Juego_Asincrono/infrastructure/repositories/game_repository_impl.dart';
 import 'package:kahoot/Juego_Asincrono/presentation/blocs/game_bloc.dart';
@@ -149,7 +148,6 @@ class HomePage extends StatelessWidget {
                       submitAnswer: SubmitAnswer(repository),
                       getGameSummary: GetSummary(repository),
                       getAttemptStatus: GetAttemptStatus(repository),
-                      checkActiveAttempt: CheckActiveAttempt(repository),
                     )..add(OnStartGame(currentKahootId));
                   },
                   child: GamePage(kahootId: currentKahootId),
