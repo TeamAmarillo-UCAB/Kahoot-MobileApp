@@ -101,6 +101,26 @@ class _QuizViewState extends State<QuizView> {
           currentNumber: widget.currentNumber,
           totalQuestions: widget.totalQuestions,
         ),
+
+        if (slide.mediaId != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.network(
+                'https://quizzy-backend-0wh2.onrender.com/api/media/${slide.mediaId}',
+                height: MediaQuery.of(context).size.height * 0.2,
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.image_not_supported,
+                  color: Colors.white24,
+                  size: 50,
+                ),
+              ),
+            ),
+          ),
+
         AnimatedTimerBar(progress: progress),
         const SizedBox(height: 20),
         Expanded(

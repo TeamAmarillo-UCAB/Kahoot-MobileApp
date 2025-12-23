@@ -54,15 +54,28 @@ class OptionTitle extends StatelessWidget {
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  option.text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                  ),
-                ),
+                child: option.mediaId != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          'https://quizzy-backend-0wh2.onrender.com/api/media/${option.mediaId}',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.broken_image,
+                                color: Colors.white,
+                              ),
+                        ),
+                      )
+                    : Text(
+                        option.text,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                        ),
+                      ),
               ),
             ),
           ],
