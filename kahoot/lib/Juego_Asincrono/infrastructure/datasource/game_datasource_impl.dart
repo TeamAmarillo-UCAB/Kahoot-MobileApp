@@ -53,4 +53,10 @@ class GameDatasourceImpl implements GameDatasource {
     final response = await dio.get('/attempts/$attemptId');
     return Attempt.fromJson(response.data);
   }
+
+  @override
+  Future<Map<String, dynamic>> checkActiveAttempt(String kahootId) async {
+    final response = await dio.get('/kahoots/inspect/$kahootId');
+    return response.data;
+  }
 }

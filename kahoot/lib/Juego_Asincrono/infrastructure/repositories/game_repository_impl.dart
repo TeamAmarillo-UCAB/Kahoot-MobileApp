@@ -13,7 +13,6 @@ class GameRepositoryImpl implements GameRepository {
   Future<Result<Attempt>> startAttempt(String kahootId) async {
     try {
       final attempt = await datasource.startAttempt(kahootId);
-      // Suponiendo que el datasource ya devuelve la entidad Attempt
       return Result.success(attempt);
     } catch (e) {
       return Result.makeError(Exception('No se pudo iniciar el juego: $e'));
@@ -61,6 +60,17 @@ class GameRepositoryImpl implements GameRepository {
       return Result.success(summary);
     } catch (e) {
       return Result.makeError(Exception('Error al obtener el resumen: $e'));
+    }
+  }
+
+  @override
+  Future<Result<String?>> checkActiveAttempt(String kahootId) async {
+    try {
+      final data = await datasource.checkActiveAttempt(kahootId);
+      final String? attemptId = data['state']?['attemptId'];
+      return Result.success(attemptId);
+    } catch (e) {
+      return Result.makeError(Exception('Error al inspeccionar el Kahoot: $e'));
     }
   }
 }

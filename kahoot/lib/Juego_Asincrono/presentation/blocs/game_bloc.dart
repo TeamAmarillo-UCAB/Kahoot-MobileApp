@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kahoot/common/core/result.dart';
 import '../../application/usecases/start_attempt.dart';
 import '../../application/usecases/submit_answer.dart';
 import '../../application/usecases/get_summary.dart';
 import '../../application/usecases/get_attempt_status.dart';
+import '../../application/usecases/check_active_attempt.dart';
 import 'game_event.dart';
 import 'game_state.dart';
 import '../../domain/entities/attempt.dart';
@@ -12,6 +14,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   final SubmitAnswer submitAnswer;
   final GetSummary getGameSummary;
   final GetAttemptStatus getAttemptStatus;
+  final CheckActiveAttempt checkActiveAttempt;
 
   Attempt? _currentAttempt;
   int _counter = 1;
@@ -21,14 +24,34 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     required this.submitAnswer,
     required this.getGameSummary,
     required this.getAttemptStatus,
+    required this.checkActiveAttempt,
   }) : super(GameInitial()) {
     on<OnStartGame>((event, emit) async {
       emit(GameLoading());
-      final result = await startAttempt(event.kahootId);
+      /* PARA CUANDO SE TENGA EL TOKEN Y SE PUEDA RESTAURAR EL PROGRESO
+      final activeCheckResult = await checkActiveAttempt(event.kahootId);
+      String? existingAttemptId;
+
+      if (activeCheckResult.isSuccessful()) {
+        existingAttemptId = activeCheckResult.getValue();
+      }
+
+      Result<Attempt> result;
+
+      if (existingAttemptId != null && existingAttemptId.isNotEmpty) {
+        result = await getAttemptStatus(existingAttemptId);
+      } else {
+        result = await startAttempt(event.kahootId);
+      }
+      */
+      Result<Attempt> result;
+      result = await startAttempt(event.kahootId);
 
       if (result.isSuccessful()) {
         _currentAttempt = result.getValue();
+
         _counter = 1;
+
         emit(
           QuizState(
             attempt: _currentAttempt!,
@@ -37,7 +60,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           ),
         );
       } else {
-        emit(GameError("Error al iniciar la partida"));
+        emit(GameError("No se pudo iniciar o recuperar la partida"));
       }
     });
 

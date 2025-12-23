@@ -16,4 +16,6 @@ abstract class GameRepository {
   });
 
   Future<Result<GameSummary>> getSummary(String attemptId);
+
+  Future<Result<String?>> checkActiveAttempt(String kahootId);
 }
