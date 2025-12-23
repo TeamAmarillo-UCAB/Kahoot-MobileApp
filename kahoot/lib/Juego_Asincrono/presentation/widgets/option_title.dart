@@ -41,19 +41,24 @@ class OptionTitle extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              left: 10,
-              top: 10,
-              child: Icon(icon, color: Colors.white30, size: 35),
+              left: 8,
+              top: 8,
+              child: Icon(icon, color: Colors.white30, size: 28),
             ),
             if (isSelected)
               const Positioned(
-                right: 10,
-                top: 10,
-                child: Icon(Icons.check_circle, color: Colors.white, size: 28),
+                right: 8,
+                top: 8,
+                child: Icon(Icons.check_circle, color: Colors.white, size: 22),
               ),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.fromLTRB(
+                  12,
+                  30,
+                  12,
+                  8,
+                ), // Padding para no chocar con iconos
                 child: option.mediaId != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -70,11 +75,16 @@ class OptionTitle extends StatelessWidget {
                     : Text(
                         option.text,
                         textAlign: TextAlign.center,
+                        // QUITAMOS EL FITTEDBOX PARA QUE ESTO FUNCIONE:
                         style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16, // Un tamaño sólido
                         ),
+                        maxLines: 6, // Permite hasta 4 líneas
+                        overflow: TextOverflow
+                            .ellipsis, // Si es demasiado largo, pone "..."
+                        softWrap: true, // Forzar el salto de línea
                       ),
               ),
             ),

@@ -128,9 +128,10 @@ class _QuizViewState extends State<QuizView> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              // CAMBIO: Se reduce el ratio para dar más altura a los cuadros
+              childAspectRatio: 0.85,
             ),
             itemCount: slide.options.length,
             itemBuilder: (context, index) {
