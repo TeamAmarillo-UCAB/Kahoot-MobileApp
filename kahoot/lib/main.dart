@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
+import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentacion/pages/biblioteca_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
@@ -46,14 +47,15 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = const [
-      HomePage(showFooter: false),
-      CreateKahootPage(),
-      BibliotecaPage(),
+    final pages = [
+      HomePage(showFooter: false), // 0
+      const ExploracionBusquedaPage(), // 1
+      CreateKahootPage(), // 2
+      BibliotecaPage(), // 3
     ];
 
     final body = IndexedStack(
-      index: _index == 4 ? 2 : (_index == 3 ? 1 : 0),
+      index: _index,
       children: pages,
     );
 
@@ -78,7 +80,13 @@ class _MainShellState extends State<MainShell> {
             iconSize: 28,
             onTap: () => setState(() => _index = 0),
           ),
-          const _BottomNavItem(icon: Icons.explore, label: 'Descubre', iconSize: 28),
+          _BottomNavItem(
+            icon: Icons.explore,
+            label: 'Descubre',
+            selected: _index == 1,
+            iconSize: 28,
+            onTap: () => setState(() => _index = 1),
+          ),
           const _BottomNavItem(
             icon: Icons.group_add_outlined,
             label: 'Unirse',
@@ -88,15 +96,15 @@ class _MainShellState extends State<MainShell> {
             icon: Icons.add_box,
             label: 'Crear',
             iconSize: 30,
-            selected: _index == 3,
-            onTap: () => setState(() => _index = 3),
+            selected: _index == 2,
+            onTap: () => setState(() => _index = 2),
           ),
           _BottomNavItem(
             icon: Icons.library_books,
             label: 'Biblioteca',
-            selected: _index == 4,
+            selected: _index == 3,
             iconSize: 28,
-            onTap: () => setState(() => _index = 4),
+            onTap: () => setState(() => _index = 3),
           ),
         ],
       ),
@@ -106,20 +114,16 @@ class _MainShellState extends State<MainShell> {
 
 class _BottomNavItem extends StatefulWidget {
   final IconData? icon;
-  final Widget? iconWidget;
   final String label;
   final bool selected;
   final double iconSize;
   final VoidCallback? onTap;
-  final double lift;
   const _BottomNavItem({
     this.icon,
-    this.iconWidget,
     required this.label,
     this.selected = false,
     this.iconSize = 24,
     this.onTap,
-    this.lift = -3,
   });
 
   @override
@@ -137,13 +141,13 @@ class _BottomNavItemState extends State<_BottomNavItem> {
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        widget.iconWidget ?? Icon(widget.icon, color: color, size: widget.iconSize),
+        Icon(widget.icon, color: color, size: widget.iconSize),
         const SizedBox(height: 2),
         Text(widget.label, style: TextStyle(color: color, fontWeight: widget.selected ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
       ],
     );
     final child = Transform.translate(
-      offset: Offset(0, widget.lift),
+      offset: const Offset(0, -3),
       child: AnimatedScale(
         scale: _scale,
         duration: const Duration(milliseconds: 120),
