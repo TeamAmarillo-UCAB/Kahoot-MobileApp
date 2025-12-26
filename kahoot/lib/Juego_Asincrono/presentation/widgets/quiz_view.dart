@@ -102,6 +102,7 @@ class _QuizViewState extends State<QuizView> {
   Widget build(BuildContext context) {
     final slide = widget.attempt.nextSlide;
     if (slide == null) return const SizedBox.shrink();
+    final remainingSeconds = (progress * timeLimit).ceil().clamp(0, timeLimit);
 
     return Column(
       children: [
@@ -130,7 +131,33 @@ class _QuizViewState extends State<QuizView> {
             ),
           ),
 
-        AnimatedTimerBar(progress: progress),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF46178F),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  "$remainingSeconds",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: AnimatedTimerBar(progress: progress)),
+            ],
+          ),
+        ),
         const SizedBox(height: 20),
         Expanded(
           child: GridView.builder(
