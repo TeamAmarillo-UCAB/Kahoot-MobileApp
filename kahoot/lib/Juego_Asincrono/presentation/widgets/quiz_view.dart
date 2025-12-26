@@ -59,11 +59,20 @@ class _QuizViewState extends State<QuizView> {
 
   void _onOptionTap(int index) {
     if (_hasAnswered) return;
+
+    final slide = widget.attempt.nextSlide;
+    if (slide == null) return;
+
     setState(() {
-      if (selectedIndices.contains(index)) {
-        selectedIndices.remove(index);
+      if (slide.type == "MULTIPLE") {
+        if (selectedIndices.contains(index)) {
+          selectedIndices.remove(index);
+        } else {
+          selectedIndices.add(index);
+        }
       } else {
-        selectedIndices.add(index);
+        selectedIndices = [index];
+        _submit();
       }
     });
   }
@@ -144,7 +153,9 @@ class _QuizViewState extends State<QuizView> {
             },
           ),
         ),
-        if (selectedIndices.isNotEmpty && !_hasAnswered)
+        if (slide.type == "MULTIPLE" &&
+            selectedIndices.isNotEmpty &&
+            !_hasAnswered)
           Padding(
             padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
             child: SizedBox(

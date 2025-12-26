@@ -4,12 +4,14 @@ class Slide {
   final int timeLimit;
   final List<Option> options;
   final String? mediaId;
+  final String type;
 
   Slide({
     required this.slideId,
     required this.question,
     required this.timeLimit,
     required this.options,
+    required this.type,
     this.mediaId,
   });
 
@@ -19,6 +21,7 @@ class Slide {
       question: json['questionText'] ?? '',
       timeLimit: json['timeLimitSeconds'] ?? 30,
       mediaId: json['mediaId'],
+      type: json['questionType'],
       options: (json['options'] as List? ?? [])
           .map((o) => Option.fromJson(o))
           .toList(),
