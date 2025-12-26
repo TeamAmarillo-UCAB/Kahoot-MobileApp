@@ -130,7 +130,6 @@ class _QuizViewState extends State<QuizView> {
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              // CAMBIO: Se reduce el ratio para dar más altura a los cuadros
               childAspectRatio: 0.85,
             ),
             itemCount: slide.options.length,
@@ -168,6 +167,39 @@ class _QuizViewState extends State<QuizView> {
               ),
             ),
           ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white30, width: 1),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Juan",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Puntos: ${widget.attempt.currentScore}",
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

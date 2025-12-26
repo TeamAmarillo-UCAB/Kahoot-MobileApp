@@ -49,60 +49,93 @@ class _FeedbackViewState extends State<FeedbackView> {
         ? "¡Sigue así!"
         : "No te preocupes, sigue avanzando";
 
-    // Determinamos el texto de puntos a mostrar
     final pointsText = widget.wasCorrect
         ? "+ ${widget.attempt.lastPointsEarned} puntos"
         : "+ 0 puntos";
 
     return Material(
       color: bgColor,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              widget.wasCorrect
-                  ? Icons.check_circle_outline
-                  : Icons.highlight_off,
-              size: 150,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.wasCorrect ? "CORRECTO" : "INCORRECTO",
-              style: const TextStyle(
-                fontSize: 40,
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
+      child: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  widget.wasCorrect
+                      ? Icons.check_circle_outline
+                      : Icons.highlight_off,
+                  size: 150,
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontStyle: FontStyle.italic,
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  widget.wasCorrect ? "CORRECTO" : "INCORRECTO",
+                  style: const TextStyle(
+                    fontSize: 40,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  pointsText,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 40),
+          ),
 
-            // PUNTOS GANADOS (Ahora siempre visible)
-            Text(
-              pointsText,
-              style: const TextStyle(
-                fontSize: 32,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          Positioned(
+            left: 20,
+            bottom: 40,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white30, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Juan",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Puntos: ${widget.attempt.currentScore}",
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

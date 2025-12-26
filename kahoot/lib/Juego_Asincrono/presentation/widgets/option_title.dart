@@ -53,12 +53,7 @@ class OptionTitle extends StatelessWidget {
               ),
             Center(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  12,
-                  30,
-                  12,
-                  8,
-                ), // Padding para no chocar con iconos
+                padding: const EdgeInsets.fromLTRB(12, 30, 12, 8),
                 child: option.mediaId != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -75,16 +70,14 @@ class OptionTitle extends StatelessWidget {
                     : Text(
                         option.text,
                         textAlign: TextAlign.center,
-                        // QUITAMOS EL FITTEDBOX PARA QUE ESTO FUNCIONE:
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
-                          fontSize: 16, // Un tamaño sólido
+                          fontSize: 16,
                         ),
-                        maxLines: 6, // Permite hasta 4 líneas
-                        overflow: TextOverflow
-                            .ellipsis, // Si es demasiado largo, pone "..."
-                        softWrap: true, // Forzar el salto de línea
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
                       ),
               ),
             ),
