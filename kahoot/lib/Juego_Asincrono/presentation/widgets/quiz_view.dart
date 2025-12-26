@@ -166,7 +166,7 @@ class _QuizViewState extends State<QuizView> {
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 0.85,
+              childAspectRatio: 1.4,
             ),
             itemCount: slide.options.length,
             itemBuilder: (context, index) {
