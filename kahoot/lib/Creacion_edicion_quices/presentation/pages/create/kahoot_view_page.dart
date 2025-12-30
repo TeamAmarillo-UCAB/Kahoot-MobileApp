@@ -8,7 +8,7 @@ import '../../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../../../main.dart';
 import 'create_kahoot_page.dart';
 import '../home/home_page.dart';
-import '../../../../biblioteca_gestion_de_contenido/presentacion/pages/biblioteca_page.dart';
+import '../../../../biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 
 class KahootViewPage extends StatefulWidget {
   final Kahoot kahoot;

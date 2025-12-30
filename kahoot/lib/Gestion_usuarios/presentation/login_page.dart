@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/social_button.dart';
+import 'register_page.dart';
+import '../../core/widgets/gradient_button.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -7,21 +9,31 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFA05A00),
+      backgroundColor: const Color(0xFF3A240C),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Container(
-              width: 350,
+              width: 360,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE082),
+                color: const Color(0xFFF2C147),
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      GradientButton(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Text('Volver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
                   const Text(
                     'Iniciar sesión',
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
@@ -37,24 +49,9 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: const Text(
-                        'Continual con el email del trabajo',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                  GradientButton(
+                    onTap: () {},
+                    child: const Text('Continuar con el email del trabajo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 14),
                   Row(
@@ -103,23 +100,9 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC233),
-                        foregroundColor: Colors.black54,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: const Text(
-                        'Iniciar sesión',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black38),
-                      ),
-                    ),
+                  GradientButton(
+                    onTap: () {},
+                    child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 10),
                   const Text.rich(
@@ -143,7 +126,9 @@ class LoginPage extends StatelessWidget {
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed('/register');
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const RegisterPage()),
+                        );
                       },
                       child: const Text(
                         '¿No tienes cuenta? Regístrate',

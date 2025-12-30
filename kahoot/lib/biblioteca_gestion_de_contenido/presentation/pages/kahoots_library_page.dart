@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
+import '../../../core/widgets/gradient_button.dart';
 
 class KahootsLibraryPage extends StatelessWidget {
   final List<Kahoot> items;
   const KahootsLibraryPage({Key? key, this.items = const []}) : super(key: key);
 
   static const Color bgBrown = Color(0xFF3A240C);
-  static const Color headerYellow = Color(0xFFFFD36F);
+  static const Color headerYellow = Color(0xFFFFB300);
   static const Color cardYellow = Color(0xFFFFB300);
 
   @override
@@ -31,17 +32,12 @@ class KahootsLibraryPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFEE58),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Volver'),
+          GradientButton(
+            onTap: () => Navigator.of(context).pop(),
+            child: const Text('Volver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
           const Spacer(),
-          const Text('Kahoots', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          const Text('Mis Kahoots', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
           const Spacer(),
         ],
       ),

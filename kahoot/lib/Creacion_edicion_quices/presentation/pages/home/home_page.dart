@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/gradient_button.dart';
+import '../../../../Gestion_usuarios/presentation/pages/account_page.dart';
 import '../create/create_kahoot_page.dart';
-import '../../../../biblioteca_gestion_de_contenido/presentacion/pages/biblioteca_page.dart';
+import '../../../../biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 
 class HomePage extends StatefulWidget {
   final bool showFooter;
@@ -67,15 +69,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.brown.shade200,
-              radius: 22,
-              child: Icon(Icons.person, color: Colors.brown.shade800, size: 26),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AccountPage()),
+                );
+              },
+              child: CircleAvatar(
+                backgroundColor: Colors.brown.shade200,
+                radius: 22,
+                child: Icon(Icons.person, color: Colors.brown.shade800, size: 26),
+              ),
             ),
             const SizedBox(width: 10),
             _LogoTitle(),
             const Spacer(),
-            _GradientButton(
+            GradientButton(
               onTap: () {},
               child: const Text(
                 'Actualizar',
@@ -273,60 +282,7 @@ class _AnimatedShapesState extends State<_AnimatedShapes> with SingleTickerProvi
   }
 }
 
-// Botón con degradado y efecto 3D para "Actualizar"
-class _GradientButton extends StatelessWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  const _GradientButton({required this.child, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF5A437), // naranja
-              Color(0xFF8B5A2B), // marrón
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          boxShadow: [
-            // Sombra base marcada para efecto 3D
-            BoxShadow(
-              color: const Color(0xFF5B3A17).withOpacity(0.35),
-              offset: const Offset(0, 6),
-              blurRadius: 0,
-            ),
-            // Sombra suave ambiental
-            BoxShadow(
-              color: Colors.black.withOpacity(0.20),
-              offset: const Offset(0, 3),
-              blurRadius: 7,
-            ),
-          ],
-        ),
-        foregroundDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withOpacity(0.18),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.7],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: child,
-      ),
-    );
-  }
-}
+// Usa GradientButton compartido desde core/widgets/gradient_button.dart
 
 class _AnimatedCreateArrow extends StatelessWidget {
   final Animation<double> progress;

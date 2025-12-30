@@ -6,12 +6,16 @@ import '../../infrastructure/datasource/kahoot_datasource_impl.dart';
 import '../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../presentation/blocs/kahoot_editor_cubit.dart';
 import '../pages/create/add_question_modal.dart';
+import '../pages/create/quiz_editor_page.dart';
+import '../pages/create/true_false_editor_page.dart';
+import '../pages/create/short_answer_editor_page.dart';
 import '../../../main.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
 import '../../domain/entities/kahoot.dart';
 
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
+import '../../../core/widgets/gradient_button.dart';
 
 class KahootDetailsPage extends StatefulWidget {
   final Kahoot? initialKahoot;
@@ -128,10 +132,13 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    const bgBrown = Color(0xFF3A240C);
+    const headerYellow = Color(0xFFF2C147);
+    const cardDark = Color(0xFF444444);
     return Scaffold(
-      backgroundColor: const Color(0xFF222222),
+      backgroundColor: bgBrown,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFD54F),
+        backgroundColor: headerYellow,
         elevation: 0,
         title: const Text(
           'Crear Kahoot',
@@ -143,17 +150,10 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          Padding(
+            Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFB300),
-                foregroundColor: Colors.brown,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () async {
+            child: GradientButton(
+              onTap: () async {
                 final title = _titleController.text.trim();
                 if (title.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +215,10 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                   ).showSnackBar(SnackBar(content: Text(msg)));
                 }
               },
-              child: const Text('Guardar'),
+              child: const Text(
+                'Guardar',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
@@ -239,7 +242,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                           controller: _titleController,
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: Color(0xFFFFD54F),
+                            fillColor: headerYellow,
                             hintText: 'Título',
                             hintStyle: TextStyle(color: Colors.black54),
                             border: OutlineInputBorder(
@@ -248,15 +251,6 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFFFFB300),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(Icons.settings, color: Colors.black),
                       ),
                     ],
                   ),
@@ -271,7 +265,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                         : null,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Color(0xFFFFD54F),
+                      fillColor: headerYellow,
                       hintText: 'Tema',
                       hintStyle: TextStyle(color: Colors.black54),
                       border: OutlineInputBorder(
@@ -289,6 +283,8 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                         .toList(),
                     onChanged: (value) {
                       setState(() => _selectedTheme = value);
+                      // Sincronizar inmediatamente con el cubit para que se envíe al JSON
+                      _editorCubit.setTheme(value ?? '');
                     },
                   ),
                 ),
@@ -299,7 +295,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     value: visibility,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Color(0xFFFFD54F),
+                      fillColor: headerYellow,
                       hintText: 'Visible para',
                       hintStyle: TextStyle(color: Colors.black54),
                       border: OutlineInputBorder(
@@ -346,10 +342,61 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                 vertical: 14,
                               ),
                               decoration: BoxDecoration(
-                                color: Color(0xFF444444),
+                                color: cardDark,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Row(
+                              child: InkWell(
+                                onTap: () async {
+                                  final q = state.questions[i];
+                                  Map<String, dynamic>? result;
+                                  if (q.type == QuestionType.true_false) {
+                                    result = await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => TrueFalseEditorPage(
+                                          index: i,
+                                          initialTitle: q.title,
+                                          initialTrueText: q.answer.isNotEmpty ? q.answer.first.text : 'Verdadero',
+                                          initialFalseText: q.answer.length > 1 ? q.answer[1].text : 'Falso',
+                                          initialTime: q.timeLimitSeconds,
+                                        ),
+                                      ),
+                                    );
+                                  } else if (q.type == QuestionType.short_answer) {
+                                    final correct = q.answer.isNotEmpty ? q.answer.first.text : '';
+                                    final others = q.answer.length > 1 ? q.answer.skip(1).map((a) => a.text).toList() : <String>[];
+                                    result = await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ShortAnswerEditorPage(
+                                          index: i,
+                                          initialTitle: q.title,
+                                          initialCorrect: correct,
+                                          initialOthers: others,
+                                          initialTime: q.timeLimitSeconds,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    // quiz_single
+                                    final texts = q.answer.map((a) => a.text).toList();
+                                    result = await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => QuizEditorPage(
+                                          index: i,
+                                          initialTitle: q.title,
+                                          initialAnswers: texts,
+                                          initialTime: q.timeLimitSeconds,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  if (result != null) {
+                                    final updated = _mapResultToQuestion(result);
+                                    if (updated != null) {
+                                      _editorCubit.updateQuestion(i, updated);
+                                    }
+                                  }
+                                },
+                                child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
@@ -369,6 +416,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                     },
                                   ),
                                 ],
+                              ),
                               ),
                             ),
                           ),

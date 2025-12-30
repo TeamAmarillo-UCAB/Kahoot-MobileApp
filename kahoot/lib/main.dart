@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'biblioteca_gestion_de_contenido/presentacion/pages/biblioteca_page.dart';
+import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
 
 const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api');

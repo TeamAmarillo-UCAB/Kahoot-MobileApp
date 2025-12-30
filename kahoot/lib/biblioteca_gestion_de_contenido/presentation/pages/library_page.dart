@@ -16,7 +16,6 @@ class BibliotecaPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _header(context),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -60,24 +59,7 @@ class BibliotecaPage extends StatelessWidget {
     );
   }
 
-  Widget _header(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      builder: (context, t, child) => Opacity(
-        opacity: t,
-        child: Transform.translate(offset: Offset(0, (1 - t) * 10), child: child),
-      ),
-      child: Container(
-        color: headerYellow,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: const Center(
-          child: Text('Biblioteca', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        ),
-      ),
-    );
-  }
+  // Header eliminado según solicitud
 }
 
 class _AnimatedAppear extends StatefulWidget {

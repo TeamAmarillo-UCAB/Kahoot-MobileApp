@@ -12,22 +12,6 @@ class CreateKahootPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgBrown,
-      appBar: AppBar(
-        backgroundColor: headerYellow,
-        title: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut,
-          builder: (context, t, child) => Opacity(
-            opacity: t,
-            child: Transform.translate(offset: Offset(0, (1 - t) * 8), child: child),
-          ),
-          child: const Text('Crear', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: Column(
