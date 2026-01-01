@@ -9,93 +9,71 @@ class GameSummaryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF46178F), GameColors.blue],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: GameColors.mainPurple,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.emoji_events,
-                color: GameColors.yellow,
-                size: 140,
-              ),
-              const SizedBox(height: 20),
               const Text(
-                "¡PARTIDA FINALIZADA!",
-                style: TextStyle(
+                "Resultados",
+                style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              
+              // Trofeo
+              Image.asset(
+                GameAssets.iconTrophy,
+                height: 150,
+                errorBuilder: (_,__,___) => const Icon(Icons.emoji_events, size: 150, color: GameColors.yellow),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Tarjeta de Puntuación
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,5))]
+                ),
+                child: Column(
+                  children: [
+                    const Text("Puntaje Final", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    Text(
+                      "${summary.totalScore}",
+                      style: const TextStyle(color: Colors.black, fontSize: 48, fontWeight: FontWeight.w900),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
-
-              _buildStatCard(
-                label: "Puntaje Total",
-                value: summary.totalScore.toString(),
-                isPrimary: true,
-                color: Colors.white,
-              ),
-
+              
               const SizedBox(height: 20),
-
+              
+              // Estadísticas secundarias
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatCard(
-                    label: "Correctas",
-                    value:
-                        "${summary.correctAnswers}" +
-                        "/" +
-                        "${((summary.correctAnswers * 100) / summary.accuracy).toInt()}",
-                    isPrimary: false,
-                    color: GameColors.correctGreen,
-                  ),
-                  const SizedBox(width: 16),
-                  _buildStatCard(
-                    label: "Precisión",
-                    value: "${(summary.accuracy).toInt()}%",
-                    isPrimary: false,
-                    color: Colors.white,
-                  ),
+                  Expanded(child: _statBox("Correctas", "${summary.correctAnswers}", Colors.green)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _statBox("Precisión", "${summary.accuracy.toInt()}%", Colors.blue)),
                 ],
               ),
-
-              const SizedBox(height: 60),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF46178F),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 8,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      "VOLVER AL INICIO",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
-                    ),
+              
+              const Spacer(),
+              
+              // Botón Salir
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: GameColors.mainPurple,
                   ),
+                  onPressed: () => Navigator.of(context).pop(), // Volver al inicio
+                  child: const Text("VOLVER AL INICIO", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -105,48 +83,18 @@ class GameSummaryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required String label,
-    required String value,
-    required bool isPrimary,
-    required Color color,
-  }) {
+  Widget _statBox(String label, String value, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isPrimary ? 50 : 30,
-        vertical: isPrimary ? 25 : 15,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white24, width: 1),
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(label, style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: isPrimary ? 55 : 30,
-              fontWeight: FontWeight.w900,
-              shadows: const [
-                Shadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
+          Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
         ],
       ),
     );
