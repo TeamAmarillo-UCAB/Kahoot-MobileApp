@@ -14,7 +14,7 @@ class UserDatasourceImpl implements UserDatasource {
       'userType': userType,
     };
     await dio.post(
-      '/users',
+      'auth/register',
       data: body,
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
@@ -29,7 +29,7 @@ class UserDatasourceImpl implements UserDatasource {
       'userType': user.userType.toString().split('.').last,
     };
     await dio.put(
-      '/users',
+      '/profile',
       data: body,
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
@@ -41,5 +41,30 @@ class UserDatasourceImpl implements UserDatasource {
       '/users/$userId',
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
+  }
+
+  @override
+  Future<User?> getUserById(String userId) async {
+    final response = await dio.get(
+      '/users/$userId',
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
+    if (response.statusCode == 200) {
+      return User.fromJson(response.data);
+    } else {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> userLogin(String email, String password) async {
+    // TODO: Implement with POST to 'auth/login' and body {"email": email, "password": password}
+    throw UnimplementedError('userLogin not implemented');
+  }
+
+  @override
+  Future<void> userLogout() async {
+    // TODO: Implement with POST to 'auth/logout'
+    throw UnimplementedError('userLogout not implemented');
   }
 }
