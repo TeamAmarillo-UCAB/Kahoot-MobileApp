@@ -14,7 +14,26 @@ class GameDatasourceImpl implements GameDatasource {
               baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
               headers: {'Content-Type': 'application/json'},
             ),
-          );
+          ) {
+    // Interceptor para el header
+    this.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // --- ID HARDCODEADO ---
+          const String userId =
+              "20936913-0c59-4ee4-ad35-634ef24d7d3d"; // El ID que necesites probar
+
+          // Inyección de userId como header
+          options.headers['UserId'] = userId;
+
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) {
+          return handler.next(e);
+        },
+      ),
+    );
+  }
 
   @override
   Future<Map<String, dynamic>> submitAnswer({

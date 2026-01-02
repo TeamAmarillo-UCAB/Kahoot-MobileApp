@@ -120,22 +120,6 @@ class HomePage extends StatelessWidget {
                       ),
                     );
 
-                    dio.interceptors.add(
-                      InterceptorsWrapper(
-                        onRequest: (options, handler) {
-                          // PARA CUANDO ESTÉ EL TOKENNNNNNN
-                          const String token = "TU_TOKEN_AQUI";
-
-                          if (token.isNotEmpty && token != "TU_TOKEN_AQUI") {
-                            options.headers['Authorization'] = 'Bearer $token';
-                          }
-                          return handler.next(options);
-                        },
-                        onError: (DioException e, handler) {
-                          return handler.next(e);
-                        },
-                      ),
-                    );
                     // ----------------------------
 
                     final datasource = GameDatasourceImpl(dio: dio);
