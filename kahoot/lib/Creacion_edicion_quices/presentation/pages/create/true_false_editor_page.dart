@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 import '../../../../core/widgets/gradient_button.dart';
 // Dependencias eliminadas, vista solo UI
@@ -218,17 +219,36 @@ class _TFBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(12),
-      child: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          hintText: 'Pulsa para añadir respuesta',
-          hintStyle: TextStyle(color: Colors.white),
-          border: InputBorder.none,
-        ),
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Pulsa para añadir respuesta',
+                hintStyle: TextStyle(color: Colors.white),
+                border: InputBorder.none,
+              ),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Subir imagen',
+            icon: const Icon(Icons.image, color: Colors.white),
+            onPressed: () async {
+              final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
+              final name = res?.files.first.name;
+              if (name != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Imagen seleccionada: $name')),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
