@@ -164,6 +164,7 @@ class _GamePageState extends State<GamePage> {
               title: const Text("Cancelar"),
               onTap: () => Navigator.pop(ctx), // Solo cerrar el modal
             ),
+            SizedBox(height: 50) // Espacio extra abajo
           ],
         ),
       ),

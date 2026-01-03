@@ -4,7 +4,7 @@ import '../utils/game_constants.dart';
 
 class OptionTitle extends StatelessWidget {
   final Option option;
-  final int index; // 0, 1, 2, 3
+  final int index;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -18,7 +18,7 @@ class OptionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener color e icono basado en la posición (0=Rojo/Triangulo, 1=Azul/Rombo...)
+    // Obtener color e icono
     final color = GameColors.optionColors[index % GameColors.optionColors.length];
     final iconData = GameColors.optionIcons[index % GameColors.optionIcons.length];
 
@@ -26,48 +26,57 @@ class OptionTitle extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(8),
+        // Padding reducido para dar máximo espacio al contenido
+        padding: const EdgeInsets.all(8), 
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(4), // Bordes más rectos estilo tarjeta
-          // Efecto de "presionado" u opacidad si hay otro seleccionado
+          borderRadius: BorderRadius.circular(4),
           border: isSelected ? Border.all(color: Colors.white, width: 4) : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.25),
               offset: const Offset(0, 4),
-              blurRadius: 0, // Sombra sólida tipo bloque
+              blurRadius: 0, 
             )
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // CAMBIO PRINCIPAL: Usamos Stack en lugar de Column
+        child: Stack(
           children: [
-            // Icono de forma (Triangulo, Cuadrado...)
-            Align(
-              alignment: Alignment.topLeft,
-              child: Icon(iconData, color: Colors.white.withOpacity(0.5), size: 24),
+            // 1. Icono (Anclado arriba a la izquierda)
+            Positioned(
+              left: 0,
+              top: 0,
+              child: Icon(iconData, color: Colors.white.withOpacity(0.9), size: 18),
             ),
-            
-            Expanded(
-              child: Center(
+
+            // 2. Contenido (Texto o Imagen) Centrado absolutamente en la tarjeta
+            Center(
+              child: Padding(
+                // Damos un poco de margen horizontal para que no toque los bordes
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: option.mediaId != null 
-                ? Image.network(
-                    'https://quizzy-backend-0wh2.onrender.com/api/media/${option.mediaId}',
-                    fit: BoxFit.contain,
-                  )
-                : Text(
-                    option.text,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(color: Colors.black26, offset: Offset(1,1), blurRadius: 2)]
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.network(
+                        'https://quizzy-backend-0wh2.onrender.com/api/media/${option.mediaId}',
+                        fit: BoxFit.cover,
+                        width: double.infinity, // Asegura que ocupe espacio disponible
+                      ),
+                    )
+                  : Text(
+                      option.text,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 15, // Tamaño 15 es ideal para hasta 75 chars
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [Shadow(color: Colors.black26, offset: Offset(1,1), blurRadius: 2)]
+                      ),
+                      maxLines: 5, // Aumentado a 5 líneas para soportar 75 caracteres cómodamente
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
               ),
             ),
           ],

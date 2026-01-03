@@ -2,11 +2,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/attempt.dart';
+import '../../domain/entities/slide.dart';
 import '../blocs/game_bloc.dart';
 import '../blocs/game_event.dart';
 import '../utils/game_constants.dart';
 import 'animated_timer_bar.dart';
 import 'option_title.dart';
+import 'question_header.dart'; // Importamos el header optimizado
+
+enum QuizPhase {
+  intro,      
+  content,    // Muestra pregunta e imagen (si hay)
+}
 
 class QuizView extends StatefulWidget {
   final Attempt attempt;
@@ -25,232 +32,174 @@ class QuizView extends StatefulWidget {
 }
 
 class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
-  // Estados internos de la vista
-  bool _showingTransition = true; // Empieza mostrando la transición (ej: "Quiz")
+  QuizPhase _phase = QuizPhase.intro;
   bool _hasAnswered = false;
   
-  // Lógica del Timer y Selección
+  // Timer
   Timer? _questionTimer;
   double _timerProgress = 1.0;
   List<int> _selectedIndices = [];
-  late final int _timeLimitSeconds;
-  DateTime? _startQuestionTime; // Momento exacto en que se muestra la pregunta
-
+  late int _timeLimitSeconds;
+  
   // Animaciones
-  late AnimationController _transitionController;
-  late Animation<Offset> _slideAnimation;
+  late AnimationController _optionsController;
+  late Animation<Offset> _optionsSlideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _timeLimitSeconds = widget.attempt.nextSlide?.timeLimit ?? 30;
-
-    // Configurar animación de entrada de la pregunta
-    _transitionController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
+    // Configurar animación de entrada de opciones (desde abajo)
+    _optionsController = AnimationController(
+      vsync: this, 
+      duration: const Duration(milliseconds: 800)
     );
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2), // Viene un poco de abajo
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _transitionController, curve: Curves.easeOut));
+    _optionsSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1.5), 
+      end: Offset.zero
+    ).animate(CurvedAnimation(parent: _optionsController, curve: Curves.elasticOut));
 
-    // INICIAR SECUENCIA:
-    // 1. Mostrar pantalla de transición por 2.5 segundos
-    // 2. Ocultar transición, mostrar pregunta y arrancar timer
     _startSequence();
   }
 
-  void _startSequence() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
-    if (!mounted) return;
-
-    setState(() {
-      _showingTransition = false;
-    });
+  void _startSequence() {
+    // FASE 1: Intro (Pantalla de transición)
+    setState(() => _phase = QuizPhase.intro);
     
-    _transitionController.forward(); // Animar entrada de elementos
-    _startTimer(); // Arrancar el reloj
+    // Esperar 2.5 segundos y pasar al contenido
+    Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      setState(() {
+        _phase = QuizPhase.content;
+      });
+      _startTimer();
+      _optionsController.forward(); // Suben las opciones
+    });
   }
 
   void _startTimer() {
-    _startQuestionTime = DateTime.now();
-    
-    _questionTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+    final slide = widget.attempt.nextSlide!;
+    _timeLimitSeconds = slide.timeLimit > 0 ? slide.timeLimit : 20;
+    int remaining = _timeLimitSeconds * 100; 
+    int total = remaining;
 
-      final now = DateTime.now();
-      final elapsedMs = now.difference(_startQuestionTime!).inMilliseconds;
-      final totalMs = _timeLimitSeconds * 1000;
-      
-      final newProgress = 1 - (elapsedMs / totalMs);
+    _questionTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      if (!mounted) return;
+      setState(() {
+        remaining--;
+        _timerProgress = remaining / total;
+      });
 
-      if (newProgress <= 0) {
+      if (remaining <= 0) {
         timer.cancel();
-        setState(() => _timerProgress = 0);
-        if (!_hasAnswered) _submit(); // Timeout
-      } else {
-        setState(() => _timerProgress = newProgress);
+        _submitAnswer(timeOut: true);
       }
     });
   }
 
-  void _onOptionTap(int index, String type) {
+  @override
+  void dispose() {
+    _questionTimer?.cancel();
+    _optionsController.dispose();
+    super.dispose();
+  }
+
+  void _onOptionSelected(int index, String type) {
     if (_hasAnswered) return;
 
     setState(() {
-      if (type == "MULTIPLE") {
+      if (type == 'MULTIPLE') {
         if (_selectedIndices.contains(index)) {
           _selectedIndices.remove(index);
         } else {
           _selectedIndices.add(index);
         }
       } else {
-        // SINGLE o TRUE_FALSE
+        // Single, True/False -> Envío inmediato
         _selectedIndices = [index];
-        _submit(); // Auto-enviar
+        _submitAnswer();
       }
     });
   }
 
-  void _submit() {
-    if (_hasAnswered) return;
-    _hasAnswered = true;
+  void _submitAnswer({bool timeOut = false}) {
     _questionTimer?.cancel();
+    setState(() => _hasAnswered = true);
+    
+    final timeElapsed = ((1.0 - _timerProgress) * _timeLimitSeconds).toInt();
 
-    final now = DateTime.now();
-    // Calcular tiempo real tomado desde que se mostró la pregunta
-    final secondsTaken = _startQuestionTime != null 
-        ? now.difference(_startQuestionTime!).inSeconds 
-        : _timeLimitSeconds;
-
-    context.read<GameBloc>().add(
-      OnSubmitAnswer(
-        answerIndexes: _selectedIndices,
-        timeSeconds: secondsTaken.clamp(1, _timeLimitSeconds),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _questionTimer?.cancel();
-    _transitionController.dispose();
-    super.dispose();
+    context.read<GameBloc>().add(OnSubmitAnswer(
+      answerIndexes: _selectedIndices,
+      timeSeconds: timeElapsed,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final slide = widget.attempt.nextSlide;
-    if (slide == null) return const SizedBox.shrink();
+    final slide = widget.attempt.nextSlide!;
+    
+    // Usamos AnimatedSwitcher para una transición suave entre Intro y Pregunta
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      child: _phase == QuizPhase.intro
+          ? _buildIntroView(slide)
+          : _buildGameView(slide),
+    );
+  }
 
-    // -- FASE 1: TRANSICIÓN --
-    if (_showingTransition) {
-      return _buildTransitionScreen(slide.type);
-    }
-
-    // -- FASE 2: PREGUNTA --
-    return FadeTransition(
-      opacity: _transitionController,
-      child: SlideTransition(
-        position: _slideAnimation,
+  // --- VISTA 1: INTRODUCCIÓN (Imagen 1 corregida) ---
+  Widget _buildIntroView(Slide slide) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      key: const ValueKey('intro'),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Cabecera (Pregunta)
+            // Numero de pregunta
+            Text(
+              "Pregunta ${widget.currentNumber}",
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 24, 
+                color: Colors.white70,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Icono del tipo de pregunta
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(25),
+              decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,2))]
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,5))]
+              ),
+              child: Image.asset(
+                _getIconForType(slide.type),
+                width: 60, height: 60,
+                errorBuilder: (_,__,___)=> const Icon(Icons.quiz, size: 60, color: GameColors.amberTheme),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Texto del tipo (con fondo bonito, no rectangular feo)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              decoration: BoxDecoration(
+                color: GameColors.amberTheme,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white24)
               ),
               child: Text(
-                slide.question,
-                textAlign: TextAlign.center,
+                slide.type.replaceAll('_', ' '),
                 style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 10),
-
-            // Imagen (Si existe)
-            if (slide.mediaId != null)
-              Expanded(
-                flex: 4,
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: NetworkImage('https://quizzy-backend-0wh2.onrender.com/api/media/${slide.mediaId}'),
-                      fit: BoxFit.contain, // Para que se vea toda la imagen
-                    ),
-                  ),
-                ),
-              )
-            else 
-              const Spacer(flex: 1),
-
-            // Timer Bar (Estilo Kahoot: barra morada que decrece)
-            Padding(
-               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-               child: Row(
-                 children: [
-                   // Círculo con segundos restantes
-                   Container(
-                     width: 40, height: 40,
-                     alignment: Alignment.center,
-                     decoration: const BoxDecoration(color: GameColors.mainPurple, shape: BoxShape.circle),
-                     child: Text(
-                       "${(_timerProgress * _timeLimitSeconds).ceil()}", 
-                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
-                     ),
-                   ),
-                   const SizedBox(width: 10),
-                   Expanded(child: AnimatedTimerBar(progress: _timerProgress)),
-                 ],
-               ),
-            ),
-
-            // Opciones (Grid)
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: _buildOptionsGrid(slide),
-              ),
-            ),
-            
-            // Botón enviar (Solo para MULTIPLE)
-            if (slide.type == "MULTIPLE" && _selectedIndices.isNotEmpty && !_hasAnswered)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: GameColors.mainPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: _submit,
-                  child: const Text("ENVIAR", style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-              ),
-              
-            // Info usuario pie de pagina
-             Padding(
-              padding: const EdgeInsets.only(bottom: 10, left: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Puntos: ${widget.attempt.currentScore}",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  fontFamily: 'Montserrat',
+                  fontSize: 28, 
+                  fontWeight: FontWeight.w900, 
+                  color: Colors.black87
                 ),
               ),
             ),
@@ -260,74 +209,203 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
     );
   }
 
-  // Widget para la pantalla intermedia "Pregunta 1 - Quiz"
-  Widget _buildTransitionScreen(String type) {
-    String typeText = "Quiz";
-    String iconPath = GameAssets.iconQuiz;
+  // --- VISTA 2: JUEGO (Imagen 2 y 3 corregidas) ---
+ Widget _buildGameView(Slide slide) {
+    return Scaffold(
+      key: const ValueKey('game'),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. Header ACTUALIZADO
+            // Ya no pasamos onMenuPressed, pasamos el slide completo
+            QuestionHeader(
+              currentNumber: widget.currentNumber,
+              slide: slide, 
+            ),
 
-    if (type == "TRUE_FALSE") {
-      typeText = "Verdadero o Falso";
-      iconPath = GameAssets.iconTrueFalse;
-    } else if (type == "MULTIPLE") {
-      typeText = "Selección Múltiple";
-      iconPath = GameAssets.iconQuiz; // O uno específico si tienes
-    } else if (type == "SHORT_ANSWER") {
-      typeText = "Respuesta Corta";
-      iconPath = GameAssets.iconShortAnswer;
-    }
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 10),
+                    
+                    // 2. Caja Blanca de Pregunta
+                    Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(minHeight: 100), // Altura mínima para estética
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,4))]
+                      ),
+                      // Usamos Center para centrar verticalmente el texto en la caja
+                      child: Center(
+                        child: Text(
+                          slide.question,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            color: Colors.black87,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+                    const SizedBox(height: 10),
+
+                    // 3. Imagen (Si existe)
+                    if (slide.mediaId != null) 
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.black12,
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                'https://quizzy-backend-0wh2.onrender.com/api/media/${slide.mediaId}'
+                              ),
+                              fit: BoxFit.contain, 
+                            ),
+                          ),
+                        ),
+                      )
+                    else 
+                      const Spacer(),
+
+                    const SizedBox(height: 10),
+
+                    // 4. Opciones (Animadas y Grid)
+                    SlideTransition(
+                      position: _optionsSlideAnimation,
+                      child: _buildOptionsArea(slide),
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+
+            // 5. Timer Amber
+            AnimatedTimerBar(progress: _timerProgress),
+
+            // 6. Footer Usuario
+            _buildFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionsArea(Slide slide) {
+    // FIX: True/False ahora usa 2 columnas lado a lado
+    int crossAxisCount = 2; 
+    double aspectRatio = 1.3; // Rectangulares verticales
+
+    // Botón de enviar si es multiple o short answer
+    final bool showSubmitButton = slide.type == 'MULTIPLE' || slide.type == 'SHORT_ANSWER';
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: aspectRatio,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: slide.options.length,
+          itemBuilder: (context, index) {
+            final option = slide.options[index];
+            final isSelected = _selectedIndices.contains(option.index);
+            
+            return OptionTitle(
+              option: option,
+              index: index,
+              isSelected: isSelected,
+              onTap: () => _onOptionSelected(option.index, slide.type),
+            );
+          },
+        ),
+
+        if (showSubmitButton) ...[
+          const SizedBox(height: 15),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _selectedIndices.isNotEmpty ? GameColors.amberTheme : Colors.grey,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: _selectedIndices.isNotEmpty ? () => _submitAnswer() : null,
+              child: const Text(
+                "Enviar Respuesta",
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 18, 
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+            ),
+          ),
+        ]
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      color: Colors.black26,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "${widget.currentNumber}",
-            style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.white),
-          ),
-          const SizedBox(height: 10),
           const Text(
-            "Prepárate...",
-            style: TextStyle(fontSize: 24, color: Colors.white70),
+            "JovaniVazques",
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              color: Colors.white, 
+              fontWeight: FontWeight.bold,
+              fontSize: 16
+            ),
           ),
-          const SizedBox(height: 40),
           Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: Image.asset(iconPath, width: 60, height: 60, errorBuilder: (_,__,___) => const Icon(Icons.help, size: 60)),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            typeText,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black45,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              "${widget.attempt.currentScore}",
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOptionsGrid(slide) {
-    // Si es Verdadero/Falso, usamos layout específico o grid de 2
-    // Aquí asumimos Grid para todo por simplicidad y consistencia visual
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.3, // Aspecto rectangular tipo botón
-      ),
-      itemCount: slide.options.length,
-      itemBuilder: (context, index) {
-        final option = slide.options[index];
-        final isSelected = _selectedIndices.contains(option.index);
-        
-        return OptionTitle(
-          option: option,
-          index: index, // Pasamos índice para color
-          isSelected: isSelected,
-          onTap: () => _onOptionTap(option.index, slide.type),
-        );
-      },
-    );
+
+  String _getIconForType(String type) {
+    switch (type) {
+      case 'TRUE_FALSE': return GameAssets.iconTrueFalse;
+      case 'SHORT_ANSWER': return GameAssets.iconShortAnswer;
+      case 'SLIDE': return GameAssets.iconSlide;
+      default: return GameAssets.iconQuiz;
+    }
   }
 }

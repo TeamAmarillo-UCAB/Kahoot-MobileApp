@@ -9,7 +9,7 @@ class GameSummaryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GameColors.mainPurple,
+      backgroundColor: Colors.transparent, // TRANSPARENTE para ver el fondo original
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -18,15 +18,29 @@ class GameSummaryPage extends StatelessWidget {
             children: [
               const Text(
                 "Resultados",
-                style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  color: Colors.white, 
+                  fontSize: 36, 
+                  fontWeight: FontWeight.w900,
+                  shadows: [Shadow(color: Colors.black45, offset: Offset(2,2), blurRadius: 5)]
+                ),
               ),
               const SizedBox(height: 30),
               
-              // Trofeo
-              Image.asset(
-                GameAssets.iconTrophy,
-                height: 150,
-                errorBuilder: (_,__,___) => const Icon(Icons.emoji_events, size: 150, color: GameColors.yellow),
+              // Trofeo animado (Scale)
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(seconds: 1),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(scale: value, child: child);
+                },
+                child: Image.asset(
+                  GameAssets.iconTrophy,
+                  height: 180,
+                  errorBuilder: (_,__,___) => const Icon(Icons.emoji_events, size: 150, color: GameColors.yellow),
+                ),
               ),
               
               const SizedBox(height: 40),
@@ -35,45 +49,62 @@ class GameSummaryPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,5))]
+                  color: GameColors.amberTheme,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,5))]
                 ),
                 child: Column(
                   children: [
-                    const Text("Puntaje Final", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    Text(
+                      "Puntaje Final", 
+                      style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)
+                    ),
                     Text(
                       "${summary.totalScore}",
-                      style: const TextStyle(color: Colors.black, fontSize: 48, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 48, 
+                        fontWeight: FontWeight.w900, 
+                        color: Colors.black87
+                      ),
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 20),
               
-              // Estadísticas secundarias
+              // Estadísticas (Correctas / Precisión)
               Row(
                 children: [
-                  Expanded(child: _statBox("Correctas", "${summary.correctAnswers}", Colors.green)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _statBox("Precisión", "${summary.accuracy.toInt()}%", Colors.blue)),
+                  Expanded(child: _statBox("Correctas", "${summary.correctAnswers}", GameColors.green)),
+                  const SizedBox(width: 15),
+                  Expanded(child: _statBox("Precisión", "${summary.accuracy.toInt()}%", GameColors.blue)),
                 ],
               ),
               
               const Spacer(),
               
-              // Botón Salir
+              // Botón Salir (Estilo Amber)
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: GameColors.mainPurple,
+                    backgroundColor: GameColors.amberTheme, // COLOR AMBER
+                    foregroundColor: Colors.white,
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
                   ),
-                  onPressed: () => Navigator.of(context).pop(), // Volver al inicio
-                  child: const Text("VOLVER AL INICIO", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  onPressed: () => Navigator.of(context).pop(), 
+                  child: const Text(
+                    "VOLVER AL INICIO", 
+                    style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold, 
+                      fontFamily: 'Montserrat',
+                      color: Colors.black87
+                    )
+                  ),
                 ),
               ),
             ],
@@ -87,14 +118,15 @@ class GameSummaryPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: Colors.black26,
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.black54, // Semitransparente oscuro
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white24)
       ),
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70)),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 5),
-          Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.bold)),
         ],
       ),
     );

@@ -22,7 +22,6 @@ class GameAssets {
 }
 
 class GameColors {
-  // Colores Kahoot clásicos
   static const Color red = Color(0xFFE21B3C);
   static const Color blue = Color(0xFF1368CE);
   static const Color yellow = Color(0xFFD89E00);
@@ -31,24 +30,43 @@ class GameColors {
   static const Color correctGreen = Color(0xFF66BF39);
   static const Color wrongRed = Color(0xFFFF3355);
   static const Color mainPurple = Color(0xFF46178F);
+  
+  // Nuevo color Amber para la app/timer
+  static const Color amberTheme = Color(0xFFFFC107); 
 
-  // Orden específico: Azul, Rojo, Verde, Amarillo (se repite si hay más)
   static const List<Color> optionColors = [red, blue, yellow, green];
 
-  // Formas clásicas para los botones
+  // Usamos iconos rellenos (rounded/sharp) para simular el look sólido
   static const List<IconData> optionIcons = [
-    Icons.change_history, // Triángulo (Rojo)
-    Icons.diamond,        // Rombo (Azul)
-    Icons.circle,         // Círculo (Amarillo)
-    Icons.square,         // Cuadrado (Verde)
+    Icons.change_history, // Triángulo (Se renderizará solido o grueso)
+    Icons.diamond,        // Rombo
+    Icons.circle,         // Círculo (Relleno)
+    Icons.square,         // Cuadrado (Relleno)
   ];
+}
 
-  static Color getBackgroundForIndex(int index) {
-     const backgrounds = [
-       Color(0xFF46178F), // Morado base
-       Color(0xFFB91E6A), // Rosa oscuro
-       Color(0xFF1368CE), // Azul
-     ];
-     return backgrounds[index % backgrounds.length];
-  }
+class GameTextStyles {
+  // Asegúrate de tener la fuente Montserrat en tu pubspec.yaml o usa esta configuración
+  static const TextStyle montserrat = TextStyle(
+    fontFamily: 'Montserrat', // Si no carga, usará la default
+    fontWeight: FontWeight.w600,
+  );
+  
+  static TextStyle questionHeader = montserrat.copyWith(
+    fontSize: 20, 
+    color: Colors.white,
+    fontWeight: FontWeight.bold
+  );
+
+  static TextStyle questionText = montserrat.copyWith(
+    fontSize: 22,
+    color: Colors.white,
+    fontWeight: FontWeight.w700,
+  );
+  
+  static TextStyle optionText = montserrat.copyWith(
+    fontSize: 16,
+    color: Colors.white,
+    fontWeight: FontWeight.w700,
+  );
 }
