@@ -6,8 +6,8 @@ import '../create/create_kahoot_page.dart';
 import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 
 // Importaciones de la Épica 8 (Grupos)
-import '../../../../Grupos/infrastructure/repository/group_repository_impl.dart';
-import '../../../../Grupos/infrastructure/datasource/group_datasource_impl.dart';
+import '../../../../Grupos/infrastructure/repositories/group_repository_impl.dart';
+import '../../../../Grupos/infrastructure/datasources/group_datasource_impl.dart';
 import '../../../../Grupos/application/usecases/get_user_groups.dart';
 import '../../../../Grupos/application/usecases/create_group.dart';
 import '../../../../Grupos/application/usecases/join_group.dart';

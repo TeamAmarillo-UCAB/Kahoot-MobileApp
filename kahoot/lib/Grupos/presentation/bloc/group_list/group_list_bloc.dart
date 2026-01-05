@@ -6,11 +6,9 @@ import 'group_list_event.dart';
 import 'group_list_state.dart';
 
 class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
-  // Inyección de Casos de Uso
   final GetUserGroups getUserGroups;
   final CreateGroup createGroup;
   final JoinGroup joinGroup;
-
   final String currentUserId;
 
   GroupListBloc({
@@ -19,19 +17,12 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
     required this.joinGroup,
     required this.currentUserId,
   }) : super(GroupListInitial()) {
-    // Cargar Mis Grupos (Story 8.1)
+    // 1. Manejador de Carga
     on<LoadGroupsEvent>((event, emit) async {
-      emit(GroupListLoading());
-      final result = await getUserGroups(currentUserId);
-
-      if (result.isSuccessful()) {
-        emit(GroupListLoaded(result.getValue()));
-      } else {
-        emit(GroupListError(result.getError().toString()));
-      }
+      await _loadGroups(emit);
     });
 
-    // Crear Grupo (Story 8.2)
+    // 2. Manejador de Creación
     on<CreateGroupEvent>((event, emit) async {
       emit(GroupListLoading());
       final result = await createGroup(
@@ -41,26 +32,42 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
       );
 
       if (result.isSuccessful()) {
-        // Si se crea con éxito, recargamos la lista completa
-        add(LoadGroupsEvent());
+        // CORRECCIÓN: En lugar de add(LoadGroupsEvent()), llamamos a la lógica directa
+        // Esto evita el error de "Bloc cerrado" porque usamos el 'emit' actual.
+        await _loadGroups(emit);
       } else {
-        emit(GroupListError("Error al crear el grupo: ${result.getError()}"));
-        // Volvemos a cargar los grupos antiguos para no dejar la pantalla vacía
-        add(LoadGroupsEvent());
+        emit(GroupListError("Error al crear: ${result.getError()}"));
+        // Si falló, recargamos la lista que teníamos antes
+        await _loadGroups(emit);
       }
     });
 
-    // Unirse a Grupo (Story 8.3)
+    // 3. Manejador de Unirse
     on<JoinGroupEvent>((event, emit) async {
       emit(GroupListLoading());
       final result = await joinGroup(currentUserId, event.token);
 
       if (result.isSuccessful()) {
-        add(LoadGroupsEvent());
+        await _loadGroups(emit);
       } else {
         emit(GroupListError("Error al unirse o código inválido"));
-        add(LoadGroupsEvent());
+        await _loadGroups(emit);
       }
     });
+  }
+
+  // --- MÉTODO PRIVADO REUTILIZABLE ---
+  // Esta función hace el trabajo sucio y es segura de llamar desde cualquier evento
+  Future<void> _loadGroups(Emitter<GroupListState> emit) async {
+    // Nota: No emitimos 'Loading' aquí dentro para no parpadear
+    // si ya venimos de una acción de carga.
+
+    final result = await getUserGroups(currentUserId);
+
+    if (result.isSuccessful()) {
+      emit(GroupListLoaded(result.getValue()));
+    } else {
+      emit(GroupListError(result.getError().toString()));
+    }
   }
 }
