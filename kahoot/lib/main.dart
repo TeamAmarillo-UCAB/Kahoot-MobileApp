@@ -52,7 +52,8 @@ class MyApp extends StatelessWidget {
                 getUserGroups: GetUserGroups(repository),
                 createGroup: CreateGroup(repository),
                 joinGroup: JoinGroup(repository),
-                currentUserId: "user1", // Tu usuario temporal
+                currentUserId:
+                    "397b9a84-f851-417e-91da-fdfc271b1a81", // Tu usuario temporal
               );
             },
           ),

@@ -24,7 +24,7 @@ import '../../../../Grupos/application/usecases/edit_group.dart';
 class MyGroupsPage extends StatelessWidget {
   const MyGroupsPage({Key? key}) : super(key: key);
 
-  final String _currentUserId = "user1";
+  final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
 
   @override
   Widget build(BuildContext context) {

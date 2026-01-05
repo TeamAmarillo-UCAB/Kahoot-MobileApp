@@ -5,12 +5,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../create/create_kahoot_page.dart';
 import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 
-// Importaciones de la Épica 8 (Grupos)
+// --- IMPORTS DE LA ÉPICA 8 (GRUPOS) ---
+
+// 1. Dominio (Interfaz del repositorio) - NECESARIO para el RepositoryProvider
+import '../../../../Grupos/domain/repositories/group_repository.dart';
+
+// 2. Infraestructura (Implementaciones)
 import '../../../../Grupos/infrastructure/repositories/group_repository_impl.dart';
 import '../../../../Grupos/infrastructure/datasources/group_datasource_impl.dart';
+
+// 3. Casos de uso
 import '../../../../Grupos/application/usecases/get_user_groups.dart';
 import '../../../../Grupos/application/usecases/create_group.dart';
 import '../../../../Grupos/application/usecases/join_group.dart';
+
+// 4. Bloc y Página
 import '../../../../Grupos/presentation/bloc/group_list/group_list_bloc.dart';
 import '../../../../Grupos/presentation/bloc/group_list/group_list_event.dart';
 import '../../../../Grupos/presentation/pages/my_groups_page.dart';
@@ -18,8 +27,7 @@ import '../../../../Grupos/presentation/pages/my_groups_page.dart';
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
-  // ID Temporal para pruebas (obtenido de tus ejemplos de API).
-  // En producción, esto debería venir de tu AuthBloc o SharedPreferences.
+  // ID Temporal para pruebas.
   final String _currentUserId = '397b9a84-f851-417e-91da-fdfc271b1a81';
 
   @override
@@ -119,7 +127,6 @@ class HomePage extends StatelessWidget {
             ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
           } else if (index == 4) {
             // ✅ BIBLIOTECA -> GRUPOS DE ESTUDIO
-            // Aquí envolvemos la navegación con toda la inyección de dependencias necesaria
             _navigateToGroups(context);
           }
         },
@@ -143,23 +150,31 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  // --- MÉTODO CORREGIDO ---
   void _navigateToGroups(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) {
           // 1. Instanciar Capa de Infraestructura
+          // Asegúrate de que GroupDatasourceImpl no requiera argumentos (como un cliente HTTP/Dio).
+          // Si los requiere, pásalos aquí.
           final datasource = GroupDatasourceImpl();
           final repository = GroupRepositoryImpl(datasource: datasource);
 
-          // 2. Instanciar Bloc con los Casos de Uso necesarios
-          return BlocProvider(
-            create: (context) => GroupListBloc(
-              getUserGroups: GetUserGroups(repository),
-              createGroup: CreateGroup(repository),
-              joinGroup: JoinGroup(repository),
-              currentUserId: _currentUserId,
-            )..add(LoadGroupsEvent()), // Cargar grupos al iniciar
-            child: MyGroupsPage(),
+          // 2. INYECCIÓN DE DEPENDENCIAS (LA CORRECCIÓN)
+          // Usamos RepositoryProvider para que 'MyGroupsPage' y sus hijos (GroupDetailPage)
+          // puedan encontrar el 'GroupRepository' usando context.read<GroupRepository>().
+          return RepositoryProvider<GroupRepository>.value(
+            value: repository,
+            child: BlocProvider(
+              create: (context) => GroupListBloc(
+                getUserGroups: GetUserGroups(repository),
+                createGroup: CreateGroup(repository),
+                joinGroup: JoinGroup(repository),
+                currentUserId: _currentUserId,
+              )..add(LoadGroupsEvent()), // Cargar grupos al entrar
+              child: const MyGroupsPage(),
+            ),
           );
         },
       ),
