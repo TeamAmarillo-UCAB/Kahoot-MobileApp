@@ -4,6 +4,7 @@ import '../../../application/usecases/generate_invitation.dart';
 import '../../../application/usecases/remove_member.dart';
 import '../../../application/usecases/delete_group.dart';
 import '../../../application/usecases/edit_group.dart';
+import '../../../application/usecases/get_group_leaderboard.dart';
 import 'group_detail_event.dart';
 import 'group_detail_state.dart';
 
@@ -14,6 +15,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   final RemoveMember removeMember;
   final DeleteGroup deleteGroup;
   final EditGroup editGroup;
+  final GetGroupLeaderboard getGroupLeaderboard;
 
   final String currentUserId;
   String? _currentGroupId;
@@ -24,6 +26,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     required this.removeMember,
     required this.deleteGroup,
     required this.editGroup,
+    required this.getGroupLeaderboard,
     required this.currentUserId,
   }) : super(GroupDetailState.initial()) {
     // 1. Cargar detalles (Miembros, Quizzes, Ranking)
@@ -113,6 +116,29 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
         add(LoadGroupDetailsEvent(event.groupId)); // Recargar datos nuevos
       } else {
         emit(state.copyWith(errorMessage: "Error al editar el grupo"));
+      }
+    });
+
+    on<LoadGroupLeaderboardEvent>((event, emit) async {
+      // 1. AVISA A LA UI QUE ESTÁS CARGANDO
+      emit(state.copyWith(isLoading: true));
+
+      final result = await getGroupLeaderboard(currentUserId, event.groupId);
+
+      if (result.isSuccessful()) {
+        emit(
+          state.copyWith(
+            leaderboard: result.getValue(),
+            isLoading: false, // 2. APAGA LA CARGA AL TERMINAR
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            errorMessage: "Error al cargar el ranking",
+            isLoading: false, // 2. APAGA LA CARGA SI FALLA
+          ),
+        );
       }
     });
   }

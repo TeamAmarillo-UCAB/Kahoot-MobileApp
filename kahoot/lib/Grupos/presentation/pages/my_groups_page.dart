@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kahoot/Grupos/application/usecases/get_group_leaderboard.dart';
 
 // --- IMPORTS DE DOMINIO Y REPOSITORIO ---
 import '../../../../Grupos/domain/entities/group.dart';
@@ -173,6 +174,7 @@ class MyGroupsPage extends StatelessWidget {
                     removeMember: RemoveMember(repository),
                     deleteGroup: DeleteGroup(repository),
                     editGroup: EditGroup(repository),
+                    getGroupLeaderboard: GetGroupLeaderboard(repository),
                     currentUserId: _currentUserId,
                   ),
                   child: GroupDetailPage(group: group),

@@ -12,6 +12,7 @@ import '../../domain/entities/group.dart';
 
 // Widgets y Páginas
 import 'invite_success_dialog.dart'; // Asegúrate de importar el dialog que acabamos de crear
+import 'group_leaderboard_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final Group group; // Recibimos el objeto básico desde la lista
@@ -170,7 +171,25 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               icon: Icons.leaderboard,
                               label: "Ranking",
                               onTap: () {
-                                // Navegar a pantalla de ranking detallado (si existe)
+                                // 1. Obtenemos la instancia actual del Bloc
+                                final groupDetailBloc = context
+                                    .read<GroupDetailBloc>();
+
+                                // 2. (Opcional) Disparamos el evento de cargar ranking aquí
+                                // groupDetailBloc.add(LoadGroupLeaderboardEvent(groupId: widget.group.id));
+
+                                // 3. Navegamos pasando el Bloc existente
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => BlocProvider.value(
+                                      value:
+                                          groupDetailBloc, // <--- AQUÍ PASAMOS EL BLOC
+                                      child: GroupLeaderboardPage(
+                                        groupId: widget.group.id,
+                                      ),
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ],

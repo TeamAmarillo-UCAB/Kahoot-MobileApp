@@ -35,3 +35,8 @@ class EditGroupEvent extends GroupDetailEvent {
 }
 
 class ClearInvitationLinkEvent extends GroupDetailEvent {}
+
+class LoadGroupLeaderboardEvent extends GroupDetailEvent {
+  final String groupId;
+  LoadGroupLeaderboardEvent({required this.groupId});
+}
