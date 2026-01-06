@@ -23,8 +23,8 @@ import '../../../../Grupos/application/usecases/edit_group.dart';
 
 class MyGroupsPage extends StatelessWidget {
   const MyGroupsPage({Key? key}) : super(key: key);
-
   final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
+  //final String _currentUserId = "f99e03b5-b87a-47fb-a966-34d03b6d63f4";
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +92,7 @@ class MyGroupsPage extends StatelessWidget {
 
           // 4. ESTADO INICIAL (Cargar datos)
           if (state is GroupListInitial) {
+            // Aseguramos que se carguen los datos al iniciar
             context.read<GroupListBloc>().add(LoadGroupsEvent());
             return const Center(child: CircularProgressIndicator());
           }
@@ -99,26 +100,13 @@ class MyGroupsPage extends StatelessWidget {
           return const SizedBox.shrink();
         },
       ),
-      // Botones flotantes
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: "btnJoin",
-            mini: true,
-            backgroundColor: Colors.grey[200],
-            foregroundColor: Colors.black,
-            onPressed: () => _showJoinGroupDialog(context),
-            child: const Icon(Icons.link),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: "btnCreate",
-            backgroundColor: Colors.blueAccent,
-            onPressed: () => _showCreateGroupDialog(context),
-            child: const Icon(Icons.add),
-          ),
-        ],
+
+      // SOLO BOTÓN DE CREAR (El de unirse se quitó)
+      floatingActionButton: FloatingActionButton(
+        heroTag: "btnCreate",
+        backgroundColor: Colors.blueAccent,
+        onPressed: () => _showCreateGroupDialog(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -162,7 +150,7 @@ class MyGroupsPage extends StatelessWidget {
           group.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        // IMPORTANTE: Usamos 'role' y 'memberCount' ya que 'description' no existe en la entidad
+        // Usamos 'role' y 'memberCount'
         subtitle: Text(
           "${group.role} • ${group.memberCount} miembros",
           style: TextStyle(color: Colors.grey[600]),
@@ -192,7 +180,8 @@ class MyGroupsPage extends StatelessWidget {
               },
             ),
           ).then((_) {
-            // Al volver, recargamos la lista por si hubo cambios (ej. borrar grupo)
+            // Al volver, recargamos la lista por si hubo cambios
+            // ignore: use_build_context_synchronously
             context.read<GroupListBloc>().add(LoadGroupsEvent());
           });
         },
@@ -200,11 +189,10 @@ class MyGroupsPage extends StatelessWidget {
     );
   }
 
-  // --- DIALOGS (AJUSTADOS A TUS EVENTOS POSICIONALES) ---
+  // --- DIALOG DE CREAR GRUPO ---
 
   void _showCreateGroupDialog(BuildContext context) {
     final nameController = TextEditingController();
-    // Agrego controller de descripción ya que el Evento CreateGroupEvent lo pide
     final descController = TextEditingController();
 
     showDialog(
@@ -234,8 +222,7 @@ class MyGroupsPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                // CORRECCIÓN: Argumentos POSICIONALES (sin nombres)
-                // CreateGroupEvent(String name, String description)
+                // Evento con argumentos posicionales (definido así en GroupListEvent)
                 context.read<GroupListBloc>().add(
                   CreateGroupEvent(nameController.text, descController.text),
                 );
@@ -243,43 +230,6 @@ class MyGroupsPage extends StatelessWidget {
               }
             },
             child: const Text("Crear"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showJoinGroupDialog(BuildContext context) {
-    final linkController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Unirse a Grupo"),
-        content: TextField(
-          controller: linkController,
-          decoration: const InputDecoration(
-            labelText: "Enlace o Token",
-            hintText: "Pega aquí el código",
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (linkController.text.isNotEmpty) {
-                // CORRECCIÓN: Argumento POSICIONAL
-                // JoinGroupEvent(String token)
-                context.read<GroupListBloc>().add(
-                  JoinGroupEvent(linkController.text),
-                );
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text("Unirse"),
           ),
         ],
       ),

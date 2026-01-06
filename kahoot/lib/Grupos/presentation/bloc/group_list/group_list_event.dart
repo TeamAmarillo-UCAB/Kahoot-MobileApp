@@ -11,6 +11,5 @@ class CreateGroupEvent extends GroupListEvent {
 
 class JoinGroupEvent extends GroupListEvent {
   final String token;
-
-  JoinGroupEvent(this.token);
+  JoinGroupEvent({required this.token});
 }

@@ -25,7 +25,13 @@ class EditGroupEvent extends GroupDetailEvent {
   final String name;
   final String description;
 
-  EditGroupEvent(this.groupId, this.name, this.description);
+  EditGroupEvent({
+    required this.groupId,
+    required this.name,
+    required this.description,
+  });
+
+  List<Object> get props => [groupId, name, description];
 }
 
 class ClearInvitationLinkEvent extends GroupDetailEvent {}

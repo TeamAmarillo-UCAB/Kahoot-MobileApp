@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kahoot/Grupos/domain/entities/group_detail.dart';
 
 // BloC y Eventos
 import '../bloc/group_detail/group_detail_bloc.dart';
@@ -89,8 +90,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 icon: const Icon(Icons.more_vert, color: Colors.black),
                 onSelected: (value) {
                   if (value == 'edit') {
-                    // Navegar a editar (placeholder)
-                    // Navigator.push(context, MaterialPageRoute(builder: (_) => EditGroupPage(...)));
+                    final groupToEdit = GroupDetail(
+                      id: widget.group.id,
+                      name: widget.group.name,
+                      description: '',
+                    );
+                    _showEditGroupDialog(context, groupToEdit);
                   } else if (value == 'delete') {
                     _confirmDeleteGroup(context);
                   }
@@ -265,6 +270,60 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     ),
                   ),
                 ),
+        );
+      },
+    );
+  }
+
+  void _showEditGroupDialog(BuildContext context, GroupDetail group) {
+    // Controladores pre-llenados con la info actual del grupo
+    final nameController = TextEditingController(text: group.name);
+    final descController = TextEditingController(text: group.description);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Editar Grupo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del grupo',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext), // Cancelar
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // 1. Cerrar el diálogo
+                Navigator.pop(dialogContext);
+
+                // 2. Enviar el evento al BLoC para actualizar en el Backend
+                // Asegúrate de que tu evento se llame EditGroupEvent o similar
+                context.read<GroupDetailBloc>().add(
+                  EditGroupEvent(
+                    groupId: group.id,
+                    name: nameController.text,
+                    description: descController.text,
+                  ),
+                );
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
         );
       },
     );

@@ -1,5 +1,7 @@
+import 'dart:async'; // Para StreamSubscription
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_links/app_links.dart'; // Para escuchar los links
 
 // Importaciones de otras épicas/módulos
 import '../create/create_kahoot_page.dart';
@@ -7,7 +9,7 @@ import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 
 // --- IMPORTS DE LA ÉPICA 8 (GRUPOS) ---
 
-// 1. Dominio (Interfaz del repositorio) - NECESARIO para el RepositoryProvider
+// 1. Dominio (Interfaz del repositorio)
 import '../../../../Grupos/domain/repositories/group_repository.dart';
 
 // 2. Infraestructura (Implementaciones)
@@ -24,11 +26,65 @@ import '../../../../Grupos/presentation/bloc/group_list/group_list_bloc.dart';
 import '../../../../Grupos/presentation/bloc/group_list/group_list_event.dart';
 import '../../../../Grupos/presentation/pages/my_groups_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
-  // ID Temporal para pruebas.
-  final String _currentUserId = '397b9a84-f851-417e-91da-fdfc271b1a81';
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
+  //final String _currentUserId = 'f99e03b5-b87a-47fb-a966-34d03b6d63f4';
+
+  // Variables para el Deep Linking
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinkListener();
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  // --- LÓGICA DE DEEP LINKS ---
+  void _initDeepLinkListener() {
+    _appLinks = AppLinks();
+
+    // Escuchar links (cuando la app se abre o ya está en segundo plano)
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (Uri? uri) {
+        if (uri != null) {
+          _handleDeepLink(uri);
+        }
+      },
+      onError: (err) {
+        debugPrint("Error en deep link: $err");
+      },
+    );
+  }
+
+  // Procesar el link específico
+  void _handleDeepLink(Uri uri) {
+    // Verificamos el path configurado en AndroidManifest (/groups/join)
+    if (uri.path.contains('/groups/join')) {
+      // Extraemos el token del parámetro '?token=...'
+      final String? token = uri.queryParameters['token'];
+
+      if (token != null) {
+        debugPrint("Token recibido: $token - Navegando a Grupos...");
+
+        // CORRECCIÓN: Llamamos a navegar pasando el token
+        _navigateToGroups(context, token: token);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +183,7 @@ class HomePage extends StatelessWidget {
             ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
           } else if (index == 4) {
             // ✅ BIBLIOTECA -> GRUPOS DE ESTUDIO
+            // Llamada normal (sin token) al pulsar el botón
             _navigateToGroups(context);
           }
         },
@@ -150,29 +207,37 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // --- MÉTODO CORREGIDO ---
-  void _navigateToGroups(BuildContext context) {
+  // --- MÉTODO CORREGIDO Y ADAPTADO ---
+  // Ahora acepta un parámetro opcional 'token'
+  void _navigateToGroups(BuildContext context, {String? token}) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) {
-          // 1. Instanciar Capa de Infraestructura
-          // Asegúrate de que GroupDatasourceImpl no requiera argumentos (como un cliente HTTP/Dio).
-          // Si los requiere, pásalos aquí.
           final datasource = GroupDatasourceImpl();
           final repository = GroupRepositoryImpl(datasource: datasource);
 
-          // 2. INYECCIÓN DE DEPENDENCIAS (LA CORRECCIÓN)
-          // Usamos RepositoryProvider para que 'MyGroupsPage' y sus hijos (GroupDetailPage)
-          // puedan encontrar el 'GroupRepository' usando context.read<GroupRepository>().
           return RepositoryProvider<GroupRepository>.value(
             value: repository,
             child: BlocProvider(
-              create: (context) => GroupListBloc(
-                getUserGroups: GetUserGroups(repository),
-                createGroup: CreateGroup(repository),
-                joinGroup: JoinGroup(repository),
-                currentUserId: _currentUserId,
-              )..add(LoadGroupsEvent()), // Cargar grupos al entrar
+              create: (context) {
+                // 1. Instanciamos el Bloc
+                final bloc = GroupListBloc(
+                  getUserGroups: GetUserGroups(repository),
+                  createGroup: CreateGroup(repository),
+                  joinGroup: JoinGroup(repository),
+                  currentUserId: _currentUserId,
+                );
+
+                // 2. Siempre cargamos la lista de grupos
+                bloc.add(LoadGroupsEvent());
+
+                // 3. SI HAY TOKEN (Venimos de un link): Lanzamos el evento de unirse
+                if (token != null) {
+                  bloc.add(JoinGroupEvent(token: token));
+                }
+
+                return bloc;
+              },
               child: const MyGroupsPage(),
             ),
           );

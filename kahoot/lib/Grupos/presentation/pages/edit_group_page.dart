@@ -6,8 +6,15 @@ import '../bloc/group_detail/group_detail_event.dart';
 class EditGroupPage extends StatefulWidget {
   final String groupId;
   final String currentName;
+  final String
+  currentDescription; // 1. Agregamos esto para recibir la descripción actual
 
-  const EditGroupPage({required this.groupId, required this.currentName});
+  const EditGroupPage({
+    super.key, // Uso moderno de super.key
+    required this.groupId,
+    required this.currentName,
+    required this.currentDescription, // Requerido para inicializar el campo
+  });
 
   @override
   _EditGroupPageState createState() => _EditGroupPageState();
@@ -15,11 +22,23 @@ class EditGroupPage extends StatefulWidget {
 
 class _EditGroupPageState extends State<EditGroupPage> {
   late TextEditingController _nameController;
+  late TextEditingController
+  _descController; // 2. Definimos el controlador que faltaba
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
+    _descController = TextEditingController(
+      text: widget.currentDescription,
+    ); // Inicializamos con el valor actual
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    super.dispose();
   }
 
   @override
@@ -28,10 +47,13 @@ class _EditGroupPageState extends State<EditGroupPage> {
       appBar: AppBar(
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text("Volver", style: TextStyle(color: Colors.black)),
+          child: const Text("Volver", style: TextStyle(color: Colors.black)),
         ),
         leadingWidth: 80,
-        title: Text("Editar grupo", style: TextStyle(color: Colors.black)),
+        title: const Text(
+          "Editar grupo",
+          style: TextStyle(color: Colors.black),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -40,11 +62,12 @@ class _EditGroupPageState extends State<EditGroupPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            // --- CAMPO NOMBRE ---
+            const Text(
               "Nombre",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -55,7 +78,30 @@ class _EditGroupPageState extends State<EditGroupPage> {
                 fillColor: Colors.grey.shade100,
               ),
             ),
-            SizedBox(height: 24),
+
+            const SizedBox(height: 16),
+
+            // --- CAMPO DESCRIPCIÓN (NUEVO) ---
+            const Text(
+              "Descripción",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _descController, // Usamos el controlador nuevo
+              maxLines: 3, // Permitimos más líneas para la descripción
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- IMAGEN ---
             Container(
               height: 150,
               decoration: BoxDecoration(
@@ -65,7 +111,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: const [
                     Icon(Icons.image, size: 40, color: Colors.grey),
                     Text(
                       "Pulsa para añadir una\nimagen de portada",
@@ -76,37 +122,43 @@ class _EditGroupPageState extends State<EditGroupPage> {
                 ),
               ),
             ),
-            Spacer(),
+
+            const Spacer(),
+
+            // --- BOTONES ---
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text("Cancelar"),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
+                    child: const Text("Cancelar"),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
                       context.read<GroupDetailBloc>().add(
                         EditGroupEvent(
-                          widget.groupId,
-                          _nameController.text,
-                          "Descripción editada",
+                          // 3. CORRECCIÓN IMPORTANTE AQUÍ:
+                          groupId: widget
+                              .groupId, // Usamos widget.groupId, NO widget.group.id
+                          name: _nameController.text,
+                          description: _descController
+                              .text, // Ahora sí existe esta variable
                         ),
                       );
                       Navigator.pop(context);
                     },
-                    child: Text("Guardar cambios"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
+                    child: const Text("Guardar cambios"),
                   ),
                 ),
               ],

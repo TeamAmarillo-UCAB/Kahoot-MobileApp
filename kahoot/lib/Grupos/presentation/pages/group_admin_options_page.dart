@@ -43,8 +43,11 @@ class GroupAdminOptionsPage extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    EditGroupPage(groupId: groupId, currentName: groupName),
+                builder: (_) => EditGroupPage(
+                  groupId: groupId,
+                  currentName: groupName,
+                  currentDescription: '',
+                ),
               ),
             ),
           ),
