@@ -36,6 +36,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     required this.repository,
   }) : super(LiveGameBlocState()) {
     on<InitHostSession>(_onInitHost);
+    on<InitPlayerSession>(_onInitPlayer); // Manejador añadido
     on<ScanQrCode>(_onScanQr);
     on<JoinLobby>(_onJoinLobby);
     on<StartGame>((event, emit) => startLiveGameUc.call());
@@ -46,7 +47,16 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   // --- MANEJADORES DE EVENTOS ---
 
-  // 1. En el método _onInitHost
+  void _onInitPlayer(InitPlayerSession event, Emitter<LiveGameBlocState> emit) {
+    emit(
+      state.copyWith(
+        pin: event.pin,
+        role: 'PLAYER',
+        status: LiveGameStatus.initial,
+      ),
+    );
+  }
+
   Future<void> _onInitHost(
     InitHostSession event,
     Emitter<LiveGameBlocState> emit,
@@ -55,10 +65,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     final result = await createSessionUc.call(event.kahootId);
 
     if (result.isSuccessful()) {
-      // 1. Forzar trato como dynamic
       final dynamic rawValue = result.getValue();
-
-      // 2. Verificar y lo convertir
       final LiveSession session = (rawValue is Map<String, dynamic>)
           ? LiveSession.fromJson(rawValue)
           : rawValue as LiveSession;
@@ -91,9 +98,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     final result = await getPinFromQrUc.call(event.qrToken);
 
     if (result.isSuccessful()) {
-      // Casting Seguro
       final dynamic rawValue = result.getValue();
-
       final LiveSession session = (rawValue is Map<String, dynamic>)
           ? LiveSession.fromJson(rawValue)
           : rawValue as LiveSession;
@@ -118,7 +123,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
     if (state.pin == null) return;
-
     _startSocketConnection(state.pin!, 'PLAYER', event.nickname);
     joinLiveGameUc.call(event.nickname);
   }
@@ -131,24 +135,19 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     );
   }
 
-  // --- LÓGICA DE STREAM Y SOCKET ---
-
   void _startSocketConnection(String pin, String role, String nickname) {
-    // 1. Conexión física
     connectToSocketUc.call(
       pin: pin,
       role: role,
       nickname: nickname,
-      jwt: 'TOKEN_AQUÍ', //ACÁ VA EL TOKENNNNNN
+      jwt: 'TOKEN_AQUÍ',
     );
 
-    // 2. Suscripción al flujo de eventos del servidor
     _gameStateSubscription?.cancel();
     _gameStateSubscription = repository.gameStateStream.listen((data) {
       add(OnGameStateReceived(data));
     });
 
-    // 3. Handshake lógico para pedir el estado actual
     repository.sendClientReady();
   }
 
@@ -157,10 +156,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final LiveGameState gameData = event.gameState;
-
     LiveGameStatus newStatus = state.status;
 
-    // Mapeo de fases del backend a estados de la UI
     switch (gameData.phase) {
       case 'LOBBY':
         newStatus = LiveGameStatus.lobby;

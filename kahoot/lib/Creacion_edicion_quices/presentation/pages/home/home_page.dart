@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../create/create_kahoot_page.dart';
 //ANTERIOR EPICA 4
 //import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
+import '../../../../Juego_en_vivo/presentation/pages/common/join_game_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -91,12 +92,9 @@ class HomePage extends StatelessWidget {
         currentIndex: 2,
         onTap: (index) {
           if (index == 2) {
-            //ANTERIOR EPICA 4
-            // Índice de "Unirse"
-            /*// ✅ Navegación al módulo de juego (Wrapper)
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const GameModuleWrapper()),
-            );*/
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const JoinGamePage()));
           } else if (index == 3) {
             Navigator.of(
               context,

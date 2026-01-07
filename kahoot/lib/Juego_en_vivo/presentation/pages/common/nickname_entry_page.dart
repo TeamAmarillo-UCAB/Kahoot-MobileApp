@@ -1,68 +1,113 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+
+import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
+import '../../../infrastructure/repositories/live_game_repository_impl.dart';
+import '../../../application/usecases/connect_to_socket.dart';
+import '../../../application/usecases/create_live_session.dart';
+import '../../../application/usecases/get_pin_from_qr.dart';
+import '../../../application/usecases/join_live_game.dart';
+import '../../../application/usecases/next_game_phase.dart';
+import '../../../application/usecases/start_live_game.dart';
+import '../../../application/usecases/submit_live_answer.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
 
 class NicknameEntryPage extends StatefulWidget {
-  const NicknameEntryPage({super.key});
+  final String pin;
+  const NicknameEntryPage({Key? key, required this.pin}) : super(key: key);
 
   @override
   State<NicknameEntryPage> createState() => _NicknameEntryPageState();
 }
 
 class _NicknameEntryPageState extends State<NicknameEntryPage> {
-  final TextEditingController _nickController = TextEditingController();
+  late final LiveGameBloc _liveGameBloc;
+  final TextEditingController _nicknameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final dio = Dio(
+      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
+    );
+    final datasource = LiveGameDatasourceImpl(dio: dio);
+    final repository = LiveGameRepositoryImpl(datasource: datasource);
+
+    _liveGameBloc = LiveGameBloc(
+      createSessionUc: CreateLiveSession(repository),
+      getPinFromQrUc: GetPinFromQr(repository),
+      connectToSocketUc: ConnectToSocket(repository),
+      joinLiveGameUc: JoinLiveGame(repository),
+      startLiveGameUc: StartLiveGame(repository),
+      nextGamePhaseUc: NextGamePhase(repository),
+      submitAnswerUc: SubmitLiveAnswer(repository),
+      repository: repository,
+    );
+
+    // Sincronizamos el pin en este nuevo Bloc
+    _liveGameBloc.add(InitPlayerSession(widget.pin));
+  }
+
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    _liveGameBloc.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tu Nickname')),
-      body: BlocConsumer<LiveGameBloc, LiveGameBlocState>(
+    return BlocProvider.value(
+      value: _liveGameBloc,
+      child: BlocListener<LiveGameBloc, LiveGameBlocState>(
         listener: (context, state) {
           if (state.status == LiveGameStatus.lobby) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Aquí iría el Navigator a la página de espera del Lobby
+            print("Conectado exitosamente al Lobby");
           }
         },
-        builder: (context, state) {
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
+        child: Scaffold(
+          backgroundColor: const Color(0xFF222222),
+          appBar: AppBar(
+            backgroundColor: const Color(0xFFFFD54F),
+            title: Text('PIN: ${widget.pin}'),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'PIN: ${state.pin ?? '---'}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 TextField(
-                  controller: _nickController,
+                  controller: _nicknameController,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
-                    labelText: '¿Cómo quieres que te llamen?',
-                    border: OutlineInputBorder(),
+                    hintText: 'NICKNAME',
+                    hintStyle: TextStyle(color: Colors.white54),
                   ),
                 ),
-                const SizedBox(height: 20),
-                if (state.status == LiveGameStatus.loading)
-                  const CircularProgressIndicator()
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_nickController.text.isNotEmpty) {
-                        context.read<LiveGameBloc>().add(
-                          JoinLobby(_nickController.text),
-                        );
-                      }
-                    },
-                    child: const Text('¡Unirse al Lobby!'),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_nicknameController.text.isNotEmpty) {
+                      _liveGameBloc.add(JoinLobby(_nicknameController.text));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD54F),
                   ),
+                  child: const Text(
+                    '¡LISTO!',
+                    style: TextStyle(color: Colors.brown),
+                  ),
+                ),
               ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
