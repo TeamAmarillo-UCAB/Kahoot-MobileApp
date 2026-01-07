@@ -80,9 +80,14 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
     print(
-      '👤 [BLOC] Paso 2: Intentando unirse a la partida con Nickname: ${event.nickname}',
+      '👤 [BLOC] Guardando nickname y enviando player_join: ${event.nickname}',
     );
-    emit(state.copyWith(status: LiveGameStatus.loading));
+
+    // Guardamos el nickname en el estado local antes de enviarlo
+    emit(
+      state.copyWith(status: LiveGameStatus.loading, nickname: event.nickname),
+    );
+
     joinLiveGameUc.call(event.nickname);
   }
 

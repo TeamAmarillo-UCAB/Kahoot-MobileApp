@@ -34,10 +34,8 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     required String nickname,
     required String jwt,
   }) {
-    print('🔌 [DATASOURCE] Iniciando intento de conexión...');
-    print('📋 Parámetros: PIN: $pin, ROLE: $role, JWT: $jwt');
+    print('🔌 [DATASOURCE] Conectando a socket...');
 
-    // Configuración espejo de Postman (Headers + Query)
     _socket = io.io(
       'wss://quizzy-backend-0wh2.onrender.com/multiplayer-sessions',
       io.OptionBuilder()
@@ -48,52 +46,36 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
           .build(),
     );
 
-    // --- LOGS DE ESTADO DE RED ---
     _socket!.onConnect((_) {
-      print('✅ [DATASOURCE] Webshocket Conectado');
-      // Emitimos client_ready aquí mismo, justo cuando el túnel se abre
-      _socket!.emit('client_ready', {});
-      print(
-        '📢 [DATASOURCE] client_ready enviado automáticamente tras conexión',
-      );
+      print('✅ [DATASOURCE] Socket Conectado');
+      _socket!.emit('client_ready', {}); // Sincronización automática
     });
 
-    _socket!.onConnectError((data) {
-      print('❌ [DATASOURCE] Error de Conexión: $data');
-    });
+    _socket!.onConnectError((data) => print('❌ [DATASOURCE] Error: $data'));
+    _socket!.onDisconnect((data) => print('🔌 [DATASOURCE] Desconectado'));
 
-    _socket!.onDisconnect((data) {
-      print('🔌 [DATASOURCE] Socket Desconectado: $data');
-    });
-
-    // Lista exhaustiva de eventos del servidor para loguear todo
+    // Eventos normalizados según tus logs de Postman y App
     final serverEvents = [
-      'HOST_CONNECTED_SUCCESS',
-      'HOST_LOBBY_UPDATE',
       'player_connected_to_session',
-      'player_left_session',
       'question_started',
+      'player_results',
       'player_answer_confirmation',
-      'host_answer_update',
-      'HOST_RESULTS',
-      'PLAYER_RESULTS',
-      'HOST_GAME_END',
-      'PLAYER_GAME_END',
+      'host_left_session',
       'session_closed',
-      'SYNC_ERROR',
-      'connection_error',
       'game_error',
+      'sync_error',
+      'HOST_LOBBY_UPDATE',
+      'HOST_RESULTS',
+      'PLAYER_GAME_END',
     ];
 
     for (var event in serverEvents) {
       _socket!.on(event, (data) {
         print('📩 [DATASOURCE] Evento Recibido: $event');
-        print('📦 [DATASOURCE] Payload: $data');
         _socketEventController.add({'event': event, 'data': data});
       });
     }
 
-    // Log para cualquier evento no registrado
     _socket!.onAny((event, data) {
       if (!serverEvents.contains(event)) {
         print('❓ [DATASOURCE] Evento No Mapeado: $event -> $data');
@@ -104,18 +86,15 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
   @override
   void emit(String eventName, Map<String, dynamic> data) {
     if (_socket?.connected ?? false) {
-      print('📤 [DATASOURCE] Emitiendo: $eventName con $data');
+      print('📤 [DATASOURCE] Emitiendo: $eventName');
       _socket!.emit(eventName, data);
     } else {
-      print(
-        '⚠️ [DATASOURCE] Intento de emitir $eventName fallido: Socket no conectado',
-      );
+      print('⚠️ [DATASOURCE] Socket no conectado para emitir $eventName');
     }
   }
 
   @override
   void disconnect() {
-    print('🔌 [DATASOURCE] Cerrando conexión voluntariamente');
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;

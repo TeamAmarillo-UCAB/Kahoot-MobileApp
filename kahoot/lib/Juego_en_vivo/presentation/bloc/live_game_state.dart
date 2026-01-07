@@ -14,6 +14,7 @@ enum LiveGameStatus {
 class LiveGameBlocState {
   final LiveGameStatus status;
   final String? pin;
+  final String? nickname;
   final String? role;
   final LiveSession? session;
   final LiveGameState? gameData;
@@ -22,6 +23,7 @@ class LiveGameBlocState {
   LiveGameBlocState({
     this.status = LiveGameStatus.initial,
     this.pin,
+    this.nickname,
     this.role,
     this.session,
     this.gameData,
@@ -31,6 +33,7 @@ class LiveGameBlocState {
   LiveGameBlocState copyWith({
     LiveGameStatus? status,
     String? pin,
+    String? nickname,
     String? role,
     LiveSession? session,
     LiveGameState? gameData,
@@ -39,6 +42,7 @@ class LiveGameBlocState {
     return LiveGameBlocState(
       status: status ?? this.status,
       pin: pin ?? this.pin,
+      nickname: nickname ?? this.nickname,
       role: role ?? this.role,
       session: session ?? this.session,
       gameData: gameData ?? this.gameData,

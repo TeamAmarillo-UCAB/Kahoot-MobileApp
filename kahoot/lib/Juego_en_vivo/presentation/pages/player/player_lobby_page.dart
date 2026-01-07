@@ -10,37 +10,39 @@ class PlayerLobbyView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
-        final players = state.gameData?.players ?? [];
+        // Obtenemos el nickname del estado del BLoC, no del gameData
+        final myNickname = state.nickname ?? "Jugador";
+        final playersCount = state.gameData?.players?.length ?? 0;
 
         return Scaffold(
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: const Color(0xFF46178F),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(color: Colors.white),
-                const SizedBox(height: 30),
-                const Text(
-                  '¡Estás dentro!',
-                  style: TextStyle(
+                const SizedBox(height: 40),
+                Text(
+                  '¡Estás dentro, $myNickname!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Esperando a que el Host inicie...',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 18,
-                  ),
+                const Text(
+                  'El anfitrión iniciará el juego pronto...',
+                  style: TextStyle(color: Colors.white70, fontSize: 18),
                 ),
                 const SizedBox(height: 40),
-                Text(
-                  'Jugadores en la sala: ${players.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                // Opcional: Lista de otros jugadores si el server los envía
+                if (playersCount > 0)
+                  Text(
+                    'Otros jugadores en la sala: $playersCount',
+                    style: const TextStyle(color: Colors.white54),
+                  ),
               ],
             ),
           ),
