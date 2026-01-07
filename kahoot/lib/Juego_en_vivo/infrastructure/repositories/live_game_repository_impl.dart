@@ -73,27 +73,32 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
   Stream<LiveGameState> get gameStateStream {
     return datasource.socketEvents.map((payload) {
       final event = payload['event'] as String;
-      final data = payload['data'] as Map<String, dynamic>;
+      final data = payload['data'] as Map<String, dynamic>? ?? {};
 
       String phase = 'UNKNOWN';
+      // Extraemos el estado que viene dentro del JSON (si existe)
+      final String? serverState = data['state']?.toString().toLowerCase();
 
-      // MAPEADO DE FASES BASADO EN LOGS REALES
-      if (event == 'player_connected_to_session' ||
-          event == 'HOST_LOBBY_UPDATE') {
-        phase = 'LOBBY';
-      } else if (event == 'question_started') {
+      // MAPEADO ROBUSTO: Revisa el evento O el estado interno
+      if (event == 'question_started' || serverState == 'question') {
         phase = 'QUESTION';
-      } else if (event == 'player_results' || event == 'HOST_RESULTS') {
+      } else if (event == 'player_connected_to_session' ||
+          event == 'HOST_LOBBY_UPDATE' ||
+          serverState == 'lobby') {
+        phase = 'LOBBY';
+      } else if (event == 'player_results' ||
+          event == 'HOST_RESULTS' ||
+          serverState == 'results') {
         phase = 'RESULTS';
       } else if (event == 'player_answer_confirmation') {
         phase = 'WAITING_RESULTS';
-      } else if (event == 'session_closed' ||
-          event == 'host_left_session' ||
-          event == 'PLAYER_GAME_END') {
-        phase = 'END'; // Fase final solicitada
+      } else if (event == 'session_closed' || serverState == 'end') {
+        phase = 'END';
       }
 
-      print('🗺️ [REPOSITORY] Mapeando evento $event a fase: $phase');
+      print(
+        '🗺️ [REPOSITORY] Evento: $event | Estado JSON: $serverState -> Fase: $phase',
+      );
       return LiveGameState.fromJson(phase, data);
     });
   }

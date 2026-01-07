@@ -52,7 +52,7 @@ class LiveGamePage extends StatelessWidget {
             case LiveGameStatus.lobby:
               return const PlayerLobbyView();
             case LiveGameStatus.question:
-              return const PlayerQuestionView();
+              return const PlayerQuestionPage();
             case LiveGameStatus.results:
               return const PlayerFeedbackView();
             case LiveGameStatus.end:

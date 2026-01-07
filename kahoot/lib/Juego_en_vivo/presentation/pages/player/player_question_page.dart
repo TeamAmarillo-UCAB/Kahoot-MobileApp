@@ -1,124 +1,235 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
-import '../../bloc/live_game_state.dart'; // Asegúrate que aquí la clase se llame LiveGameBlocState
+import '../../bloc/live_game_state.dart';
 
-class PlayerQuestionView extends StatefulWidget {
-  const PlayerQuestionView({super.key});
+class PlayerQuestionPage extends StatefulWidget {
+  const PlayerQuestionPage({super.key});
 
   @override
-  State<PlayerQuestionView> createState() => _PlayerQuestionViewState();
+  State<PlayerQuestionPage> createState() => _PlayerQuestionPageState();
 }
 
-class _PlayerQuestionViewState extends State<PlayerQuestionView> {
-  final Stopwatch _stopwatch = Stopwatch();
-  bool _isLocallySubmitting = false;
+class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
+  late Stopwatch _stopwatch;
+  late Timer _timer;
+  int _remainingSeconds = 0;
+  bool _answered = false;
 
   @override
   void initState() {
     super.initState();
-    _stopwatch.start();
+    _stopwatch = Stopwatch()..start();
+
+    // Obtenemos el tiempo inicial del slide
+    final state = context.read<LiveGameBloc>().state;
+    _remainingSeconds = state.gameData?.currentSlide?.timeLimit ?? 30;
+
+    // Timer para actualizar la interfaz cada segundo
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        _timer.cancel();
+        // Opcional: manejar qué pasa si se acaba el tiempo sin responder
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _stopwatch.stop();
+    super.dispose();
+  }
+
+  void _handleAnswer(String optionIndex, String? questionId) {
+    if (_answered) return; // Evita múltiples clics
+
+    setState(() => _answered = true);
+    _stopwatch.stop();
+    _timer.cancel();
+
+    final elapsedMs = _stopwatch.elapsedMilliseconds;
+    print("⏱️ Tiempo tardado: ${elapsedMs}ms");
+
+    context.read<LiveGameBloc>().add(
+      SubmitAnswer(
+        questionId: questionId ?? "",
+        answerIds: [optionIndex],
+        timeElapsedMs: elapsedMs,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
-        final data = state.gameData; // Esta es tu entidad LiveGameState
-        final slide = data?.currentSlide;
+        final slide = state.gameData?.currentSlide;
         final options = slide?.options ?? [];
 
-        // Como 'hasAnswered' no existe en tu entidad, usamos el estado local de la vista
-        final bool alreadyAnswered = _isLocallySubmitting;
-
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              'Pregunta ${(slide?.questionIndex ?? 0) + 1} / ${slide?.totalQuestions ?? 0}',
-            ),
-            automaticallyImplyLeading: false,
-          ),
-          body: Column(
-            children: [
-              const LinearProgressIndicator(),
-              if (alreadyAnswered)
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      "¡Respuesta enviada!\nEspera a los demás...",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+          backgroundColor: const Color(0xFF46178F),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Barra de progreso de tiempo
+                LinearProgressIndicator(
+                  value: slide != null && slide.timeLimit > 0
+                      ? _remainingSeconds / slide.timeLimit
+                      : 0,
+                  backgroundColor: Colors.white24,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Colors.cyanAccent,
                   ),
-                )
-              else
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 15,
-                            crossAxisSpacing: 15,
-                            childAspectRatio: 1.1,
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Pregunta ${slide?.questionIndex ?? 0}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      CircleAvatar(
+                        backgroundColor: Colors.black26,
+                        child: Text(
+                          "$_remainingSeconds",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
-                      itemCount: options.length,
-                      itemBuilder: (context, index) {
-                        final option = options[index];
-                        return ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _getOptionColor(index),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            _stopwatch.stop();
-                            setState(() => _isLocallySubmitting = true);
-                            context.read<LiveGameBloc>().add(
-                              SubmitAnswer(
-                                questionId: slide?.id ?? '',
-                                answerIds: [option.index],
-                                timeElapsedMs: _stopwatch.elapsedMilliseconds,
-                              ),
-                            );
-                          },
-                          child: _buildOptionContent(option),
-                        );
-                      },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Text(
+                    slide?.questionText ?? "Cargando...",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-            ],
+
+                const SizedBox(height: 20),
+
+                // Imagen Central
+                if (slide?.imageUrl != null)
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.all(10),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          slide!.imageUrl!,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Cuadrícula de respuestas
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 1.5,
+                        ),
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      return _AnswerButton(
+                        option: option,
+                        color: _getKahootColor(index),
+                        enabled: !_answered,
+                        onTap: () => _handleAnswer(option.index, slide?.id),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildOptionContent(dynamic option) {
-    // CORRECCIÓN: Usamos mediaUrl (minúscula) como está en tu entidad LiveOption
-    if (option.mediaUrl != null && option.mediaUrl!.isNotEmpty) {
-      return Image.network(option.mediaUrl!, fit: BoxFit.contain);
-    }
-    return Text(
-      option.text ?? '',
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Color _getOptionColor(int index) {
+  Color _getKahootColor(int index) {
     const colors = [Colors.red, Colors.blue, Colors.orange, Colors.green];
     return colors[index % colors.length];
+  }
+}
+
+class _AnswerButton extends StatelessWidget {
+  final dynamic option; // LiveOption
+  final Color color;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _AnswerButton({
+    required this.option,
+    required this.color,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.6,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              if (enabled)
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          padding: const EdgeInsets.all(8),
+          alignment: Alignment.center,
+          child: option.text != null
+              ? Text(
+                  option.text!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                )
+              : (option.mediaUrl != null
+                    ? Image.network(option.mediaUrl!)
+                    : const Icon(Icons.help_outline, color: Colors.white)),
+        ),
+      ),
+    );
   }
 }
