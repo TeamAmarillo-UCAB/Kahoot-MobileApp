@@ -40,7 +40,7 @@ class LiveGamePage extends StatelessWidget {
               return const HostQuestionView();
             case LiveGameStatus.results:
               return const HostResultsView();
-            case LiveGameStatus.podium:
+            case LiveGameStatus.end:
               return const HostPodiumView();
             default:
               return const HostLobbyView();
@@ -55,7 +55,7 @@ class LiveGamePage extends StatelessWidget {
               return const PlayerQuestionView();
             case LiveGameStatus.results:
               return const PlayerFeedbackView();
-            case LiveGameStatus.podium:
+            case LiveGameStatus.end:
               return const PlayerPodiumView();
             default:
               return const PlayerLobbyView();

@@ -4,13 +4,6 @@ import 'package:dio/dio.dart';
 
 import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
-import '../../../application/usecases/connect_to_socket.dart';
-import '../../../application/usecases/create_live_session.dart';
-import '../../../application/usecases/get_pin_from_qr.dart';
-import '../../../application/usecases/join_live_game.dart';
-import '../../../application/usecases/next_game_phase.dart';
-import '../../../application/usecases/start_live_game.dart';
-import '../../../application/usecases/submit_live_answer.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
@@ -36,16 +29,7 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
     final datasource = LiveGameDatasourceImpl(dio: dio);
     final repository = LiveGameRepositoryImpl(datasource: datasource);
 
-    _liveGameBloc = LiveGameBloc(
-      createSessionUc: CreateLiveSession(repository),
-      getPinFromQrUc: GetPinFromQr(repository),
-      connectToSocketUc: ConnectToSocket(repository),
-      joinLiveGameUc: JoinLiveGame(repository),
-      startLiveGameUc: StartLiveGame(repository),
-      nextGamePhaseUc: NextGamePhase(repository),
-      submitAnswerUc: SubmitLiveAnswer(repository),
-      repository: repository,
-    );
+    _liveGameBloc = LiveGameBloc(repository: repository);
 
     // Sincronizamos el pin en este nuevo Bloc
     _liveGameBloc.add(InitPlayerSession(widget.pin));

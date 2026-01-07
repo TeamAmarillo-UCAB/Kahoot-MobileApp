@@ -12,28 +12,20 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
   LiveGameDatasourceImpl({required this.dio});
 
-  //SOLICITUDES HTTP
-
   @override
   Future<LiveSession> createSession(String kahootId) async {
-    // El Anfitrión crea una nueva sala a partir de un Kahoot existente.
     final response = await dio.post(
       '/multiplayer-sessions',
       data: {'kahootId': kahootId},
     );
-    return LiveSession.fromJson(
-      response.data,
-    ); // Retorna sessionPin, qrToken y metadata.
+    return LiveSession.fromJson(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> getPinByQR(String qrToken) async {
-    // Obtiene el sessionPin de una partida activa mediante el token del QR.
     final response = await dio.get('/multiplayer-sessions/qr-token/$qrToken');
     return response.data;
   }
-
-  //GESTIÓN DE WEBSOCKETS
 
   @override
   void connect({
@@ -42,25 +34,43 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     required String nickname,
     required String jwt,
   }) {
-    // Handshake inicial con los parámetros requeridos en headers/query.
+    print('🔌 [DATASOURCE] Iniciando intento de conexión...');
+    print('📋 Parámetros: PIN: $pin, ROLE: $role, JWT: $jwt');
+
+    // Configuración espejo de Postman (Headers + Query)
     _socket = io.io(
       'wss://quizzy-backend-0wh2.onrender.com/multiplayer-sessions',
       io.OptionBuilder()
           .setTransports(['websocket'])
-          .setQuery({
-            'pin': pin,
-            'role': role.toUpperCase(), // 'HOST' o 'PLAYER'.
-            'jwt': jwt,
-          })
+          .setExtraHeaders({'pin': pin, 'role': role.toUpperCase(), 'jwt': jwt})
+          .setQuery({'pin': pin, 'role': role.toUpperCase(), 'jwt': jwt})
           .enableAutoConnect()
           .build(),
     );
 
-    // Lista exhaustiva de eventos del servidor
+    // --- LOGS DE ESTADO DE RED ---
+    _socket!.onConnect((_) {
+      print('✅ [DATASOURCE] Webshocket Conectado');
+      // Emitimos client_ready aquí mismo, justo cuando el túnel se abre
+      _socket!.emit('client_ready', {});
+      print(
+        '📢 [DATASOURCE] client_ready enviado automáticamente tras conexión',
+      );
+    });
+
+    _socket!.onConnectError((data) {
+      print('❌ [DATASOURCE] Error de Conexión: $data');
+    });
+
+    _socket!.onDisconnect((data) {
+      print('🔌 [DATASOURCE] Socket Desconectado: $data');
+    });
+
+    // Lista exhaustiva de eventos del servidor para loguear todo
     final serverEvents = [
       'HOST_CONNECTED_SUCCESS',
       'HOST_LOBBY_UPDATE',
-      'PLAYER_CONNECTED_TO_SESSION',
+      'player_connected_to_session',
       'player_left_session',
       'question_started',
       'player_answer_confirmation',
@@ -70,8 +80,6 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       'HOST_GAME_END',
       'PLAYER_GAME_END',
       'session_closed',
-      'host_left_session',
-      'host_returned_to_session',
       'SYNC_ERROR',
       'connection_error',
       'game_error',
@@ -79,18 +87,35 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
     for (var event in serverEvents) {
       _socket!.on(event, (data) {
+        print('📩 [DATASOURCE] Evento Recibido: $event');
+        print('📦 [DATASOURCE] Payload: $data');
         _socketEventController.add({'event': event, 'data': data});
       });
     }
+
+    // Log para cualquier evento no registrado
+    _socket!.onAny((event, data) {
+      if (!serverEvents.contains(event)) {
+        print('❓ [DATASOURCE] Evento No Mapeado: $event -> $data');
+      }
+    });
   }
 
   @override
   void emit(String eventName, Map<String, dynamic> data) {
-    _socket?.emit(eventName, data);
+    if (_socket?.connected ?? false) {
+      print('📤 [DATASOURCE] Emitiendo: $eventName con $data');
+      _socket!.emit(eventName, data);
+    } else {
+      print(
+        '⚠️ [DATASOURCE] Intento de emitir $eventName fallido: Socket no conectado',
+      );
+    }
   }
 
   @override
   void disconnect() {
+    print('🔌 [DATASOURCE] Cerrando conexión voluntariamente');
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;

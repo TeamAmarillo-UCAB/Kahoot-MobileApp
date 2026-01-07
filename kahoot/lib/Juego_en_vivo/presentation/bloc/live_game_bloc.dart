@@ -1,164 +1,100 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/live_game_state.dart';
-import '../../domain/entities/live_session.dart';
 import '../../domain/repositories/live_game_repository.dart';
 import '../../application/usecases/connect_to_socket.dart';
-import '../../application/usecases/create_live_session.dart';
-import '../../application/usecases/get_pin_from_qr.dart';
 import '../../application/usecases/join_live_game.dart';
-import '../../application/usecases/next_game_phase.dart';
+import '../../application/usecases/get_pin_from_qr.dart';
+import '../../application/usecases/create_live_session.dart';
 import '../../application/usecases/start_live_game.dart';
+import '../../application/usecases/next_game_phase.dart';
 import '../../application/usecases/submit_live_answer.dart';
 import 'live_game_event.dart';
 import 'live_game_state.dart';
 
 class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
-  final CreateLiveSession createSessionUc;
-  final GetPinFromQr getPinFromQrUc;
-  final ConnectToSocket connectToSocketUc;
-  final JoinLiveGame joinLiveGameUc;
-  final StartLiveGame startLiveGameUc;
-  final NextGamePhase nextGamePhaseUc;
-  final SubmitLiveAnswer submitAnswerUc;
   final LiveGameRepository repository;
+
+  late final CreateLiveSession createSessionUc;
+  late final GetPinFromQr getPinFromQrUc;
+  late final ConnectToSocket connectToSocketUc;
+  late final JoinLiveGame joinLiveGameUc;
+  late final StartLiveGame startLiveGameUc;
+  late final NextGamePhase nextGamePhaseUc;
+  late final SubmitLiveAnswer submitAnswerUc;
 
   StreamSubscription? _gameStateSubscription;
 
-  LiveGameBloc({
-    required this.createSessionUc,
-    required this.getPinFromQrUc,
-    required this.connectToSocketUc,
-    required this.joinLiveGameUc,
-    required this.startLiveGameUc,
-    required this.nextGamePhaseUc,
-    required this.submitAnswerUc,
-    required this.repository,
-  }) : super(LiveGameBlocState()) {
-    on<InitHostSession>(_onInitHost);
-    on<InitPlayerSession>(_onInitPlayer); // Manejador añadido
-    on<ScanQrCode>(_onScanQr);
+  LiveGameBloc({required this.repository}) : super(LiveGameBlocState()) {
+    createSessionUc = CreateLiveSession(repository);
+    getPinFromQrUc = GetPinFromQr(repository);
+    connectToSocketUc = ConnectToSocket(repository);
+    joinLiveGameUc = JoinLiveGame(repository);
+    startLiveGameUc = StartLiveGame(repository);
+    nextGamePhaseUc = NextGamePhase(repository);
+    submitAnswerUc = SubmitLiveAnswer(repository);
+
+    on<InitPlayerSession>(_onInitPlayer);
     on<JoinLobby>(_onJoinLobby);
-    on<StartGame>((event, emit) => startLiveGameUc.call());
-    on<NextPhase>((event, emit) => nextGamePhaseUc.call());
-    on<SubmitAnswer>(_onSubmitAnswer);
     on<OnGameStateReceived>(_onGameStateUpdate);
+    on<ScanQrCode>(_onScanQr);
   }
 
-  // --- MANEJADORES DE EVENTOS ---
+  void _onInitPlayer(
+    InitPlayerSession event,
+    Emitter<LiveGameBlocState> emit,
+  ) async {
+    print('🚀 [BLOC] Paso 1: Iniciando Handshake para PIN: ${event.pin}');
 
-  void _onInitPlayer(InitPlayerSession event, Emitter<LiveGameBlocState> emit) {
     emit(
       state.copyWith(
         pin: event.pin,
         role: 'PLAYER',
-        status: LiveGameStatus.initial,
+        status: LiveGameStatus.loading,
       ),
     );
-  }
 
-  Future<void> _onInitHost(
-    InitHostSession event,
-    Emitter<LiveGameBlocState> emit,
-  ) async {
-    emit(state.copyWith(status: LiveGameStatus.loading));
-    final result = await createSessionUc.call(event.kahootId);
+    // 1. Suscribir el stream ANTES de conectar para no perder el primer evento
+    print('📡 [BLOC] Suscribiendo al stream de estados...');
+    _gameStateSubscription?.cancel();
+    _gameStateSubscription = repository.gameStateStream.listen((data) {
+      print('💡 [BLOC] Stream notificó nuevo estado: ${data.phase}');
+      add(OnGameStateReceived(data));
+    }, onError: (err) => print('🚨 [BLOC] Error en Stream: $err'));
 
-    if (result.isSuccessful()) {
-      final dynamic rawValue = result.getValue();
-      final LiveSession session = (rawValue is Map<String, dynamic>)
-          ? LiveSession.fromJson(rawValue)
-          : rawValue as LiveSession;
+    // 2. Ejecutar Conexión (Handshake)
+    connectToSocketUc.call(
+      pin: event.pin,
+      role: 'PLAYER',
+      nickname: 'Carlios',
+      jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
+    );
 
-      _startSocketConnection(session.sessionPin, 'HOST', 'Admin');
+    // 3. Sincronización lógica
+    // Le damos 500ms para que el túnel TCP/WS se estabilice antes de pedir sync
+    await Future.delayed(const Duration(milliseconds: 500));
+    print('📢 [BLOC] Enviando client_ready...');
+    repository.sendClientReady();
 
-      emit(
-        state.copyWith(
-          status: LiveGameStatus.lobby,
-          session: session,
-          role: 'HOST',
-          pin: session.sessionPin,
-        ),
-      );
-    } else {
-      emit(
-        state.copyWith(
-          status: LiveGameStatus.error,
-          errorMessage: "Error al crear sesión",
-        ),
-      );
-    }
-  }
-
-  Future<void> _onScanQr(
-    ScanQrCode event,
-    Emitter<LiveGameBlocState> emit,
-  ) async {
-    emit(state.copyWith(status: LiveGameStatus.loading));
-    final result = await getPinFromQrUc.call(event.qrToken);
-
-    if (result.isSuccessful()) {
-      final dynamic rawValue = result.getValue();
-      final LiveSession session = (rawValue is Map<String, dynamic>)
-          ? LiveSession.fromJson(rawValue)
-          : rawValue as LiveSession;
-
-      emit(
-        state.copyWith(
-          session: session,
-          pin: session.sessionPin,
-          role: 'PLAYER',
-          status: LiveGameStatus.initial,
-        ),
-      );
-    } else {
-      emit(
-        state.copyWith(
-          status: LiveGameStatus.error,
-          errorMessage: "QR no válido",
-        ),
-      );
-    }
+    emit(state.copyWith(status: LiveGameStatus.initial));
   }
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
-    if (state.pin == null) return;
-    _startSocketConnection(state.pin!, 'PLAYER', event.nickname);
+    print(
+      '👤 [BLOC] Paso 2: Intentando unirse a la partida con Nickname: ${event.nickname}',
+    );
+    emit(state.copyWith(status: LiveGameStatus.loading));
     joinLiveGameUc.call(event.nickname);
-  }
-
-  void _onSubmitAnswer(SubmitAnswer event, Emitter<LiveGameBlocState> emit) {
-    submitAnswerUc.call(
-      questionId: event.questionId,
-      answerIds: event.answerIds,
-      timeElapsedMs: event.timeElapsedMs,
-    );
-  }
-
-  void _startSocketConnection(String pin, String role, String nickname) {
-    connectToSocketUc.call(
-      pin: pin,
-      role: role,
-      nickname: nickname,
-      jwt: 'TOKEN_AQUÍ',
-    );
-
-    _gameStateSubscription?.cancel();
-    _gameStateSubscription = repository.gameStateStream.listen((data) {
-      add(OnGameStateReceived(data));
-    });
-
-    repository.sendClientReady();
   }
 
   void _onGameStateUpdate(
     OnGameStateReceived event,
     Emitter<LiveGameBlocState> emit,
   ) {
-    final LiveGameState gameData = event.gameState;
-    LiveGameStatus newStatus = state.status;
+    final gameData = event.gameState;
+    print('🔄 [BLOC] Actualizando UI a fase: ${gameData.phase}');
 
-    switch (gameData.phase) {
+    LiveGameStatus newStatus = state.status;
+    switch (gameData.phase.toUpperCase()) {
       case 'LOBBY':
         newStatus = LiveGameStatus.lobby;
         break;
@@ -169,7 +105,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
         newStatus = LiveGameStatus.results;
         break;
       case 'PODIUM':
-        newStatus = LiveGameStatus.podium;
+      case 'END':
+        newStatus = LiveGameStatus.end;
         break;
     }
 
@@ -178,8 +115,29 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   @override
   Future<void> close() {
+    print('🛑 [BLOC] Cerrando BLoC y liberando recursos');
     _gameStateSubscription?.cancel();
     repository.disconnect();
     return super.close();
+  }
+
+  Future<void> _onScanQr(
+    ScanQrCode event,
+    Emitter<LiveGameBlocState> emit,
+  ) async {
+    emit(state.copyWith(status: LiveGameStatus.loading));
+    final result = await getPinFromQrUc.call(event.qrToken);
+    if (result.isSuccessful()) {
+      final session = result.getValue();
+      final pin = session['sessionPin'].toString();
+      add(InitPlayerSession(pin));
+    } else {
+      emit(
+        state.copyWith(
+          status: LiveGameStatus.error,
+          errorMessage: "QR inválido",
+        ),
+      );
+    }
   }
 }

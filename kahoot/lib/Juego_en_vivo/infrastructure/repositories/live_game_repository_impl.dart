@@ -82,7 +82,8 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
 
       // Mapeo dinámico de eventos de ráfaga a fases de la UI[cite: 70, 71, 72].
       String phase = 'UNKNOWN';
-      if (event.contains('LOBBY')) phase = 'LOBBY';
+      if (event.contains('LOBBY') || event == 'player_connected_to_session')
+        phase = 'LOBBY';
       if (event == 'question_started') phase = 'QUESTION';
       if (event.contains('RESULTS')) phase = 'RESULTS';
       if (event.contains('GAME_END')) phase = 'PODIUM';

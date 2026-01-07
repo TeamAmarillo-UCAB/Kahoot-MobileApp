@@ -7,16 +7,16 @@ enum LiveGameStatus {
   lobby,
   question,
   results,
-  podium,
+  end, // Cambiado de 'podium' a 'end' según pág. 18 del PDF
   error,
 }
 
 class LiveGameBlocState {
   final LiveGameStatus status;
   final String? pin;
-  final String? role; // 'HOST' | 'PLAYER'
+  final String? role;
   final LiveSession? session;
-  final LiveGameState? gameData; // Entidad de dominio con la info del socket
+  final LiveGameState? gameData;
   final String? errorMessage;
 
   LiveGameBlocState({

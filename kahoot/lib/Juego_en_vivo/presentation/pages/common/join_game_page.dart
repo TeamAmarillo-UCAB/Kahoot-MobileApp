@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 
-import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
+// Importaciones de infraestructura (según tus indicaciones)
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
-import '../../../application/usecases/connect_to_socket.dart';
-import '../../../application/usecases/create_live_session.dart';
-import '../../../application/usecases/get_pin_from_qr.dart';
-import '../../../application/usecases/join_live_game.dart';
-import '../../../application/usecases/next_game_phase.dart';
-import '../../../application/usecases/start_live_game.dart';
-import '../../../application/usecases/submit_live_answer.dart';
+import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
+
+// BLoC y pantallas
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
-import 'qr_scanner_page.dart';
-import 'nickname_entry_page.dart';
+import '../common/nickname_entry_page.dart';
 
 class JoinGamePage extends StatefulWidget {
   const JoinGamePage({Key? key}) : super(key: key);
@@ -25,113 +20,86 @@ class JoinGamePage extends StatefulWidget {
 }
 
 class _JoinGamePageState extends State<JoinGamePage> {
-  late final LiveGameBloc _liveGameBloc;
+  late final LiveGameBloc _bloc;
   final TextEditingController _pinController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+
+    // 1. Configuramos Dio
     final dio = Dio(
-      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
+      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com'),
     );
+
+    // 2. Instanciamos la infraestructura
     final datasource = LiveGameDatasourceImpl(dio: dio);
     final repository = LiveGameRepositoryImpl(datasource: datasource);
 
-    _liveGameBloc = LiveGameBloc(
-      createSessionUc: CreateLiveSession(repository),
-      getPinFromQrUc: GetPinFromQr(repository),
-      connectToSocketUc: ConnectToSocket(repository),
-      joinLiveGameUc: JoinLiveGame(repository),
-      startLiveGameUc: StartLiveGame(repository),
-      nextGamePhaseUc: NextGamePhase(repository),
-      submitAnswerUc: SubmitLiveAnswer(repository),
-      repository: repository,
-    );
+    // 3. Inicializamos el BLoC (Aquí se resuelve el LateError)
+    // El BLoC se encarga de sus propios casos de uso
+    _bloc = LiveGameBloc(repository: repository);
   }
 
   @override
   void dispose() {
+    _bloc.close();
     _pinController.dispose();
-    _liveGameBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // 4. Proveemos el BLoC a la vista
     return BlocProvider.value(
-      value: _liveGameBloc,
-      child: BlocListener<LiveGameBloc, LiveGameBlocState>(
-        listener: (context, state) {
-          // Si tenemos un PIN (venga de QR o Manual), pasamos al Nickname
-          if (state.pin != null && state.status == LiveGameStatus.initial) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => NicknameEntryPage(pin: state.pin!),
-              ),
-            );
-          }
-          if (state.status == LiveGameStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage ?? 'Error')),
-            );
-          }
-        },
-        child: Scaffold(
-          backgroundColor: const Color(0xFF222222),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFFFFD54F),
-            title: const Text(
-              'Unirse al Juego',
-              style: TextStyle(
-                color: Colors.brown,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(24.0),
+      value: _bloc,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF46178F),
+        body: BlocListener<LiveGameBloc, LiveGameBlocState>(
+          listener: (context, state) {
+            // Si el PIN es válido, navegamos pasando el BLoC existente
+            if (state.pin != null && state.status == LiveGameStatus.initial) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: _bloc,
+                    child: NicknameEntryPage(pin: state.pin!),
+                  ),
+                ),
+              );
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(30.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Text(
+                  'QUIZZY',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 40),
                 TextField(
                   controller: _pinController,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontSize: 24),
                   decoration: const InputDecoration(
-                    hintText: 'PIN DEL JUEGO',
-                    hintStyle: TextStyle(color: Colors.white54),
+                    hintText: 'PIN DE JUEGO',
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
                     if (_pinController.text.isNotEmpty) {
-                      _liveGameBloc.add(InitPlayerSession(_pinController.text));
+                      _bloc.add(InitPlayerSession(_pinController.text));
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD54F),
-                  ),
-                  child: const Text(
-                    'INGRESAR',
-                    style: TextStyle(color: Colors.brown),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final String? token = await Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const QrScannerPage()),
-                    );
-                    if (token != null) _liveGameBloc.add(ScanQrCode(token));
-                  },
-                  icon: const Icon(
-                    Icons.qr_code_scanner,
-                    color: Color(0xFFFFD54F),
-                  ),
-                  label: const Text(
-                    'Escanear QR',
-                    style: TextStyle(color: Color(0xFFFFD54F)),
-                  ),
+                  child: const Text('INGRESAR'),
                 ),
               ],
             ),
