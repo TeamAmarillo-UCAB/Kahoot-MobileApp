@@ -48,6 +48,8 @@ dependencies:
   socket_io_client: ^2.0.0
   json_annotation: ^4.8.0
   freezed_annotation: ^2.0.0
+  mobile_scanner: ^7.1.4
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
