@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../create/create_kahoot_page.dart';
-import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
-
-
+//ANTERIOR EPICA 4
+//import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -18,7 +17,13 @@ class HomePage extends StatelessWidget {
           children: [
             const Icon(Icons.account_circle, color: Colors.white),
             const SizedBox(width: 8),
-            const Text('Kahoot!', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+            const Text(
+              'Kahoot!',
+              style: TextStyle(
+                color: Colors.brown,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -26,7 +31,9 @@ class HomePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFFEE58),
               foregroundColor: Colors.brown,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {},
             child: const Text('Actualizar'),
@@ -50,7 +57,11 @@ class HomePage extends StatelessWidget {
             children: [
               const Text(
                 '¡Que empiecen los juegos!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -58,7 +69,9 @@ class HomePage extends StatelessWidget {
                   backgroundColor: const Color(0xFFFFD54F),
                   foregroundColor: Colors.brown,
                   elevation: 4,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
                 ),
                 onPressed: () {
                   Navigator.of(context).push(
@@ -77,32 +90,28 @@ class HomePage extends StatelessWidget {
         unselectedItemColor: Colors.brown.withOpacity(0.7),
         currentIndex: 2,
         onTap: (index) {
-          if (index == 2) { // Índice de "Unirse"
-            // ✅ Navegación al módulo de juego (Wrapper)
+          if (index == 2) {
+            //ANTERIOR EPICA 4
+            // Índice de "Unirse"
+            /*// ✅ Navegación al módulo de juego (Wrapper)
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const GameModuleWrapper()),
-            );
+            );*/
           } else if (index == 3) {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CreateKahootPage()),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
           } else {
             // Otros índices: aún no implementados
           }
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: _NavIcon(Icons.home),
-            label: 'Inicio',
-          ),
+          BottomNavigationBarItem(icon: _NavIcon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(
             icon: _NavIcon(Icons.explore),
             label: 'Descubre',
           ),
-          BottomNavigationBarItem(
-            icon: _NavIcon(Icons.group),
-            label: 'Unirse',
-          ),
+          BottomNavigationBarItem(icon: _NavIcon(Icons.group), label: 'Unirse'),
           BottomNavigationBarItem(
             icon: _NavIcon(Icons.add_circle_outline),
             label: 'Crear',
