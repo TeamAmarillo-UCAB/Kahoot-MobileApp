@@ -6,8 +6,7 @@ import '../bloc/group_detail/group_detail_event.dart';
 class EditGroupPage extends StatefulWidget {
   final String groupId;
   final String currentName;
-  final String
-  currentDescription; // 1. Agregamos esto para recibir la descripción actual
+  final String currentDescription;
 
   const EditGroupPage({
     super.key, // Uso moderno de super.key
@@ -22,8 +21,7 @@ class EditGroupPage extends StatefulWidget {
 
 class _EditGroupPageState extends State<EditGroupPage> {
   late TextEditingController _nameController;
-  late TextEditingController
-  _descController; // 2. Definimos el controlador que faltaba
+  late TextEditingController _descController; //controlador de descripcion
 
   @override
   void initState() {
@@ -31,7 +29,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
     _nameController = TextEditingController(text: widget.currentName);
     _descController = TextEditingController(
       text: widget.currentDescription,
-    ); // Inicializamos con el valor actual
+    ); // Inicializa con valor actual de descripción
   }
 
   @override
@@ -62,7 +60,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- CAMPO NOMBRE ---
             const Text(
               "Nombre",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -81,15 +78,14 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
             const SizedBox(height: 16),
 
-            // --- CAMPO DESCRIPCIÓN (NUEVO) ---
             const Text(
               "Descripción",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: _descController, // Usamos el controlador nuevo
-              maxLines: 3, // Permitimos más líneas para la descripción
+              controller: _descController,
+              maxLines: 3,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -101,7 +97,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
             const SizedBox(height: 24),
 
-            // --- IMAGEN ---
             Container(
               height: 150,
               decoration: BoxDecoration(
@@ -125,7 +120,6 @@ class _EditGroupPageState extends State<EditGroupPage> {
 
             const Spacer(),
 
-            // --- BOTONES ---
             Row(
               children: [
                 Expanded(
@@ -143,9 +137,8 @@ class _EditGroupPageState extends State<EditGroupPage> {
                     onPressed: () {
                       context.read<GroupDetailBloc>().add(
                         EditGroupEvent(
-                          // 3. CORRECCIÓN IMPORTANTE AQUÍ:
                           groupId: widget
-                              .groupId, // Usamos widget.groupId, NO widget.group.id
+                              .groupId, // Usa widget.groupId, NO widget.group.id
                           name: _nameController.text,
                           description: _descController
                               .text, // Ahora sí existe esta variable

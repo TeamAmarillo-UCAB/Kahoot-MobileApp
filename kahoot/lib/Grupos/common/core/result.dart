@@ -11,12 +11,11 @@ class Result<T> {
     return Result._(value, null, true);
   }
 
-  // Factory para caso de Error (AQUÍ ESTÁ EL MÉTODO QUE BUSCAS)
+  // Factory para caso de Error
   factory Result.error(Object error) {
     return Result._(null, error, false);
   }
 
-  // Métodos de ayuda que usa tu Bloc
   bool isSuccessful() => _isSuccess;
 
   T getValue() {

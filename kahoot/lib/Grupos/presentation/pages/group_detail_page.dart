@@ -11,11 +11,11 @@ import '../bloc/group_detail/group_detail_state.dart';
 import '../../domain/entities/group.dart';
 
 // Widgets y Páginas
-import 'invite_success_dialog.dart'; // Asegúrate de importar el dialog que acabamos de crear
+import 'invite_success_dialog.dart'; // Importar el dialog
 import 'group_leaderboard_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
-  final Group group; // Recibimos el objeto básico desde la lista
+  final Group group;
 
   const GroupDetailPage({Key? key, required this.group}) : super(key: key);
 
@@ -33,10 +33,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos BlocConsumer para escuchar cambios de estado (Listeners) y reconstruir UI (Builder)
+    //  escuchar cambios de estado (Listeners) y reconstruir UI (Builder)
     return BlocConsumer<GroupDetailBloc, GroupDetailState>(
       listener: (context, state) {
-        // 1. ESCUCHA: Si hay un error, mostrar SnackBar
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -46,18 +45,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           );
         }
 
-        // 2. ESCUCHA: Si se generó un link de invitación, mostrar el DIALOG
         if (state.invitationLink != null) {
           showDialog(
             context: context,
             builder: (_) => InviteSuccessDialog(link: state.invitationLink!),
           ).then((_) {
-            // Importante: Limpiar el link del estado al cerrar el dialog para no mostrarlo de nuevo
             context.read<GroupDetailBloc>().add(ClearInvitationLinkEvent());
           });
         }
 
-        // 3. ESCUCHA: Si el grupo fue eliminado, volver atrás
         if (state is GroupDeletedState) {
           Navigator.of(context).pop(); // Volver a la lista
           ScaffoldMessenger.of(context).showSnackBar(
@@ -137,9 +133,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          widget
-                              .group
-                              .name, // Usamos el nombre del widget padre mientras carga detalles
+                          widget.group.name,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -153,7 +147,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
                         const SizedBox(height: 24),
 
-                        // --- BOTONES DE ACCIÓN RÁPIDA ---
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -171,19 +164,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               icon: Icons.leaderboard,
                               label: "Ranking",
                               onTap: () {
-                                // 1. Obtenemos la instancia actual del Bloc
                                 final groupDetailBloc = context
                                     .read<GroupDetailBloc>();
 
-                                // 2. (Opcional) Disparamos el evento de cargar ranking aquí
-                                // groupDetailBloc.add(LoadGroupLeaderboardEvent(groupId: widget.group.id));
-
-                                // 3. Navegamos pasando el Bloc existente
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => BlocProvider.value(
-                                      value:
-                                          groupDetailBloc, // <--- AQUÍ PASAMOS EL BLOC
+                                      value: groupDetailBloc,
                                       child: GroupLeaderboardPage(
                                         groupId: widget.group.id,
                                       ),
@@ -198,7 +185,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                         const SizedBox(height: 32),
                         const Divider(),
 
-                        // --- SECCIÓN: QUIZZES ASIGNADOS ---
                         _SectionHeader(
                           title: "Quizzes Asignados",
                           onTapAdd: () {
@@ -238,7 +224,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
                         const Divider(),
 
-                        // --- SECCIÓN: MIEMBROS ---
                         const SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerLeft,
@@ -263,7 +248,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               ),
                               title: Text(
                                 member.userId,
-                              ), // Deberías mapear ID a Nombre real si lo tienes
+                              ), // Mapear ID a Nombre real (PENDIENTE)
                               subtitle: Text(member.role),
                               trailing:
                                   member.role !=
@@ -327,11 +312,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                // 1. Cerrar el diálogo
                 Navigator.pop(dialogContext);
 
-                // 2. Enviar el evento al BLoC para actualizar en el Backend
-                // Asegúrate de que tu evento se llame EditGroupEvent o similar
                 context.read<GroupDetailBloc>().add(
                   EditGroupEvent(
                     groupId: group.id,

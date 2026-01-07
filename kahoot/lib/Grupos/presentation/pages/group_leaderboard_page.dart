@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/group_detail/group_detail_bloc.dart';
 import '../bloc/group_detail/group_detail_state.dart';
-import '../bloc/group_detail/group_detail_event.dart'; // Importar eventos
+import '../bloc/group_detail/group_detail_event.dart';
 
 class GroupLeaderboardPage extends StatefulWidget {
   final String groupId;
@@ -19,8 +19,6 @@ class _GroupLeaderboardPageState extends State<GroupLeaderboardPage> {
   void initState() {
     super.initState();
     // DISPARAR EL EVENTO AL CARGAR LA PANTALLA
-    // Usamos addPostFrameCallback para asegurar que el contexto esté listo,
-    // aunque en initState suele funcionar directo con context.read.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GroupDetailBloc>().add(
         LoadGroupLeaderboardEvent(groupId: widget.groupId),
@@ -47,12 +45,10 @@ class _GroupLeaderboardPageState extends State<GroupLeaderboardPage> {
       ),
       body: BlocBuilder<GroupDetailBloc, GroupDetailState>(
         builder: (context, state) {
-          // CASO 1: Cargando (Muestra solo el spinner)
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // CASO 2: No está cargando y la lista está vacía (Muestra "Sin datos")
           if (state.leaderboard.isEmpty) {
             return Center(
               child: Column(
@@ -73,7 +69,6 @@ class _GroupLeaderboardPageState extends State<GroupLeaderboardPage> {
             );
           }
 
-          // CASO 3: Hay datos (Muestra la lista)
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: state.leaderboard.length,

@@ -32,12 +32,9 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
       );
 
       if (result.isSuccessful()) {
-        // CORRECCIÓN: En lugar de add(LoadGroupsEvent()), llamamos a la lógica directa
-        // Esto evita el error de "Bloc cerrado" porque usamos el 'emit' actual.
         await _loadGroups(emit);
       } else {
         emit(GroupListError("Error al crear: ${result.getError()}"));
-        // Si falló, recargamos la lista que teníamos antes
         await _loadGroups(emit);
       }
     });
@@ -56,12 +53,7 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
     });
   }
 
-  // --- MÉTODO PRIVADO REUTILIZABLE ---
-  // Esta función hace el trabajo sucio y es segura de llamar desde cualquier evento
   Future<void> _loadGroups(Emitter<GroupListState> emit) async {
-    // Nota: No emitimos 'Loading' aquí dentro para no parpadear
-    // si ya venimos de una acción de carga.
-
     final result = await getUserGroups(currentUserId);
 
     if (result.isSuccessful()) {

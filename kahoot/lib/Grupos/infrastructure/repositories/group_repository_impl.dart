@@ -1,5 +1,5 @@
 import '../../common/core/result.dart';
-import '../../common/core/failure.dart'; // Asegúrate de tener este archivo creado
+import '../../common/core/failure.dart';
 import '../../domain/datasources/group_datasource.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/group_detail.dart';

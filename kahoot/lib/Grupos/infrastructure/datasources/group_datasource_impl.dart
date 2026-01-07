@@ -50,8 +50,6 @@ class GroupDatasourceImpl implements GroupDatasource {
     String name,
     String description,
   ) async {
-    // Nota: Usamos la ruta REST estándar para editar recurso.
-    // Si la API requiere estrictamente la ruta rara del prompt, cambiar a: '/groups/$groupId/members/algo'
     final response = await dio.patch(
       '/groups/$groupId',
       data: {'name': name, 'description': description},
@@ -123,14 +121,12 @@ class GroupDatasourceImpl implements GroupDatasource {
       options: _getOptions(userId),
     );
 
-    // Mapeo manual porque la respuesta de este endpoint (Endpoint 8) es ligeramente
-    // diferente a la entidad Group estándar (no trae memberCount, por ejemplo).
     final data = response.data;
     return Group(
       id: data['groupId'],
       name: data['groupName'],
       role: data['role'],
-      memberCount: 1, // Valor placeholder ya que la API no lo devuelve aquí
+      memberCount: 1, // OJO Valor placeholder ya que la API no lo devuelve aquí
       createdAt: DateTime.tryParse(data['joinedAt'] ?? '') ?? DateTime.now(),
     );
   }

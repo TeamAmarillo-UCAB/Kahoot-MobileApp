@@ -1,7 +1,7 @@
 import '../../../domain/entities/group_member.dart';
 import '../../../domain/entities/assigned_quiz.dart';
 import '../../../domain/entities/leaderboard_entry.dart';
-import '../../../domain/entities/group_detail.dart'; // Si usas GroupDetail para la info básica
+import '../../../domain/entities/group_detail.dart';
 
 class GroupDetailState {
   final bool isLoading;
@@ -13,7 +13,6 @@ class GroupDetailState {
   final bool isDeleted;
   final String? groupId;
 
-  // Opcional: Para tener info del grupo (nombre, desc) en el encabezado
   final GroupDetail? groupDetails;
 
   const GroupDetailState({
@@ -37,22 +36,20 @@ class GroupDetailState {
     List<GroupMember>? members,
     List<AssignedQuiz>? quizzes,
     List<LeaderboardEntry>? leaderboard,
-    // Usamos un "truco" para permitir borrar el link pasando null explícitamente si queremos,
-    // pero aquí lo manejaremos con lógica simple:
+
     String? invitationLink,
-    bool clearInvitationLink = false, // <--- BANDERA NUEVA IMPORTANTE
+    bool clearInvitationLink = false, //Flag de borrar link
     bool? isDeleted,
     String? groupId,
     GroupDetail? groupDetails,
   }) {
     return GroupDetailState(
       isLoading: isLoading ?? this.isLoading,
-      errorMessage:
-          errorMessage, // Si pasas null, se borra el error (deseado generalmente)
+      errorMessage: errorMessage,
       members: members ?? this.members,
       quizzes: quizzes ?? this.quizzes,
       leaderboard: leaderboard ?? this.leaderboard,
-      // Lógica: Si la bandera es true, forzamos null. Si no, usamos el nuevo valor o mantenemos el viejo.
+      // Lógica: Si la bandera es true, forza null. Si no, nuevo valor o el viejo
       invitationLink: clearInvitationLink
           ? null
           : (invitationLink ?? this.invitationLink),

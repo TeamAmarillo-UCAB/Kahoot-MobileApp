@@ -2,20 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kahoot/Grupos/application/usecases/get_group_leaderboard.dart';
 
-// --- IMPORTS DE DOMINIO Y REPOSITORIO ---
 import '../../../../Grupos/domain/entities/group.dart';
 import '../../../../Grupos/domain/repositories/group_repository.dart';
 
-// --- IMPORTS DE BLOC DE LISTA ---
 import '../bloc/group_list/group_list_bloc.dart';
 import '../bloc/group_list/group_list_state.dart';
 import '../bloc/group_list/group_list_event.dart';
 
-// --- IMPORTS PARA EL DETALLE (Inyección de dependencias) ---
 import '../bloc/group_detail/group_detail_bloc.dart';
 import 'group_detail_page.dart';
 
-// --- IMPORTS DE CASOS DE USO ---
 import '../../../../Grupos/application/usecases/get_group_details.dart';
 import '../../../../Grupos/application/usecases/generate_invitation.dart';
 import '../../../../Grupos/application/usecases/remove_member.dart';
@@ -49,12 +45,10 @@ class MyGroupsPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          // 1. CARGANDO
           if (state is GroupListLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // 2. ERROR (Mensaje en pantalla si no hay datos previos)
           if (state is GroupListError) {
             return Center(
               child: Column(
@@ -73,7 +67,6 @@ class MyGroupsPage extends StatelessWidget {
             );
           }
 
-          // 3. CARGADO EXITOSO
           if (state is GroupListLoaded) {
             final List<Group> groups = state.groups;
 
@@ -91,9 +84,7 @@ class MyGroupsPage extends StatelessWidget {
             );
           }
 
-          // 4. ESTADO INICIAL (Cargar datos)
           if (state is GroupListInitial) {
-            // Aseguramos que se carguen los datos al iniciar
             context.read<GroupListBloc>().add(LoadGroupsEvent());
             return const Center(child: CircularProgressIndicator());
           }
@@ -102,7 +93,6 @@ class MyGroupsPage extends StatelessWidget {
         },
       ),
 
-      // SOLO BOTÓN DE CREAR (El de unirse se quitó)
       floatingActionButton: FloatingActionButton(
         heroTag: "btnCreate",
         backgroundColor: Colors.blueAccent,
@@ -111,8 +101,6 @@ class MyGroupsPage extends StatelessWidget {
       ),
     );
   }
-
-  // --- WIDGETS AUXILIARES ---
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(
@@ -151,14 +139,13 @@ class MyGroupsPage extends StatelessWidget {
           group.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        // Usamos 'role' y 'memberCount'
+        // 'role' y 'memberCount'
         subtitle: Text(
           "${group.role} • ${group.memberCount} miembros",
           style: TextStyle(color: Colors.grey[600]),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
 
-        // --- NAVEGACIÓN E INYECCIÓN DE DEPENDENCIAS ---
         onTap: () {
           final repository = context.read<GroupRepository>();
 
@@ -166,7 +153,6 @@ class MyGroupsPage extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) {
-                // Creamos el Bloc de DETALLE al vuelo
                 return BlocProvider(
                   create: (ctx) => GroupDetailBloc(
                     getGroupDetails: GetGroupDetails(repository),
@@ -182,8 +168,6 @@ class MyGroupsPage extends StatelessWidget {
               },
             ),
           ).then((_) {
-            // Al volver, recargamos la lista por si hubo cambios
-            // ignore: use_build_context_synchronously
             context.read<GroupListBloc>().add(LoadGroupsEvent());
           });
         },

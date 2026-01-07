@@ -9,7 +9,6 @@ import 'group_detail_event.dart';
 import 'group_detail_state.dart';
 
 class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
-  // Inyección de dependencias: Casos de Uso en lugar de Repositorio
   final GetGroupDetails getGroupDetails;
   final GenerateInvitation generateInvitation;
   final RemoveMember removeMember;
@@ -29,12 +28,10 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     required this.getGroupLeaderboard,
     required this.currentUserId,
   }) : super(GroupDetailState.initial()) {
-    // 1. Cargar detalles (Miembros, Quizzes, Ranking)
     on<LoadGroupDetailsEvent>((event, emit) async {
       _currentGroupId = event.groupId;
       emit(state.copyWith(isLoading: true, groupId: event.groupId));
 
-      // Usamos el caso de uso "Orquestador" que creamos
       final result = await getGroupDetails(currentUserId, event.groupId);
 
       if (result.isSuccessful()) {
@@ -77,8 +74,6 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     on<RemoveMemberEvent>((event, emit) async {
       if (_currentGroupId == null) return;
 
-      // Optimistic update: podrías quitarlo de la lista localmente antes,
-      // pero aquí recargamos para asegurar consistencia.
       final result = await removeMember(
         currentUserId,
         _currentGroupId!,
@@ -113,30 +108,24 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
       );
 
       if (result.isSuccessful()) {
-        add(LoadGroupDetailsEvent(event.groupId)); // Recargar datos nuevos
+        add(LoadGroupDetailsEvent(event.groupId));
       } else {
         emit(state.copyWith(errorMessage: "Error al editar el grupo"));
       }
     });
 
     on<LoadGroupLeaderboardEvent>((event, emit) async {
-      // 1. AVISA A LA UI QUE ESTÁS CARGANDO
       emit(state.copyWith(isLoading: true));
 
       final result = await getGroupLeaderboard(currentUserId, event.groupId);
 
       if (result.isSuccessful()) {
-        emit(
-          state.copyWith(
-            leaderboard: result.getValue(),
-            isLoading: false, // 2. APAGA LA CARGA AL TERMINAR
-          ),
-        );
+        emit(state.copyWith(leaderboard: result.getValue(), isLoading: false));
       } else {
         emit(
           state.copyWith(
             errorMessage: "Error al cargar el ranking",
-            isLoading: false, // 2. APAGA LA CARGA SI FALLA
+            isLoading: false,
           ),
         );
       }

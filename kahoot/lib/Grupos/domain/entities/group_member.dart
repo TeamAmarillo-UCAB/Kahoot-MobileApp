@@ -16,7 +16,7 @@ class GroupMember {
       userId: json['userId'] ?? '',
       role: json['role'] ?? 'MEMBER',
       joinedAt: DateTime.tryParse(json['joinedAt'] ?? '') ?? DateTime.now(),
-      // Mapeamos 'name' si viene, sino usamos el userId o un default
+      // Mapeamos 'name' si viene, sino el userId o un default
       name: json['name'] ?? json['userId'] ?? 'Usuario',
     );
   }
