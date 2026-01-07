@@ -3,7 +3,7 @@ import '../entities/live_session.dart';
 abstract class LiveGameDatasource {
   // HTTP
   Future<LiveSession> createSession(String kahootId);
-  Future<Map<String, dynamic>> getSessionByQR(String qrToken);
+  Future<Map<String, dynamic>> getPinByQR(String qrToken);
 
   // Socket
   void connect({
