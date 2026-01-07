@@ -1,3 +1,4 @@
+// lib/domain/entities/live_game_state.dart
 import 'live_slide.dart';
 
 class LiveGameState {
@@ -10,6 +11,7 @@ class LiveGameState {
   final int? totalScore;
   final int? rank;
   final List<String>? correctAnswerIds;
+  final String? feedbackMessage; // <--- Agregado
   final dynamic podiumData;
 
   LiveGameState({
@@ -22,6 +24,7 @@ class LiveGameState {
     this.totalScore,
     this.rank,
     this.correctAnswerIds,
+    this.feedbackMessage,
     this.podiumData,
   });
 
@@ -37,6 +40,7 @@ class LiveGameState {
       lastPointsEarned: json['pointsEarned'],
       totalScore: json['totalScore'] ?? json['score'],
       rank: json['rank'],
+      feedbackMessage: json['message'], // <--- Mapeo de la llave del servidor
       correctAnswerIds: (json['correctAnswerIds'] as List?)
           ?.map((e) => e.toString())
           .toList(),

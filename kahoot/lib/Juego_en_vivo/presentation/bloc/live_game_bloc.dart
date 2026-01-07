@@ -36,6 +36,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     on<InitPlayerSession>(_onInitPlayer);
     on<JoinLobby>(_onJoinLobby);
     on<OnGameStateReceived>(_onGameStateUpdate);
+    on<SubmitAnswer>(_onSubmitAnswer);
     on<ScanQrCode>(_onScanQr);
   }
 
@@ -124,6 +125,30 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     _gameStateSubscription?.cancel();
     repository.disconnect();
     return super.close();
+  }
+
+  Future<void> _onSubmitAnswer(
+    SubmitAnswer event,
+    Emitter<LiveGameBlocState> emit,
+  ) async {
+    print(
+      "📤 [BLOC] Enviando respuesta: ${event.answerIds} para la pregunta ${event.questionId}",
+    );
+
+    try {
+      // 1. Llamamos al repositorio para que emita por el socket
+      repository.submitAnswer(
+        questionId: event.questionId,
+        answerIds: event.answerIds,
+        timeElapsedMs: event.timeElapsedMs,
+      );
+
+      // 2. Opcional: Cambiamos el estado local a "WAITING_RESULTS"
+      // para que la UI sepa que ya respondimos
+      emit(state.copyWith(status: LiveGameStatus.waitingResults));
+    } catch (e) {
+      print("❌ Error al enviar respuesta: $e");
+    }
   }
 
   Future<void> _onScanQr(

@@ -64,7 +64,7 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
   }) {
     datasource.emit('player_submit_answer', {
       'questionId': questionId,
-      'answerIds': answerIds,
+      'answerId': answerIds,
       'timeElapsedMs': timeElapsedMs,
     });
   }
@@ -76,10 +76,9 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
       final data = payload['data'] as Map<String, dynamic>? ?? {};
 
       String phase = 'UNKNOWN';
-      // Extraemos el estado que viene dentro del JSON (si existe)
       final String? serverState = data['state']?.toString().toLowerCase();
 
-      // MAPEADO ROBUSTO: Revisa el evento O el estado interno
+      // Mapeo de fases
       if (event == 'question_started' || serverState == 'question') {
         phase = 'QUESTION';
       } else if (event == 'player_connected_to_session' ||
@@ -92,14 +91,28 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
         phase = 'RESULTS';
       } else if (event == 'player_answer_confirmation') {
         phase = 'WAITING_RESULTS';
-      } else if (event == 'session_closed' || serverState == 'end') {
+      } else if (event == 'session_closed' ||
+          serverState == 'end' ||
+          event == 'game_over') {
         phase = 'END';
       }
 
-      print(
-        '🗺️ [REPOSITORY] Evento: $event | Estado JSON: $serverState -> Fase: $phase',
-      );
-      return LiveGameState.fromJson(phase, data);
+      if (phase == 'RESULTS') {
+        print('📥 [REPOSITORY INCOMING]: $data');
+      }
+
+      // CREACIÓN DEL ESTADO
+      final mappedState = LiveGameState.fromJson(phase, data);
+
+      if (phase == 'RESULTS') {
+        print(
+          '🏗️ [REPOSITORY MAPPED]: Score: ${mappedState.totalScore}, Rank: ${mappedState.rank}, Correct: ${mappedState.lastWasCorrect}',
+        );
+      }
+
+      print('🗺️ [REPOSITORY] Evento: $event | Fase: $phase');
+
+      return mappedState;
     });
   }
 }

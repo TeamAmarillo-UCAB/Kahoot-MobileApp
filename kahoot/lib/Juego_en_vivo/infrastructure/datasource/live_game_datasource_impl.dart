@@ -48,13 +48,14 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
     _socket!.onConnect((_) {
       print('✅ [DATASOURCE] Socket Conectado');
-      _socket!.emit('client_ready', {}); // Sincronización automática
+      _socket!.emit('client_ready', {});
     });
 
-    _socket!.onConnectError((data) => print('❌ [DATASOURCE] Error: $data'));
+    _socket!.onConnectError(
+      (data) => print('❌ [DATASOURCE] Error de Conexión: $data'),
+    );
     _socket!.onDisconnect((data) => print('🔌 [DATASOURCE] Desconectado'));
 
-    // Eventos normalizados según tus logs de Postman y App
     final serverEvents = [
       'player_connected_to_session',
       'question_started',
@@ -72,6 +73,12 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     for (var event in serverEvents) {
       _socket!.on(event, (data) {
         print('📩 [DATASOURCE] Evento Recibido: $event');
+
+        // LOG CRÍTICO PARA DEBUG: Ver qué llega del servidor
+        if (event == 'player_results' || event == 'HOST_RESULTS') {
+          print('📊 [DATASOURCE DATA RAW]: $data');
+        }
+
         _socketEventController.add({'event': event, 'data': data});
       });
     }
