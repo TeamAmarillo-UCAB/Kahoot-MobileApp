@@ -9,7 +9,8 @@ class PlayerPodiumView extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = state.gameData;
     final rank = data?.rank ?? 0;
-    final isWinner = rank == 1;
+    // Usamos la propiedad isWinner de la entidad si existe, o calculamos por el rank
+    final isWinner = data?.isWinner ?? (rank == 1);
 
     return Container(
       width: double.infinity,
@@ -63,8 +64,9 @@ class PlayerPodiumView extends StatelessWidget {
                   const Divider(color: Colors.white24),
                   _StatRow(
                     label: "Racha Final",
-                    value: "${data?.lastPointsEarned ?? 0}",
-                  ), // O usa streak si lo tienes
+                    // Cambio: Usamos finalStreak de la entidad
+                    value: "${data?.finalStreak ?? 0} 🔥",
+                  ),
                 ],
               ),
             ),
