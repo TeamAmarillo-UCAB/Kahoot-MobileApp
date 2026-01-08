@@ -1,9 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
+// Asegúrate de importar la ruta correcta de tu widget de timer
+import '../../widgets/live_timer_widget.dart';
 
 class PlayerQuestionView extends StatefulWidget {
   final LiveGameBlocState state;
@@ -15,28 +16,16 @@ class PlayerQuestionView extends StatefulWidget {
 
 class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   late Stopwatch _stopwatch;
-  late Timer _timer;
-  int _remainingSeconds = 0;
   final Set<String> _selectedOptions = {};
 
   @override
   void initState() {
     super.initState();
     _stopwatch = Stopwatch()..start();
-    _remainingSeconds = widget.state.gameData?.currentSlide?.timeLimit ?? 30;
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
-        setState(() => _remainingSeconds--);
-      } else {
-        _timer.cancel();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
     _stopwatch.stop();
     super.dispose();
   }
@@ -54,7 +43,6 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
 
   @override
   Widget build(BuildContext context) {
-    // Si el estado es waitingResults, mostramos el overlay de "Enviado"
     if (widget.state.status == LiveGameStatus.waitingResults) {
       return Container(
         color: const Color(0xFF46178F),
@@ -68,13 +56,13 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                 "¡Respuesta enviada!",
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 "Espera al anfitrión...",
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.white70, fontSize: 18),
               ),
             ],
           ),
@@ -91,41 +79,57 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
       child: SafeArea(
         child: Column(
           children: [
-            LinearProgressIndicator(
-              value: (slide?.timeLimit ?? 1) > 0
-                  ? _remainingSeconds / slide!.timeLimit
-                  : 0,
-              backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Colors.cyanAccent,
-              ),
+            // TIMER CON EL NÚMERO DINÁMICO
+            LiveTimerWidget(
+              timeLimitSeconds: slide?.timeLimit ?? 30,
+              onTimerFinished: () {
+                if (isMultiple && _selectedOptions.isNotEmpty) {
+                  _submit(slide?.id, _selectedOptions.toList());
+                }
+              },
             ),
-            // ... (Resto de tu UI de preguntas igual que antes)
+
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Text(
                 slide?.questionText ?? "",
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
+
+            if (slide?.imageUrl != null && slide!.imageUrl!.isNotEmpty)
+              Container(
+                height: 180,
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.network(slide.imageUrl!, fit: BoxFit.contain),
+                ),
+              ),
+
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 1.1,
                 ),
                 itemCount: options.length,
                 itemBuilder: (context, index) {
                   final option = options[index];
                   final isSelected = _selectedOptions.contains(option.index);
+
                   return GestureDetector(
                     onTap: () {
                       if (isMultiple) {
@@ -138,20 +142,42 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                         _submit(slide?.id, [option.index]);
                       }
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
                       decoration: BoxDecoration(
                         color: _getKahootColor(index),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(20),
                         border: isSelected
-                            ? Border.all(color: Colors.white, width: 4)
-                            : null,
+                            ? Border.all(color: Colors.white, width: 6)
+                            : Border.all(color: Colors.white24, width: 1),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        option.text ?? "",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (option.mediaUrl != null &&
+                                option.mediaUrl!.isNotEmpty)
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    option.mediaUrl!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 5),
+                            Text(
+                              option.text ?? "",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -159,18 +185,29 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                 },
               ),
             ),
+
             if (isMultiple)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: ElevatedButton(
                   onPressed: _selectedOptions.isEmpty
                       ? null
                       : () => _submit(slide?.id, _selectedOptions.toList()),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Colors.greenAccent[700],
+                    minimumSize: const Size(double.infinity, 60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                  child: const Text("ENVIAR RESPUESTAS"),
+                  child: const Text(
+                    "ENVIAR RESPUESTAS",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -180,7 +217,12 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   }
 
   Color _getKahootColor(int index) {
-    const colors = [Colors.red, Colors.blue, Colors.orange, Colors.green];
+    const colors = [
+      Color(0xFFE21B3C),
+      Color(0xFF1368CE),
+      Color(0xFFD89E00),
+      Color(0xFF26890C),
+    ];
     return colors[index % colors.length];
   }
 }

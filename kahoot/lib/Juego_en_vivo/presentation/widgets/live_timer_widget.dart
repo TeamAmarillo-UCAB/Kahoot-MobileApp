@@ -42,34 +42,54 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Column(
-          children: [
-            LinearProgressIndicator(
-              value: _controller.value,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                _controller.value > 0.3 ? Colors.deepPurple : Colors.red,
-              ),
-              minHeight: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.timer, size: 20),
-                  const SizedBox(width: 5),
-                  Text(
-                    '${(widget.timeLimitSeconds * _controller.value).ceil()}s',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculamos la posición X basada en el porcentaje de la barra
+            final double width = constraints.maxWidth;
+            final double currentPosition = width * _controller.value;
+
+            return Column(
+              children: [
+                Stack(
+                  clipBehavior: Clip
+                      .none, // Permite que el texto sobresalga si es necesario
+                  children: [
+                    // La barra de progreso
+                    LinearProgressIndicator(
+                      value: _controller.value,
+                      backgroundColor: Colors.white12,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _controller.value > 0.3
+                            ? Colors.cyanAccent
+                            : Colors.redAccent,
+                      ),
+                      minHeight: 12,
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                    // El número que "sigue" a la barra
+                    Positioned(
+                      left:
+                          currentPosition -
+                          20, // Ajuste para que el texto flote sobre el final
+                      top: 15, // Lo posicionamos justo debajo de la barra
+                      child: Text(
+                        '${(widget.timeLimitSeconds * _controller.value).ceil()}s',
+                        style: TextStyle(
+                          color: _controller.value > 0.3
+                              ? Colors.white
+                              : Colors.redAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 25,
+                ), // Espacio para que el número no choque con la pregunta
+              ],
+            );
+          },
         );
       },
     );
