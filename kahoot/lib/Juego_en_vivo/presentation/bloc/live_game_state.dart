@@ -1,3 +1,4 @@
+// lib/presentation/bloc/live_game_state.dart
 import '../../domain/entities/live_game_state.dart';
 import '../../domain/entities/live_session.dart';
 
@@ -18,7 +19,8 @@ class LiveGameBlocState {
   final String? nickname;
   final String? role;
   final LiveSession? session;
-  final LiveGameState? gameData;
+  final LiveGameState?
+  gameData; // <--- Aquí vive la Entidad que definimos arriba
   final String? errorMessage;
 
   LiveGameBlocState({

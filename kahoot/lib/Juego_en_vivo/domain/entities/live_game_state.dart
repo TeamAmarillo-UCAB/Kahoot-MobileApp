@@ -10,8 +10,12 @@ class LiveGameState {
   final int? lastPointsEarned;
   final int? totalScore;
   final int? rank;
+  final int? streak;
   final List<String>? correctAnswerIds;
   final String? feedbackMessage; // <--- Agregado
+  final bool? isWinner;
+  final bool? isPodium;
+  final int? finalStreak;
   final dynamic podiumData;
 
   LiveGameState({
@@ -23,8 +27,12 @@ class LiveGameState {
     this.lastPointsEarned,
     this.totalScore,
     this.rank,
+    this.streak,
     this.correctAnswerIds,
     this.feedbackMessage,
+    this.isWinner,
+    this.isPodium,
+    this.finalStreak,
     this.podiumData,
   });
 
@@ -40,10 +48,14 @@ class LiveGameState {
       lastPointsEarned: json['pointsEarned'],
       totalScore: json['totalScore'] ?? json['score'],
       rank: json['rank'],
+      streak: json['streak'],
       feedbackMessage: json['message'], // <--- Mapeo de la llave del servidor
       correctAnswerIds: (json['correctAnswerIds'] as List?)
           ?.map((e) => e.toString())
           .toList(),
+      isWinner: json['isWinner'],
+      isPodium: json['isPodium'],
+      finalStreak: json['finalStreak'],
       podiumData: json['finalPodium'] ?? json['winner'],
     );
   }
