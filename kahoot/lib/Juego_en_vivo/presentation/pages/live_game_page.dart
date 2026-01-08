@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// Imports de Bloc
 import '../bloc/live_game_bloc.dart';
 import '../bloc/live_game_state.dart';
-
-// Imports de las páginas de HOST
-import 'host/host_lobby_page.dart';
-import 'host/host_question_page.dart';
-import 'host/host_results_page.dart';
-import 'host/host_podium_page.dart';
-
-// Imports de las páginas de PLAYER
 import 'player/player_lobby_page.dart';
 import 'player/player_question_page.dart';
 import 'player/player_feedback_page.dart';
@@ -22,46 +12,52 @@ class LiveGamePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
-      builder: (context, state) {
-        //Si está cargando o no hay rol definido
-        if (state.status == LiveGameStatus.loading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        //Lógica de HOST
-        if (state.role == 'HOST') {
-          switch (state.status) {
-            case LiveGameStatus.lobby:
-              return const HostLobbyView();
-            case LiveGameStatus.question:
-              return const HostQuestionView();
-            case LiveGameStatus.results:
-              return const HostResultsView();
-            case LiveGameStatus.end:
-              return const HostPodiumView();
-            default:
-              return const HostLobbyView();
+    return Scaffold(
+      // BlocListener solo para errores o salidas definitivas
+      body: BlocListener<LiveGameBloc, LiveGameBlocState>(
+        listener: (context, state) {
+          if (state.status == LiveGameStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Error')),
+            );
           }
-        }
-        //Lógica de PLAYER
-        else {
-          switch (state.status) {
-            case LiveGameStatus.lobby:
-              return const PlayerLobbyView();
-            case LiveGameStatus.question:
-              return const PlayerQuestionPage();
-            case LiveGameStatus.results:
-              return const PlayerFeedbackView();
-            case LiveGameStatus.end:
-              return const PlayerPodiumView();
-            default:
-              return const PlayerLobbyView();
-          }
-        }
-      },
+        },
+        child: BlocBuilder<LiveGameBloc, LiveGameBlocState>(
+          builder: (context, state) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: _buildCurrentView(state),
+            );
+          },
+        ),
+      ),
     );
+  }
+
+  Widget _buildCurrentView(LiveGameBlocState state) {
+    switch (state.status) {
+      case LiveGameStatus.lobby:
+        return PlayerLobbyView(key: const ValueKey('lobby'), state: state);
+      case LiveGameStatus.question:
+      case LiveGameStatus.waitingResults:
+        return PlayerQuestionView(
+          key: const ValueKey('question'),
+          state: state,
+        );
+      case LiveGameStatus.results:
+        return PlayerFeedbackView(key: const ValueKey('results'), state: state);
+      case LiveGameStatus.end:
+        return PlayerPodiumView(key: const ValueKey('end'), state: state);
+      case LiveGameStatus.loading:
+        return const Center(
+          key: ValueKey('loading'),
+          child: CircularProgressIndicator(),
+        );
+      default:
+        return const Center(
+          key: ValueKey('init'),
+          child: Text("Esperando conexión..."),
+        );
+    }
   }
 }

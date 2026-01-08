@@ -65,9 +65,9 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       'session_closed',
       'game_error',
       'sync_error',
-      'HOST_LOBBY_UPDATE',
-      'HOST_RESULTS',
-      'PLAYER_GAME_END',
+      'host_lobby_update',
+      'host_results',
+      'player_game_end',
     ];
 
     for (var event in serverEvents) {

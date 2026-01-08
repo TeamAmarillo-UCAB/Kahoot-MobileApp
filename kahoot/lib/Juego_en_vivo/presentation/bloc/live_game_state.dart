@@ -8,7 +8,7 @@ enum LiveGameStatus {
   question,
   waitingResults,
   results,
-  end, // Cambiado de 'podium' a 'end' según pág. 18 del PDF
+  end,
   error,
 }
 

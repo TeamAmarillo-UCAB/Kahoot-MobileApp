@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
-import '../player/player_lobby_page.dart'; // Asegúrate de que la ruta sea correcta
+import '../live_game_page.dart'; // Importamos el orquestador
 
 class NicknameEntryPage extends StatefulWidget {
   final String pin;
@@ -17,28 +17,32 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<LiveGameBloc, LiveGameBlocState>(
       listener: (context, state) {
-        // ESCENARIO A: El servidor confirma que entramos al lobby
+        // Cuando el estado pase a LOBBY, entramos a la "caja" del juego
         if (state.status == LiveGameStatus.lobby) {
-          print("✅ Confirmación recibida. Navegando al Lobby...");
+          print("✅ Nickname aceptado. Entrando a la sesión de juego...");
 
-          // Guardamos la referencia al bloc actual antes de navegar
           final liveGameBloc = context.read<LiveGameBloc>();
 
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => BlocProvider.value(
-                value:
-                    liveGameBloc, // <--- Esto mantiene vivo el bloc en la siguiente pantalla
-                child: const PlayerLobbyView(),
+                value: liveGameBloc,
+                child:
+                    const LiveGamePage(), // Navegamos al orquestador principal
               ),
             ),
           );
         }
 
-        // ESCENARIO B: Error al unirse (ej. nickname duplicado o sesión cerrada)
         if (state.status == LiveGameStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.errorMessage ?? 'Error al unirse')),
@@ -76,7 +80,7 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
                     fontWeight: FontWeight.bold,
                   ),
                   decoration: InputDecoration(
-                    hintText: "Nickname",
+                    hintText: "Tu apodo aquí",
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -115,7 +119,10 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
                               )
                             : const Text(
                                 "¡LISTO!",
-                                style: TextStyle(fontSize: 18),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                       ),
                     );

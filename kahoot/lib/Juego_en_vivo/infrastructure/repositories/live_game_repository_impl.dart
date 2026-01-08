@@ -83,44 +83,40 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
   @override
   Stream<LiveGameState> get gameStateStream {
     return datasource.socketEvents.map((payload) {
-      final event = payload['event'] as String;
+      final event = (payload['event'] as String).toLowerCase();
       final data = payload['data'] as Map<String, dynamic>? ?? {};
 
-      String phase = 'UNKNOWN';
-      final String? serverState = data['state']?.toString().toLowerCase();
+      // Extraemos el estado interno si viene en la data
+      final String serverState = (data['state'] ?? '').toString().toLowerCase();
 
+      String phase = 'UNKNOWN';
+
+      // --- LOGICA DE MAPEO CORREGIDA ---
       if (event == 'question_started' || serverState == 'question') {
         phase = 'QUESTION';
       } else if (event == 'player_connected_to_session' ||
-          event == 'HOST_LOBBY_UPDATE' ||
           serverState == 'lobby') {
         phase = 'LOBBY';
-      } else if (event == 'player_results' ||
-          event == 'HOST_RESULTS' ||
-          serverState == 'results') {
+      } else if (event == 'player_results' || serverState == 'results') {
         phase = 'RESULTS';
       } else if (event == 'player_answer_confirmation') {
         phase = 'WAITING_RESULTS';
-      } else if (event == 'session_closed' ||
+      }
+      // AQUÍ ESTABA EL ERROR: Agregamos el evento que viste en el log
+      else if (event == 'player_game_end' ||
           serverState == 'end' ||
           event == 'game_over') {
         phase = 'END';
       }
 
-      if (phase == 'RESULTS') {
-        print('📥 [REPOSITORY INCOMING]: $data');
+      // Si sigue saliendo "UNKNOWN", este print te lo dirá
+      if (phase == 'UNKNOWN') {
+        print('❓ [REPOSITORY] Evento No Mapeado: $event -> $data');
+      } else {
+        print('✅ [REPOSITORY] Evento Mapeado: $event -> Fase: $phase');
       }
 
-      final mappedState = LiveGameState.fromJson(phase, data);
-
-      if (phase == 'RESULTS') {
-        print(
-          '🏗️ [REPOSITORY MAPPED]: Score: ${mappedState.totalScore}, Rank: ${mappedState.rank}',
-        );
-      }
-
-      print('🗺️ [REPOSITORY] Evento: $event | Fase: $phase');
-      return mappedState;
+      return LiveGameState.fromJson(phase, data);
     });
   }
 }
