@@ -131,24 +131,18 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     SubmitAnswer event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    print(
-      "📤 [BLOC] Enviando respuesta: ${event.answerIds} para la pregunta ${event.questionId}",
+    // Log para ver qué recibe el Bloc
+    print('📥 [BLOC RECEIVING]: ${event.answerIds}');
+
+    // Cambiamos el estado a 'waitingResults' para que salga la pantalla de carga
+    emit(state.copyWith(status: LiveGameStatus.waitingResults));
+
+    // Llamada al repositorio
+    repository.submitAnswer(
+      questionId: event.questionId,
+      answerIds: event.answerIds, // Aquí ya deberían ser Strings
+      timeElapsedMs: event.timeElapsedMs,
     );
-
-    try {
-      // 1. Llamamos al repositorio para que emita por el socket
-      repository.submitAnswer(
-        questionId: event.questionId,
-        answerIds: event.answerIds,
-        timeElapsedMs: event.timeElapsedMs,
-      );
-
-      // 2. Opcional: Cambiamos el estado local a "WAITING_RESULTS"
-      // para que la UI sepa que ya respondimos
-      emit(state.copyWith(status: LiveGameStatus.waitingResults));
-    } catch (e) {
-      print("❌ Error al enviar respuesta: $e");
-    }
   }
 
   Future<void> _onScanQr(

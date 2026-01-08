@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
-import 'player_results_page.dart'; // Asegúrate de que la ruta sea correcta
+import 'player_results_page.dart';
 
 class PlayerQuestionPage extends StatefulWidget {
   const PlayerQuestionPage({super.key});
@@ -29,9 +29,7 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
+        setState(() => _remainingSeconds--);
       } else {
         _timer.cancel();
       }
@@ -45,20 +43,20 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
     super.dispose();
   }
 
-  void _handleAnswer(String optionIndex, String? questionId) {
+  void _handleAnswer(dynamic optionIndex, String? questionId) {
     if (_answered) return;
 
     setState(() => _answered = true);
     _stopwatch.stop();
-    _timer.cancel();
 
-    final elapsedMs = _stopwatch.elapsedMilliseconds;
+    // Enviamos el index tal cual (probablemente un int)
+    print('⏱️ [UI] Respuesta seleccionada: $optionIndex');
 
     context.read<LiveGameBloc>().add(
       SubmitAnswer(
         questionId: questionId ?? "",
-        answerIds: [optionIndex],
-        timeElapsedMs: elapsedMs,
+        answerIds: [optionIndex.toString()], // Lo pasamos al Bloc como String
+        timeElapsedMs: _stopwatch.elapsedMilliseconds,
       ),
     );
   }
@@ -67,7 +65,6 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
   Widget build(BuildContext context) {
     return BlocListener<LiveGameBloc, LiveGameBlocState>(
       listener: (context, state) {
-        // Navegar a resultados cuando el estado cambie a RESULTS
         if (state.status == LiveGameStatus.results) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -81,7 +78,6 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
       },
       child: BlocBuilder<LiveGameBloc, LiveGameBlocState>(
         builder: (context, state) {
-          // Pantalla intermedia: Respuesta enviada, esperando al Host
           if (state.status == LiveGameStatus.waitingResults) {
             return const Scaffold(
               backgroundColor: Color(0xFF46178F),
@@ -100,7 +96,7 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                       ),
                     ),
                     Text(
-                      "Espera a que el anfitrión avance...",
+                      "Espera al anfitrión...",
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ],
@@ -126,7 +122,6 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                       Colors.cyanAccent,
                     ),
                   ),
-
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -149,7 +144,6 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                       ],
                     ),
                   ),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Text(
@@ -162,9 +156,7 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   if (slide?.imageUrl != null)
                     Expanded(
                       child: Container(
@@ -178,7 +170,6 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                         ),
                       ),
                     ),
-
                   Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: GridView.builder(
@@ -244,19 +235,15 @@ class _AnswerButton extends StatelessWidget {
           ),
           padding: const EdgeInsets.all(8),
           alignment: Alignment.center,
-          child: option.text != null
-              ? Text(
-                  option.text!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                )
-              : (option.mediaUrl != null
-                    ? Image.network(option.mediaUrl!)
-                    : const Icon(Icons.help_outline, color: Colors.white)),
+          child: Text(
+            option.text ?? "",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ),
       ),
     );

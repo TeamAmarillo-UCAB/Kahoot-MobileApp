@@ -3,6 +3,7 @@ import '../../domain/repositories/live_game_repository.dart';
 import '../../domain/entities/live_session.dart';
 import '../../domain/entities/live_game_state.dart';
 import '../../common/core/result.dart';
+import 'dart:convert';
 
 class LiveGameRepositoryImpl implements LiveGameRepository {
   final LiveGameDatasource datasource;
@@ -62,11 +63,24 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
     required List<String> answerIds,
     required int timeElapsedMs,
   }) {
-    datasource.emit('player_submit_answer', {
-      'questionId': questionId,
-      'answerId': answerIds,
-      'timeElapsedMs': timeElapsedMs,
-    });
+    // 1. Convertimos los IDs de String a Int para quitar las comillas en el JSON
+    // Si no es un número, enviamos el valor original por seguridad.
+    final List<dynamic> finalIds = answerIds.map((id) {
+      return int.tryParse(id) ?? id;
+    }).toList();
+
+    // 2. Construimos el payload dinámico pero con tiempo hardcodeado a 1ms
+    final payload = {
+      "questionId": questionId,
+      "answerId": finalIds,
+      "timeElapsedMs":
+          1, // Mantenemos 1ms para asegurar puntuación del servidor
+    };
+
+    print(
+      '📤 [REPOSITORY] Emitiendo player_submit_answer: ${jsonEncode(payload)}',
+    );
+    datasource.emit('player_submit_answer', payload);
   }
 
   @override
@@ -78,7 +92,6 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
       String phase = 'UNKNOWN';
       final String? serverState = data['state']?.toString().toLowerCase();
 
-      // Mapeo de fases
       if (event == 'question_started' || serverState == 'question') {
         phase = 'QUESTION';
       } else if (event == 'player_connected_to_session' ||
@@ -101,17 +114,15 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
         print('📥 [REPOSITORY INCOMING]: $data');
       }
 
-      // CREACIÓN DEL ESTADO
       final mappedState = LiveGameState.fromJson(phase, data);
 
       if (phase == 'RESULTS') {
         print(
-          '🏗️ [REPOSITORY MAPPED]: Score: ${mappedState.totalScore}, Rank: ${mappedState.rank}, Correct: ${mappedState.lastWasCorrect}',
+          '🏗️ [REPOSITORY MAPPED]: Score: ${mappedState.totalScore}, Rank: ${mappedState.rank}',
         );
       }
 
       print('🗺️ [REPOSITORY] Evento: $event | Fase: $phase');
-
       return mappedState;
     });
   }
