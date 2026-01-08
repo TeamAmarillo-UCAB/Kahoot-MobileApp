@@ -19,6 +19,9 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
   int _remainingSeconds = 0;
   bool _answered = false;
 
+  // Guardamos las opciones seleccionadas localmente
+  final Set<String> _selectedOptions = {};
+
   @override
   void initState() {
     super.initState();
@@ -43,19 +46,37 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
     super.dispose();
   }
 
-  void _handleAnswer(dynamic optionIndex, String? questionId) {
+  void _onOptionTapped(
+    String optionIndex,
+    String? slideType,
+    String? questionId,
+  ) {
     if (_answered) return;
+
+    if (slideType == "MULTIPLE") {
+      setState(() {
+        if (_selectedOptions.contains(optionIndex)) {
+          _selectedOptions.remove(optionIndex);
+        } else {
+          _selectedOptions.add(optionIndex);
+        }
+      });
+    } else {
+      _submitFinalAnswers([optionIndex], questionId);
+    }
+  }
+
+  void _submitFinalAnswers(List<String> answers, String? questionId) {
+    if (_answered || answers.isEmpty) return;
 
     setState(() => _answered = true);
     _stopwatch.stop();
-
-    // Enviamos el index tal cual (probablemente un int)
-    print('⏱️ [UI] Respuesta seleccionada: $optionIndex');
+    _timer.cancel();
 
     context.read<LiveGameBloc>().add(
       SubmitAnswer(
         questionId: questionId ?? "",
-        answerIds: [optionIndex.toString()], // Lo pasamos al Bloc como String
+        answerIds: answers,
         timeElapsedMs: _stopwatch.elapsedMilliseconds,
       ),
     );
@@ -107,6 +128,7 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
 
           final slide = state.gameData?.currentSlide;
           final options = slide?.options ?? [];
+          final isMultiple = slide?.slideType == "MULTIPLE";
 
           return Scaffold(
             backgroundColor: const Color(0xFF46178F),
@@ -185,15 +207,52 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
                       itemCount: options.length,
                       itemBuilder: (context, index) {
                         final option = options[index];
+                        final isSelected = _selectedOptions.contains(
+                          option.index,
+                        );
+
                         return _AnswerButton(
                           option: option,
                           color: _getKahootColor(index),
                           enabled: !_answered,
-                          onTap: () => _handleAnswer(option.index, slide?.id),
+                          isSelected: isSelected, // <--- Nueva propiedad
+                          onTap: () => _onOptionTapped(
+                            option.index,
+                            slide?.slideType,
+                            slide?.id,
+                          ),
                         );
                       },
                     ),
                   ),
+
+                  // BOTÓN PARA ENVIAR (Solo aparece en MULTIPLE)
+                  if (isMultiple && !_answered)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _selectedOptions.isEmpty
+                            ? null
+                            : () => _submitFinalAnswers(
+                                _selectedOptions.toList(),
+                                slide?.id,
+                              ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        child: const Text(
+                          "ENVIAR RESPUESTAS",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -209,16 +268,19 @@ class _PlayerQuestionPageState extends State<PlayerQuestionPage> {
   }
 }
 
+// ESTE ES EL WIDGET DEL BOTÓN (Abajo del todo)
 class _AnswerButton extends StatelessWidget {
   final dynamic option;
   final Color color;
   final bool enabled;
+  final bool isSelected;
   final VoidCallback onTap;
 
   const _AnswerButton({
     required this.option,
     required this.color,
     required this.enabled,
+    required this.isSelected,
     required this.onTap,
   });
 
@@ -232,6 +294,10 @@ class _AnswerButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(12),
+            // Si está seleccionado, le ponemos un borde blanco grueso
+            border: isSelected
+                ? Border.all(color: Colors.white, width: 4)
+                : null,
           ),
           padding: const EdgeInsets.all(8),
           alignment: Alignment.center,

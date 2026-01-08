@@ -63,23 +63,19 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
     required List<String> answerIds,
     required int timeElapsedMs,
   }) {
-    // 1. Convertimos los IDs de String a Int para quitar las comillas en el JSON
-    // Si no es un número, enviamos el valor original por seguridad.
+    // Convertimos cada ID de la lista. Si es un número lo manda como int, si no como String.
+    // Esto asegura que se mande [0, 1] en lugar de ["0", "1"] si el servidor lo prefiere así.
     final List<dynamic> finalIds = answerIds.map((id) {
       return int.tryParse(id) ?? id;
     }).toList();
 
-    // 2. Construimos el payload dinámico pero con tiempo hardcodeado a 1ms
     final payload = {
       "questionId": questionId,
-      "answerId": finalIds,
-      "timeElapsedMs":
-          1, // Mantenemos 1ms para asegurar puntuación del servidor
+      "answerId": finalIds, // Ahora puede llevar múltiples valores: [0, 1]
+      "timeElapsedMs": 1, // Mantenemos el hardcode para asegurar puntos
     };
 
-    print(
-      '📤 [REPOSITORY] Emitiendo player_submit_answer: ${jsonEncode(payload)}',
-    );
+    print('📤 [REPOSITORY] Enviando MULTIPLE: ${jsonEncode(payload)}');
     datasource.emit('player_submit_answer', payload);
   }
 
