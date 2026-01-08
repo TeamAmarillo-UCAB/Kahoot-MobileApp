@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings_page.dart';
+import '../../../main.dart';
 
 class PostLoginPage extends StatelessWidget {
   const PostLoginPage({Key? key}) : super(key: key);
@@ -54,7 +55,13 @@ class _Header extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.brown),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  // Salir a Home: limpia el stack y navega a MainShell
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const MainShell()),
+                    (route) => false,
+                  );
+                },
               ),
               const Spacer(),
               IconButton(

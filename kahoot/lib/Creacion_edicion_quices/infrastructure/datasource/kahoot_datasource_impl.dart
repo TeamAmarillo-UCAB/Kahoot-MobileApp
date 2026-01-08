@@ -17,19 +17,23 @@ class KahootDatasourceImpl implements KahootDatasource {
     String description,
     String image,
     String visibility,
+    String status,
     String theme,
     List<Question> question,
     List<Answer> answer,
   ) async {
+    // Keep status hardcoded as 'published' per request
+
     // Build body following backend contract; map empty strings to nulls where applicable
     Map<String, dynamic> body = {
       'title': title,
       'description': description,
       'coverImageId': image.isEmpty ? null : image,
-      'visibility': "private",
+      'visibility': visibility,
       'status': 'draft',
-      'category': 'Tecnología',
-      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
+      'category': theme,
+      'themeId': 'd67b732b-020b-4776-996c-98bbdaa7c263',
+      // 'themeId': theme.isEmpty ? null : theme,
       'questions': question.map((q) {
         final String qt = (q.title.isNotEmpty ? q.title : q.text);
         final String qMedia = q.mediaId;
@@ -109,6 +113,9 @@ class KahootDatasourceImpl implements KahootDatasource {
     } catch (_) {
       existing = null;
     }
+    // Keep status hardcoded as 'published' per request
+    const String status = 'published';
+
     final Map<String, dynamic> body = { 
       'title': kahoot.title.isNotEmpty
           ? kahoot.title
@@ -119,10 +126,10 @@ class KahootDatasourceImpl implements KahootDatasource {
       'coverImageId': kahoot.image.isNotEmpty
           ? kahoot.image
           : ((existing?.image ?? '') .isNotEmpty ? existing!.image : null),
-      'visibility': "private",
-      'status': 'draft',
-      'category': 'Tecnología',
-      'themeId': "f1986c62-7dc1-47c5-9a1f-03d34043e8f4",
+      'visibility': kahoot.visibility.toShortString(),
+      'status': status,
+      'category': kahoot.theme,
+      'themeId': kahoot.theme.isNotEmpty ? kahoot.theme : null,
       // Combinar preguntas existentes y nuevas (sin duplicar por texto)
       'questions': (() {
         final List<Map<String, dynamic>> existingQuestions = (existing?.question.map((q) => {
@@ -447,3 +454,4 @@ String _mapQuestionTypeV2(QuestionType t) {
       return 'single';
   }
 }
+ 

@@ -1,7 +1,7 @@
 import "../entities/user.dart";
 
 abstract class UserDatasource {
-  Future<void> createUser(String name, String email, String password, String userType);
+  Future<void> createUser(String email, String name, String password);
   Future<void> updateUser(User user);
   Future<void> deleteUser(String userId);
   Future<User?> getUserById(String userId);

@@ -6,7 +6,7 @@ class CreateUser {
 
   CreateUser(this.repository);
 
-  Future<Result<void>> call(String name, String email, String password, String userType) async {
-    return await repository.createUser(name, email, password, userType);
+  Future<Result<void>> call(String email, String name, String password) async {
+    return await repository.createUser(email, name, password);
   }
 }

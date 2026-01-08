@@ -30,7 +30,9 @@ class _KahootViewPageState extends State<KahootViewPage> {
   void initState() {
     super.initState();
     _datasource = KahootDatasourceImpl();
-    _datasource.dio.options.baseUrl = apiBaseUrl;
+    _datasource.dio.options.baseUrl = apiBaseUrl.trim();
+    // ignore: avoid_print
+    print('KahootView baseUrl: ' + _datasource.dio.options.baseUrl.toString());
     _repository = KahootRepositoryImpl(datasource: _datasource);
     _getById = GetKahootByKahootId(_repository);
     _load();

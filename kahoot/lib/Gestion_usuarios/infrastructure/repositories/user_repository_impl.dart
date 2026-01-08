@@ -9,9 +9,9 @@ class UserRepositoryImpl implements UserRepository {
 	UserRepositoryImpl({required this.datasource});
 
 	@override
-	Future<Result<void>> createUser(String name, String email, String password, String userType) async {
+	Future<Result<void>> createUser( String email,String name, String password) async {
 		try {
-			await datasource.createUser(name, email, password, userType);
+			await datasource.createUser(email, name, password);
 			return Result.voidSuccess();
 		} catch (e, stackTrace) {
 			print('Error creating user: ' + e.toString());

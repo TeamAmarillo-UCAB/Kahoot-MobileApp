@@ -1,32 +1,69 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
 import '../../domain/datasource/user_datasource.dart';
 import '../../domain/entities/user.dart';
 
 class UserDatasourceImpl implements UserDatasource {
   final Dio dio = Dio();
 
-  @override
-  Future<void> createUser(String name, String email, String password, String userType) async {
-    final body = {
-      'name': name,
-      'email': email,
-      'password': password,
-      'userType': userType,
-    };
-    await dio.post(
-      'auth/register',
-      data: body,
-      options: Options(headers: {'Content-Type': 'application/json'}),
+  UserDatasourceImpl() {
+    dio.interceptors.add(
+      LogInterceptor(
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: false,
+        responseBody: true,
+      ),
     );
+  }
+
+  @override
+  Future<void> createUser(String email, String username, String password) async {
+      final body = {
+        'email': email,
+        'username': username,
+        'password': password,
+      };
+    // Debug: imprimir el JSON que se envía
+    // ignore: avoid_print
+    print('POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/users payload: ' + jsonEncode(body));
+
+    try {
+      final res = await dio.post(
+        '/users',
+        data: body,
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+      // Mostrar respuesta del endpoint para verificar
+      try {
+        print('Respuesta POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/users (status ${res.statusCode}): ' + jsonEncode(res.data));
+      } catch (_) {
+        print('Respuesta POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/users (status ${res.statusCode}): ' + res.data.toString());
+      }
+    } on DioException catch (e) {
+      // Imprimir errores detallados de Dio
+      print('DioException POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/users: ' + e.message.toString());
+      if (e.response != null) {
+        try {
+          print('Error response (status ${e.response!.statusCode}): ' + jsonEncode(e.response!.data));
+        } catch (_) {
+          print('Error response (status ${e.response!.statusCode}): ' + e.response!.data.toString());
+        }
+      }
+      rethrow;
+    } catch (e) {
+      // Otros errores
+      print('Error POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/users: ' + e.toString());
+      rethrow;
+    }
   }
 
   @override
   Future<void> updateUser(User user) async {
     final body = {
-      'name': user.name,
       'email': user.email,
+      'username': user.name,
       'password': user.password,
-      'userType': user.userType.toString().split('.').last,
     };
     await dio.put(
       '/profile',
@@ -58,13 +95,30 @@ class UserDatasourceImpl implements UserDatasource {
 
   @override
   Future<void> userLogin(String email, String password) async {
-    // TODO: Implement with POST to 'auth/login' and body {"email": email, "password": password}
-    throw UnimplementedError('userLogin not implemented');
+    final body = {
+      'email': email,
+      'password': password,
+    };
+    // Debug
+    print('POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/auth/login payload: ' + jsonEncode(body));
+    await dio.post(
+      '/auth/login',
+      data: body,
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
   }
 
   @override
   Future<void> userLogout() async {
-    // TODO: Implement with POST to 'auth/logout'
-    throw UnimplementedError('userLogout not implemented');
+    final body = {
+      'email': '',
+      'password': '',
+    };
+    print('POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/auth/logout payload: ' + jsonEncode(body));
+    await dio.post(
+      '/auth/logout',
+      data: body,
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
   }
 }

@@ -30,12 +30,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
-  String? _selectedTheme;
-  final List<String> _themeOptions = const [
-    'Matemáticas',
-    'Historia',
-    'Ciencias',
-  ];
+    final TextEditingController _themeController = TextEditingController();
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
@@ -47,8 +42,10 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   void initState() {
     super.initState();
     _datasource = KahootDatasourceImpl();
-    // set base URL from main.dart constant
-    _datasource.dio.options.baseUrl = apiBaseUrl;
+    // set base URL from main.dart constant (trim to avoid whitespace issues)
+    _datasource.dio.options.baseUrl = apiBaseUrl.trim();
+    // ignore: avoid_print
+    print('KahootDatasource baseUrl: ' + _datasource.dio.options.baseUrl.toString());
     _repository = KahootRepositoryImpl(datasource: _datasource);
     _createKahoot = CreateKahoot(_repository);
     _updateKahoot = UpdateKahoot(_repository);
@@ -64,8 +61,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       visibility = k.visibility == KahootVisibility.private
           ? 'private'
           : 'public';
-      // Si el theme viene como id/backend y no coincide con las opciones visibles, no preseleccionar para evitar errores en Dropdown
-      _selectedTheme = _themeOptions.contains(k.theme) ? k.theme : null;
+      _themeController.text = k.theme;
       _editorCubit
         ..setAuthor(k.authorId)
         ..setTitle(k.title)
@@ -82,6 +78,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _themeController.dispose(); // Dispose of the theme controller
     _editorCubit.close();
     super.dispose();
   }
@@ -180,7 +177,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 _editorCubit
                   ..setTitle(title)
                   ..setVisibility(visibilityValue)
-                  ..setTheme(_selectedTheme ?? '');
+                  ..setTheme(_themeController.text.trim());
 
                 if (isEditing) {
                   final kahootToUpdate = _buildKahootFromState(
@@ -258,33 +255,20 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DropdownButtonFormField<String>(
-                    // Asegurar que el value esté dentro de las opciones; si no, dejar null
-                    value: _themeOptions.contains(_selectedTheme)
-                        ? _selectedTheme
-                        : null,
+                  child: TextField(
+                    controller: _themeController,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: headerYellow,
-                      hintText: 'Tema',
-                      hintStyle: TextStyle(color: Colors.black54),
+                      hintText: 'Categoría/Tema',
+                      hintStyle: const TextStyle(color: Colors.black54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    items: _themeOptions
-                        .map(
-                          (t) => DropdownMenuItem<String>(
-                            value: t,
-                            child: Text(t),
-                          ),
-                        )
-                        .toList(),
                     onChanged: (value) {
-                      setState(() => _selectedTheme = value);
-                      // Sincronizar inmediatamente con el cubit para que se envíe al JSON
-                      _editorCubit.setTheme(value ?? '');
+                      _editorCubit.setTheme(value.trim());
                     },
                   ),
                 ),
