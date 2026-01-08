@@ -72,7 +72,8 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
     final payload = {
       "questionId": questionId,
       "answerId": finalIds, // Ahora puede llevar múltiples valores: [0, 1]
-      "timeElapsedMs": 1, // Mantenemos el hardcode para asegurar puntos
+      "timeElapsedMs":
+          timeElapsedMs, // Mantenemos el hardcode para asegurar puntos
     };
 
     print('📤 [REPOSITORY] Enviando MULTIPLE: ${jsonEncode(payload)}');
