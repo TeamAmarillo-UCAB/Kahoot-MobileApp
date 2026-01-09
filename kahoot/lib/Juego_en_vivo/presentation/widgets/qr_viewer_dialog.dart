@@ -13,7 +13,7 @@ class QRViewerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // La URL se construye según el endpoint de tu backend para que el jugador se una
+    // La URL se construye según el endpoint del backend para que el jugador se una
     final String joinUrl = qrToken;
 
     return AlertDialog(

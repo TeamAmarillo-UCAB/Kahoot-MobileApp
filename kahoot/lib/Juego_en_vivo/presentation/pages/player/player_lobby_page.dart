@@ -12,11 +12,11 @@ class PlayerLobbyView extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: const Color(0xFF46178F),
-      // Agregamos Padding para que el texto no toque los bordes en nombres largos
+      // Agregar Padding para que el texto no toque los bordes en nombres largos
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        // Aseguramos el centrado horizontal de los widgets dentro de la columna
+        // Asegurar el centrado horizontal de los widgets dentro de la columna
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const CircularProgressIndicator(

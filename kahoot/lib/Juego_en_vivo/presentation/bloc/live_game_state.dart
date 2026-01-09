@@ -19,8 +19,7 @@ class LiveGameBlocState {
   final String? nickname;
   final String? role;
   final LiveSession? session;
-  final LiveGameState?
-  gameData; // <--- Aquí vive la Entidad que definimos arriba
+  final LiveGameState? gameData;
   final String? errorMessage;
 
   LiveGameBlocState({

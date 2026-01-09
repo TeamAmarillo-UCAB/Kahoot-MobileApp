@@ -34,7 +34,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     required String nickname,
     required String jwt,
   }) {
-    print('🔌 [DATASOURCE] Conectando a socket...');
+    print('[DATASOURCE] Conectando a socket...');
 
     _socket = io.io(
       'wss://quizzy-backend-0wh2.onrender.com/multiplayer-sessions',
@@ -47,12 +47,12 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     );
 
     _socket!.onConnect((_) {
-      print('✅ [DATASOURCE] Socket Conectado');
+      print('[DATASOURCE] Socket Conectado');
       _socket!.emit('client_ready', {});
     });
 
     _socket!.onConnectError(
-      (data) => print('❌ [DATASOURCE] Error de Conexión: $data'),
+      (data) => print('[DATASOURCE] Error de Conexión: $data'),
     );
     _socket!.onDisconnect((data) => print('🔌 [DATASOURCE] Desconectado'));
 
@@ -72,11 +72,11 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
     for (var event in serverEvents) {
       _socket!.on(event, (data) {
-        print('📩 [DATASOURCE] Evento Recibido: $event');
+        print('[DATASOURCE] Evento Recibido: $event');
 
         // LOG CRÍTICO PARA DEBUG: Ver qué llega del servidor
         if (event == 'player_results' || event == 'HOST_RESULTS') {
-          print('📊 [DATASOURCE DATA RAW]: $data');
+          print('[DATASOURCE DATA RAW]: $data');
         }
 
         _socketEventController.add({'event': event, 'data': data});
@@ -85,7 +85,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
     _socket!.onAny((event, data) {
       if (!serverEvents.contains(event)) {
-        print('❓ [DATASOURCE] Evento No Mapeado: $event -> $data');
+        print('[DATASOURCE] Evento No Mapeado: $event -> $data');
       }
     });
   }
@@ -93,10 +93,10 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
   @override
   void emit(String eventName, Map<String, dynamic> data) {
     if (_socket?.connected ?? false) {
-      print('📤 [DATASOURCE] Emitiendo: $eventName');
+      print('[DATASOURCE] Emitiendo: $eventName');
       _socket!.emit(eventName, data);
     } else {
-      print('⚠️ [DATASOURCE] Socket no conectado para emitir $eventName');
+      print('[DATASOURCE] Socket no conectado para emitir $eventName');
     }
   }
 

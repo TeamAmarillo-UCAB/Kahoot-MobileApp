@@ -63,20 +63,17 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
     required List<String> answerIds,
     required int timeElapsedMs,
   }) {
-    // Convertimos cada ID de la lista. Si es un número lo manda como int, si no como String.
-    // Esto asegura que se mande [0, 1] en lugar de ["0", "1"] si el servidor lo prefiere así.
     final List<dynamic> finalIds = answerIds.map((id) {
       return int.tryParse(id) ?? id;
     }).toList();
 
     final payload = {
       "questionId": questionId,
-      "answerId": finalIds, // Ahora puede llevar múltiples valores: [0, 1]
-      "timeElapsedMs":
-          timeElapsedMs, // Mantenemos el hardcode para asegurar puntos
+      "answerId": finalIds,
+      "timeElapsedMs": timeElapsedMs,
     };
 
-    print('📤 [REPOSITORY] Enviando MULTIPLE: ${jsonEncode(payload)}');
+    print('[REPOSITORY] Enviando MULTIPLE: ${jsonEncode(payload)}');
     datasource.emit('player_submit_answer', payload);
   }
 
@@ -86,12 +83,10 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
       final event = (payload['event'] as String).toLowerCase();
       final data = payload['data'] as Map<String, dynamic>? ?? {};
 
-      // Extraemos el estado interno si viene en la data
       final String serverState = (data['state'] ?? '').toString().toLowerCase();
 
       String phase = 'UNKNOWN';
 
-      // --- LOGICA DE MAPEO CORREGIDA ---
       if (event == 'question_started' || serverState == 'question') {
         phase = 'QUESTION';
       } else if (event == 'player_connected_to_session' ||
@@ -101,19 +96,16 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
         phase = 'RESULTS';
       } else if (event == 'player_answer_confirmation') {
         phase = 'WAITING_RESULTS';
-      }
-      // AQUÍ ESTABA EL ERROR: Agregamos el evento que viste en el log
-      else if (event == 'player_game_end' ||
+      } else if (event == 'player_game_end' ||
           serverState == 'end' ||
           event == 'game_over') {
         phase = 'END';
       }
 
-      // Si sigue saliendo "UNKNOWN", este print te lo dirá
       if (phase == 'UNKNOWN') {
-        print('❓ [REPOSITORY] Evento No Mapeado: $event -> $data');
+        print('[REPOSITORY] Evento No Mapeado: $event -> $data');
       } else {
-        print('✅ [REPOSITORY] Evento Mapeado: $event -> Fase: $phase');
+        print('[REPOSITORY] Evento Mapeado: $event -> Fase: $phase');
       }
 
       return LiveGameState.fromJson(phase, data);

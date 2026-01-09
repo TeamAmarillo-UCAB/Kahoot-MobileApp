@@ -9,7 +9,7 @@ class PlayerPodiumView extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = state.gameData;
     final rank = data?.rank ?? 0;
-    // Usamos la propiedad isWinner de la entidad si existe, o calculamos por el rank
+    // Usarr la propiedad isWinner de la entidad si existe, o calcular por el rank
     final isWinner = data?.isWinner ?? (rank == 1);
 
     return Container(
@@ -64,7 +64,7 @@ class PlayerPodiumView extends StatelessWidget {
                   const Divider(color: Colors.white24),
                   _StatRow(
                     label: "Racha Final",
-                    // Cambio: Usamos finalStreak de la entidad
+                    // Cambio: Usart finalStreak de la entidad
                     value: "${data?.finalStreak ?? 0} 🔥",
                   ),
                 ],
@@ -74,7 +74,7 @@ class PlayerPodiumView extends StatelessWidget {
             const SizedBox(height: 50),
             ElevatedButton(
               onPressed: () {
-                // Cerramos todo y volvemos a la pantalla principal de la app
+                // Cerrar todo y volver a la pantalla principal de la app
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
               style: ElevatedButton.styleFrom(

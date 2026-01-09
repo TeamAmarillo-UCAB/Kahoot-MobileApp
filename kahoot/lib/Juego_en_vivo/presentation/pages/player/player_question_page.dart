@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
-// Asegúrate de importar la ruta correcta de tu widget de timer
 import '../../widgets/live_timer_widget.dart';
 
 class PlayerQuestionView extends StatefulWidget {

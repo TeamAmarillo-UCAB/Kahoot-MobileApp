@@ -44,7 +44,7 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
       builder: (context, child) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            // Calculamos la posición X basada en el porcentaje de la barra
+            // Calcular la posición X basada en el porcentaje de la barra
             final double width = constraints.maxWidth;
             final double currentPosition = width * _controller.value;
 
@@ -70,7 +70,7 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
                       left:
                           currentPosition -
                           20, // Ajuste para que el texto flote sobre el final
-                      top: 15, // Lo posicionamos justo debajo de la barra
+                      top: 15, // Posiciona justo debajo de la barra
                       child: Text(
                         '${(widget.timeLimitSeconds * _controller.value).ceil()}s',
                         style: TextStyle(

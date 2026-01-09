@@ -27,17 +27,16 @@ class _JoinGamePageState extends State<JoinGamePage> {
   void initState() {
     super.initState();
 
-    // 1. Configuramos Dio
+    //Dio
     final dio = Dio(
       BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com'),
     );
 
-    // 2. Instanciamos la infraestructura
+    //Infraestructura
     final datasource = LiveGameDatasourceImpl(dio: dio);
     final repository = LiveGameRepositoryImpl(datasource: datasource);
 
-    // 3. Inicializamos el BLoC (Aquí se resuelve el LateError)
-    // El BLoC se encarga de sus propios casos de uso
+    // Inicializar bloc
     _bloc = LiveGameBloc(repository: repository);
   }
 
@@ -50,14 +49,14 @@ class _JoinGamePageState extends State<JoinGamePage> {
 
   @override
   Widget build(BuildContext context) {
-    // 4. Proveemos el BLoC a la vista
+    // Proveer el bloc
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
         backgroundColor: const Color(0xFF46178F),
         body: BlocListener<LiveGameBloc, LiveGameBlocState>(
           listener: (context, state) {
-            // Si el PIN es válido, navegamos pasando el BLoC existente
+            // Si el PIN es válido, navega pasando el BLoC existente
             if (state.pin != null && state.status == LiveGameStatus.initial) {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -75,7 +74,7 @@ class _JoinGamePageState extends State<JoinGamePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'QUIZZY',
+                  'Introduce el PIN',
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,

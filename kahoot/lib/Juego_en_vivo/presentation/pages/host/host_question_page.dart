@@ -10,10 +10,10 @@ class HostQuestionView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
-        // Accedemos al slide actual
+        // Acceder al slide actual
         final slide = state.gameData?.currentSlide;
 
-        // Mapeamos los campos de tu entidad LiveSlide
+        // Mapear los campos de entidad LiveSlide
         final String questionText =
             slide?.questionText ?? 'Cargando pregunta...';
         final int currentIdx =
@@ -67,8 +67,7 @@ class HostQuestionView extends StatelessWidget {
                               width: 100,
                               height: 100,
                               child: CircularProgressIndicator(
-                                value:
-                                    1.0, // Aquí podrías animarlo si tuvieras un stream de segundos
+                                value: 1.0,
                                 strokeWidth: 8,
                                 color: Colors.indigo,
                               ),

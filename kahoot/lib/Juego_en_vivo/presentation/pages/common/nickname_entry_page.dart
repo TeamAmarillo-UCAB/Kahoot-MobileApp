@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
-import '../live_game_page.dart'; // Importamos el orquestador
+import '../live_game_page.dart';
 
 class NicknameEntryPage extends StatefulWidget {
   final String pin;
@@ -26,9 +26,8 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
   Widget build(BuildContext context) {
     return BlocListener<LiveGameBloc, LiveGameBlocState>(
       listener: (context, state) {
-        // Cuando el estado pase a LOBBY, entramos a la "caja" del juego
         if (state.status == LiveGameStatus.lobby) {
-          print("✅ Nickname aceptado. Entrando a la sesión de juego...");
+          print("Nickname aceptado. Entrando a la sesión de juego...");
 
           final liveGameBloc = context.read<LiveGameBloc>();
 
@@ -36,8 +35,7 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
             MaterialPageRoute(
               builder: (_) => BlocProvider.value(
                 value: liveGameBloc,
-                child:
-                    const LiveGamePage(), // Navegamos al orquestador principal
+                child: const LiveGamePage(),
               ),
             ),
           );

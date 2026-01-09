@@ -29,7 +29,7 @@ class HostPodiumView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Mostramos el Top 3
+                // Mostrar el Top 3
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Column(

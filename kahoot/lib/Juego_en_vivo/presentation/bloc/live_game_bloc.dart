@@ -44,7 +44,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     InitPlayerSession event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    print('🚀 [BLOC] Paso 1: Iniciando Handshake para PIN: ${event.pin}');
+    print('[BLOC] Paso 1: Iniciando Handshake para PIN: ${event.pin}');
 
     emit(
       state.copyWith(
@@ -54,15 +54,15 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       ),
     );
 
-    // 1. Suscribir el stream ANTES de conectar para no perder el primer evento
-    print('📡 [BLOC] Suscribiendo al stream de estados...');
+    //Suscribir stream
+    print('[BLOC] Suscribiendo al stream de estados...');
     _gameStateSubscription?.cancel();
     _gameStateSubscription = repository.gameStateStream.listen((data) {
-      print('💡 [BLOC] Stream notificó nuevo estado: ${data.phase}');
+      print('[BLOC] Stream notificó nuevo estado: ${data.phase}');
       add(OnGameStateReceived(data));
-    }, onError: (err) => print('🚨 [BLOC] Error en Stream: $err'));
+    }, onError: (err) => print('[BLOC] Error en Stream: $err'));
 
-    // 2. Ejecutar Conexión (Handshake)
+    //Handshake CAMBIAR CUANDO ESTÉ EL JWT AAAAA
     connectToSocketUc.call(
       pin: event.pin,
       role: 'PLAYER',
@@ -70,10 +70,10 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
     );
 
-    // 3. Sincronización lógica
-    // Le damos 500ms para que el túnel TCP/WS se estabilice antes de pedir sync
+    //Sincronización lógica
+    //500ms para que el túnel TCP/WS se estabilice antes de pedir sync
     await Future.delayed(const Duration(milliseconds: 500));
-    print('📢 [BLOC] Enviando client_ready...');
+    print('[BLOC] Enviando client_ready...');
     repository.sendClientReady();
 
     emit(state.copyWith(status: LiveGameStatus.initial));
@@ -81,10 +81,10 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
     print(
-      '👤 [BLOC] Guardando nickname y enviando player_join: ${event.nickname}',
+      '[BLOC] Guardando nickname y enviando player_join: ${event.nickname}',
     );
 
-    // Guardamos el nickname en el estado local antes de enviarlo
+    // Guardar el nickname en el estado local antes de enviarlo
     emit(
       state.copyWith(status: LiveGameStatus.loading, nickname: event.nickname),
     );
@@ -97,7 +97,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final gameData = event.gameState;
-    print('🔄 [BLOC] Actualizando UI a fase: ${gameData.phase}');
+    print('[BLOC] Actualizando UI a fase: ${gameData.phase}');
 
     LiveGameStatus newStatus = state.status;
     switch (gameData.phase.toUpperCase()) {
@@ -121,7 +121,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   @override
   Future<void> close() {
-    print('🛑 [BLOC] Cerrando BLoC y liberando recursos');
+    print('[BLOC] Cerrando BLoC y liberando recursos');
     _gameStateSubscription?.cancel();
     repository.disconnect();
     return super.close();
@@ -132,15 +132,14 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) async {
     // Log para ver qué recibe el Bloc
-    print('📥 [BLOC RECEIVING]: ${event.answerIds}');
+    print('[BLOC RECEIVING]: ${event.answerIds}');
 
-    // Cambiamos el estado a 'waitingResults' para que salga la pantalla de carga
     emit(state.copyWith(status: LiveGameStatus.waitingResults));
 
     // Llamada al repositorio
     repository.submitAnswer(
       questionId: event.questionId,
-      answerIds: event.answerIds, // Aquí ya deberían ser Strings
+      answerIds: event.answerIds,
       timeElapsedMs: event.timeElapsedMs,
     );
   }
