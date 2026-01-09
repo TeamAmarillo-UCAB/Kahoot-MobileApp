@@ -16,7 +16,7 @@ import '../../../../Juego_Asincrono/presentation/pages/game_page.dart';
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
   //KAHOOT DE PRUEBAAAAA
-  final String currentKahootId = "3b01e174-6853-4dc0-b846-e6788eee44ad";
+  final String currentKahootId = "e78e618b-6a9e-437c-bf67-1138f6700e35";
   @override
   Widget build(BuildContext context) {
     return Scaffold(

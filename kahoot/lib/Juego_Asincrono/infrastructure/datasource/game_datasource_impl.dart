@@ -19,12 +19,12 @@ class GameDatasourceImpl implements GameDatasource {
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // --- ID HARDCODEADO ---
-          const String userId =
-              "20936913-0c59-4ee4-ad35-634ef24d7d3d"; // El ID que necesites probar
+          const String jwtToken =
+              // JWT HARDCODEADO CAMBIARRRRRRRR
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTg1MDE3LCJleHAiOjE3Njc5OTIyMTd9.AMhPYrzGeSZjUSLMGvJtsnQ93cZByLaNQEQU_u-3AGk";
 
           // Inyección de userId como header
-          options.headers['UserId'] = userId;
+          options.headers['Authorization'] = 'Bearer $jwtToken';
 
           return handler.next(options);
         },
