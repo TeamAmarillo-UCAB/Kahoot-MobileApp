@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../create/create_kahoot_page.dart';
-//ANTERIOR EPICA 4
-//import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 import '../../../../Juego_en_vivo/presentation/pages/common/join_game_page.dart';
+import '../../../../Juego_en_vivo/presentation/pages/host/host_lobby_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -99,8 +98,16 @@ class HomePage extends StatelessWidget {
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
-          } else {
-            // Otros índices: aún no implementados
+          } else if (index == 4) {
+            // Biblioteca
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const HostLobbyView(
+                  kahootId:
+                      "af1b22a1-bf64-4aeb-ac21-e06f86ed608f", // HARDCODEADO HAY QUE CAMBIARLOOOOO
+                ),
+              ),
+            );
           }
         },
         items: const [

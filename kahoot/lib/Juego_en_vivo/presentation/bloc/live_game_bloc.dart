@@ -34,6 +34,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     submitAnswerUc = SubmitLiveAnswer(repository);
 
     on<InitPlayerSession>(_onInitPlayer);
+    on<InitHostSession>(_onInitHost);
     on<JoinLobby>(_onJoinLobby);
     on<OnGameStateReceived>(_onGameStateUpdate);
     on<SubmitAnswer>(_onSubmitAnswer);
@@ -77,6 +78,55 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     repository.sendClientReady();
 
     emit(state.copyWith(status: LiveGameStatus.initial));
+  }
+
+  Future<void> _onInitHost(
+    InitHostSession event,
+    Emitter<LiveGameBlocState> emit,
+  ) async {
+    print('[BLOC] Paso 1 Host: Creando sesión para Kahoot: ${event.kahootId}');
+    emit(state.copyWith(status: LiveGameStatus.loading, role: 'HOST'));
+
+    final result = await createSessionUc.call(event.kahootId);
+
+    if (result.isSuccessful()) {
+      final session = result.getValue();
+      emit(
+        state.copyWith(
+          pin: session.sessionPin,
+          session: session,
+          nickname: 'Pepito',
+        ),
+      );
+
+      // Suscribir al stream
+      _gameStateSubscription?.cancel();
+      _gameStateSubscription = repository.gameStateStream.listen((data) {
+        add(OnGameStateReceived(data));
+      });
+
+      // Handshake del Host
+      connectToSocketUc.call(
+        pin: session.sessionPin,
+        role: 'HOST',
+        nickname: 'Pepito',
+        //HARDCOEADO HAY QUE CAMBIARLOOOOOOOOO
+        jwt:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30",
+      );
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      repository.sendClientReady();
+
+      emit(state.copyWith(status: LiveGameStatus.lobby));
+    } else {
+      emit(
+        state.copyWith(
+          status: LiveGameStatus.error,
+          errorMessage: "No se pudo crear la sesión",
+        ),
+      );
+    }
   }
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
