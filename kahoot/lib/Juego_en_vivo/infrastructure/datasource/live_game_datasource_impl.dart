@@ -14,12 +14,12 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
   @override
   Future<LiveSession> createSession(String kahootId) async {
-    print('entró al datasource');
+    print('[DATASOURCE] Entró al datasource para crear sesión');
     final response = await dio.post(
       '/multiplayer-sessions',
       data: {'kahootId': kahootId},
     );
-    print('imprimiendo datos');
+    print('[DATASOURCE] Respuesta exitosa de creación');
     print(response.data);
     return LiveSession.fromJson(response.data);
   }
@@ -37,28 +37,40 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     required String nickname,
     required String jwt,
   }) {
-    print('[DATASOURCE] Conectando a socket...');
+    print(
+      '[DATASOURCE] Intentando conectar a socket como ${role.toUpperCase()}...',
+    );
 
     _socket = io.io(
       'wss://quizzy-backend-0wh2.onrender.com/multiplayer-sessions',
       io.OptionBuilder()
           .setTransports(['websocket'])
-          .setExtraHeaders({'pin': pin, 'role': role.toUpperCase(), 'jwt': jwt})
+          // IMPORTANTE: Configuración del websocket
+          .setExtraHeaders({
+            'pin': pin,
+            'role': role.toUpperCase(), // HOST
+            'jwt': jwt, // El UUID
+          })
           .setQuery({'pin': pin, 'role': role.toUpperCase(), 'jwt': jwt})
           .enableAutoConnect()
           .build(),
     );
 
     _socket!.onConnect((_) {
-      print('[DATASOURCE] Socket Conectado');
+      print('[DATASOURCE] ✅ Socket Conectado Exitosamente');
+      // Sincronización inicial
       _socket!.emit('client_ready', {});
     });
 
-    _socket!.onConnectError(
-      (data) => print('[DATASOURCE] Error de Conexión: $data'),
-    );
-    _socket!.onDisconnect((data) => print('🔌 [DATASOURCE] Desconectado'));
+    _socket!.onConnectError((data) {
+      print('[DATASOURCE] ❌ Error de Conexión: $data');
+    });
 
+    _socket!.onDisconnect((data) {
+      print('🔌 [DATASOURCE] Socket Desconectado: $data');
+    });
+
+    // Eventos que escuchamos del servidor
     final serverEvents = [
       'player_connected_to_session',
       'question_started',
@@ -68,7 +80,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       'session_closed',
       'game_error',
       'sync_error',
-      'host_lobby_update',
+      'host_lobby_update', // Este actualizará tu lista de jugadores
       'host_results',
       'player_game_end',
     ];
@@ -77,9 +89,9 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       _socket!.on(event, (data) {
         print('[DATASOURCE] Evento Recibido: $event');
 
-        // LOG CRÍTICO PARA DEBUG: Ver qué llega del servidor
-        if (event == 'player_results' || event == 'HOST_RESULTS') {
-          print('[DATASOURCE DATA RAW]: $data');
+        // Log detallado para ver la lista de jugadores cuando llega 'host_lobby_update'
+        if (event == 'host_lobby_update') {
+          print('[DATASOURCE] Datos del Lobby: $data');
         }
 
         _socketEventController.add({'event': event, 'data': data});
@@ -96,15 +108,18 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
   @override
   void emit(String eventName, Map<String, dynamic> data) {
     if (_socket?.connected ?? false) {
-      print('[DATASOURCE] Emitiendo: $eventName');
+      print('[DATASOURCE] Emitiendo: $eventName con datos: $data');
       _socket!.emit(eventName, data);
     } else {
-      print('[DATASOURCE] Socket no conectado para emitir $eventName');
+      print(
+        '[DATASOURCE] ⚠️ Error: Socket no conectado para emitir $eventName',
+      );
     }
   }
 
   @override
   void disconnect() {
+    print('[DATASOURCE] Cerrando conexión de socket...');
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;

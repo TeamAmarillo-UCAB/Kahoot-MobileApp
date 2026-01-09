@@ -88,17 +88,17 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       '[DEBUG-BLOC] Paso 1 Host: Iniciando creación de sesión para Kahoot ID: ${event.kahootId}',
     );
 
-    // 1. Iniciamos estado de carga
+    //Iniciar estado de carga
     emit(
       state.copyWith(
         status: LiveGameStatus.loading,
         role: 'HOST',
-        errorMessage: null, // Limpiamos errores previos
+        errorMessage: null, //Limpiarerrores previos
       ),
     );
 
     try {
-      // 2. Llamada al UseCase
+      //Llamar al UseCase
       print('[DEBUG-BLOC] Paso 2: Ejecutando createSessionUc...');
       final result = await createSessionUc.call(event.kahootId);
 
@@ -109,21 +109,21 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       if (result.isSuccessful()) {
         final session = result.getValue();
         final String sessionPin = session.sessionPin
-            .toString(); // Aseguramos que sea String
+            .toString(); // Asegurar que sea String
 
         print('[DEBUG-BLOC] Paso 4: Sesión creada. PIN: $sessionPin');
 
-        // 3. Emitimos éxito y pasamos a fase LOBBY
+        //Emitir éxito y pasar a fase LOBBY
         emit(
           state.copyWith(
             status: LiveGameStatus.lobby,
             pin: sessionPin,
             session: session,
-            nickname: 'Pepito', // Placeholder según tu lógica
+            nickname: 'Pepito', // Placeholder
           ),
         );
 
-        // 4. Configuración del Stream de estados del juego
+        //Configuración del Stream de estados del juego
         print('[DEBUG-BLOC] Paso 5: Suscribiendo al stream de estados...');
         _gameStateSubscription?.cancel();
         _gameStateSubscription = repository.gameStateStream.listen(
@@ -138,15 +138,13 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
           },
         );
 
-        // 5. Conexión al Socket (Handshake)
+        //Conexión al Socket (Handshake)
         print('[DEBUG-BLOC] Paso 6: Conectando al socket...');
         connectToSocketUc.call(
           pin: sessionPin,
           role: 'HOST',
-          nickname: 'Pepito',
-          // HARDCODEADO según tu código
-          jwt:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30",
+          nickname: 'Pepito', //HARDCODEADO
+          jwt: "7abc6fed-665e-463d-b54d-8d78c1397e6f",
         );
 
         // 6. Sincronización final
