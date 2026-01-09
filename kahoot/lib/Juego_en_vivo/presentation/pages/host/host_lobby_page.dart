@@ -106,13 +106,31 @@ class _HostLobbyViewState extends State<HostLobbyView> {
                   child: ListView.builder(
                     itemCount: players.length,
                     itemBuilder: (context, index) {
-                      //Players es una lista de Strings o objetos con nickname
                       final player = players[index];
-                      return ListTile(
-                        leading: const Icon(Icons.person, color: Colors.white),
-                        title: Text(
-                          player.toString(), // Ajusta a string
-                          style: const TextStyle(color: Colors.white),
+
+                      // ¡IMPORTANTE!: Agregar el 'return' para que el widget se renderice
+                      return Card(
+                        color: Colors.white.withOpacity(
+                          0.1,
+                        ), // Fondo semitransparente
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 5,
+                        ),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Icon(Icons.person, color: Color(0xFF46178F)),
+                          ),
+                          title: Text(
+                            player['nickname'] ?? 'Anónimo',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors
+                                  .white, // Texto en blanco para que se vea sobre el morado
+                            ),
+                          ),
                         ),
                       );
                     },
