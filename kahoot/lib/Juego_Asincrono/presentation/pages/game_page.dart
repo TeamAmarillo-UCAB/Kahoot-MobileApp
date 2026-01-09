@@ -1,9 +1,22 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+
+// --- Infraestructura y Dominio ---
+import '../../infrastructure/datasource/game_datasource_impl.dart';
+import '../../infrastructure/repositories/game_repository_impl.dart';
+import '../../application/usecases/start_attempt.dart';
+import '../../application/usecases/submit_answer.dart';
+import '../../application/usecases/get_summary.dart';
+import '../../application/usecases/get_attempt_status.dart';
+
+// --- Componentes del BLoC ---
 import '../blocs/game_bloc.dart';
 import '../blocs/game_state.dart';
 import '../blocs/game_event.dart';
+
+// --- Widgets y Utils ---
 import '../widgets/quiz_view.dart';
 import '../widgets/feedback_view.dart';
 import 'game_summary_page.dart';
@@ -17,24 +30,45 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> {
-  // Variable para guardar el asset del fondo seleccionado aleatoriamente
+class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
+  late final GameBloc _bloc;
   late String _currentBackground;
-  
+
   @override
   void initState() {
     super.initState();
-    // Elegir un fondo aleatorio al entrar a la pantalla
+
+    // 1. Configuración de Infraestructura (Igual que en Home anteriormente)
+    final dio = Dio(
+      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
+    );
+    final datasource = GameDatasourceImpl(dio: dio);
+    final repository = GameRepositoryImpl(datasource: datasource);
+
+    // 2. Inicialización del BLoC con sus Casos de Uso
+    _bloc = GameBloc(
+      startAttempt: StartAttempt(repository),
+      submitAnswer: SubmitAnswer(repository),
+      getGameSummary: GetSummary(repository),
+      getAttemptStatus: GetAttemptStatus(repository),
+    )..add(OnStartGame(widget.kahootId)); // Disparamos el inicio del juego
+
+    // 3. Fondo aleatorio
     final bgs = [
-      GameAssets.bgBlue, 
-      GameAssets.bgPink, 
-      GameAssets.bgGreen, 
-      GameAssets.bgFall
+      GameAssets.bgBlue,
+      GameAssets.bgPink,
+      GameAssets.bgGreen,
+      GameAssets.bgFall,
     ];
     _currentBackground = bgs[Random().nextInt(bgs.length)];
   }
 
-  // Menú modal inferior para salir o cancelar
+  @override
+  void dispose() {
+    _bloc.close(); // Muy importante cerrar el bloc al salir
+    super.dispose();
+  }
+
   void _showExitMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -48,22 +82,28 @@ class _GamePageState extends State<GamePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.exit_to_app, color: GameColors.wrongRed),
+              leading: const Icon(
+                Icons.exit_to_app,
+                color: GameColors.wrongRed,
+              ),
               title: const Text(
-                "Salir del juego", 
-                style: TextStyle(fontWeight: FontWeight.bold, color: GameColors.wrongRed)
+                "Salir del juego",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: GameColors.wrongRed,
+                ),
               ),
               onTap: () {
-                Navigator.pop(ctx); // Cerrar el modal
-                Navigator.pop(context); // Salir de la GamePage
+                Navigator.pop(ctx);
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.close),
               title: const Text("Cancelar"),
-              onTap: () => Navigator.pop(ctx), // Solo cerrar el modal
+              onTap: () => Navigator.pop(ctx),
             ),
-            SizedBox(height: 50) // Espacio extra abajo
+            const SizedBox(height: 50),
           ],
         ),
       ),
@@ -72,63 +112,56 @@ class _GamePageState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true, // Permite que el fondo suba hasta el status bar
-      
-      // AppBar transparente solo para el botón de opciones (...)
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false, // Quitamos la flecha "Atrás" por defecto
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 8),
-            decoration: const BoxDecoration(
-              color: Colors.black26, // Fondo semitransparente para el botón
-              shape: BoxShape.circle,
+    // Proveemos el bloc a todo el árbol de la página
+    return BlocProvider.value(
+      value: _bloc,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 16, top: 8),
+              decoration: const BoxDecoration(
+                color: Colors.black26,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.more_horiz, color: Colors.white),
+                onPressed: () => _showExitMenu(context),
+              ),
             ),
-            child: IconButton(
-              icon: const Icon(Icons.more_horiz, color: Colors.white),
-              onPressed: () => _showExitMenu(context),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                _currentBackground,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Container(color: GameColors.mainPurple),
+              ),
             ),
-          )
-        ],
-      ),
-      
-      body: Stack(
-        children: [
-          // 1. Imagen de Fondo Global
-          Positioned.fill(
-            child: Image.asset(
-              _currentBackground,
-              fit: BoxFit.cover,
-              // Fallback por si la imagen falla
-              errorBuilder: (_,__,___) => Container(color: GameColors.mainPurple),
+            SafeArea(
+              child: BlocBuilder<GameBloc, GameState>(
+                builder: (context, state) {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: _buildStateWrapper(context, state),
+                  );
+                },
+              ),
             ),
-          ),
-          
-          // 2. Contenido Principal (Manejado por el Bloc)
-          SafeArea(
-            child: BlocConsumer<GameBloc, GameState>(
-              listener: (context, state) {
-                // Aquí puedes agregar lógica extra si la necesitas (ej. sonidos)
-              },
-              builder: (context, state) {
-                // AnimatedSwitcher hace una transición suave entre estados
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  child: _buildStateWrapper(context, state),
-                );
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStateWrapper(BuildContext context, GameState state) {
-    // ESTADO: CARGANDO
     if (state is GameLoading) {
       return const Center(
         key: ValueKey('loading'),
@@ -136,19 +169,15 @@ class _GamePageState extends State<GamePage> {
       );
     }
 
-    // ESTADO: JUGANDO (PREGUNTA)
     if (state is QuizState) {
-      // Usamos el número de pregunta en la Key para forzar que Flutter
-      // redibuje el widget y ejecute la animación de entrada en cada pregunta.
       return QuizView(
-        key: ValueKey('quiz_${state.currentNumber}'), 
+        key: ValueKey('quiz_${state.currentNumber}'),
         attempt: state.attempt,
         currentNumber: state.currentNumber,
         totalQuestions: state.totalQuestions,
       );
     }
 
-    // ESTADO: FEEDBACK (CORRECTO/INCORRECTO)
     if (state is ShowingFeedback) {
       return FeedbackView(
         key: const ValueKey('feedback'),
@@ -157,7 +186,6 @@ class _GamePageState extends State<GamePage> {
       );
     }
 
-    // ESTADO: RESUMEN FINAL
     if (state is GameSummaryState) {
       return GameSummaryPage(
         key: const ValueKey('summary'),
@@ -165,7 +193,6 @@ class _GamePageState extends State<GamePage> {
       );
     }
 
-    // ESTADO: ERROR
     if (state is GameError) {
       return Center(
         key: const ValueKey('error'),
@@ -182,26 +209,20 @@ class _GamePageState extends State<GamePage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              
-              // Botón REINTENTAR (Recuperado del código original)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: GameColors.mainPurple,
                 ),
-                onPressed: () =>
-                    context.read<GameBloc>().add(OnStartGame(widget.kahootId)),
+                onPressed: () => _bloc.add(OnStartGame(widget.kahootId)),
                 child: const Text("Reintentar"),
               ),
-              
               const SizedBox(height: 12),
-              
-              // Botón SALIR
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
-                  "Salir", 
-                  style: TextStyle(color: Colors.white70)
+                  "Salir",
+                  style: TextStyle(color: Colors.white70),
                 ),
               ),
             ],
@@ -209,7 +230,6 @@ class _GamePageState extends State<GamePage> {
         ),
       );
     }
-
     return const SizedBox.shrink();
   }
 }

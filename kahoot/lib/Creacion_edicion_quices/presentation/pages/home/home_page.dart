@@ -1,14 +1,4 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kahoot/Juego_Asincrono/application/usecases/get_attempt_status.dart';
-import 'package:kahoot/Juego_Asincrono/application/usecases/get_summary.dart';
-import 'package:kahoot/Juego_Asincrono/application/usecases/start_attempt.dart';
-import 'package:kahoot/Juego_Asincrono/application/usecases/submit_answer.dart';
-import 'package:kahoot/Juego_Asincrono/infrastructure/datasource/game_datasource_impl.dart';
-import 'package:kahoot/Juego_Asincrono/infrastructure/repositories/game_repository_impl.dart';
-import 'package:kahoot/Juego_Asincrono/presentation/blocs/game_bloc.dart';
-import 'package:kahoot/Juego_Asincrono/presentation/blocs/game_event.dart';
 import '../create/create_kahoot_page.dart';
 import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 import '../../../../Juego_Asincrono/presentation/pages/game_page.dart';
@@ -112,30 +102,7 @@ class HomePage extends StatelessWidget {
           } else if (index == 4) {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (context) {
-                    final dio = Dio(
-                      BaseOptions(
-                        baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
-                      ),
-                    );
-
-                    // ----------------------------
-
-                    final datasource = GameDatasourceImpl(dio: dio);
-                    final repository = GameRepositoryImpl(
-                      datasource: datasource,
-                    );
-
-                    return GameBloc(
-                      startAttempt: StartAttempt(repository),
-                      submitAnswer: SubmitAnswer(repository),
-                      getGameSummary: GetSummary(repository),
-                      getAttemptStatus: GetAttemptStatus(repository),
-                    )..add(OnStartGame(currentKahootId));
-                  },
-                  child: GamePage(kahootId: currentKahootId),
-                ),
+                builder: (_) => GamePage(kahootId: currentKahootId),
               ),
             );
           }
