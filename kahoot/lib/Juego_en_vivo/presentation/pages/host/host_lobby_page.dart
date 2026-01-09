@@ -29,7 +29,7 @@ class _HostLobbyViewState extends State<HostLobbyView> {
         baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
         headers: {
           'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTc0OTM2LCJleHAiOjE3Njc5ODIxMzZ9.9IAS2IteLAcGeeGUYbTvkYQPAIFZae5Wam1Nbz32ZtU',
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTg1MDE3LCJleHAiOjE3Njc5OTIyMTd9.AMhPYrzGeSZjUSLMGvJtsnQ93cZByLaNQEQU_u-3AGk',
           'Content-Type': 'application/json',
         },
       ),
