@@ -61,7 +61,7 @@ class LiveGameState {
       isWinner: json['isWinner'],
       isPodium: json['isPodium'],
       finalStreak: json['finalStreak'],
-      podiumData: json['finalPodium'] ?? json['winner'],
+      podiumData: json['finalPodium'],
     );
   }
 }

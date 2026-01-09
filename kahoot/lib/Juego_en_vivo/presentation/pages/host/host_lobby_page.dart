@@ -8,6 +8,7 @@ import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
 import 'host_question_page.dart';
 import 'host_results_page.dart';
+import 'host_podium_page.dart';
 
 class HostLobbyView extends StatefulWidget {
   final String kahootId;
@@ -59,7 +60,14 @@ class _HostLobbyViewState extends State<HostLobbyView> {
               return const HostQuestionView();
             }
             if (state.status == LiveGameStatus.results) {
-              return const HostResultsView();
+              // Verificar si es la última pregunta
+              final isLast = state.gameData?.progress?['isLastSlide'] ?? false;
+
+              if (isLast) {
+                return const HostPodiumView(); // Si es la última, mostramos podio directamente
+              } else {
+                return const HostResultsView(); // Si no, mostramos la tabla de posiciones normal
+              }
             }
             if (state.status == LiveGameStatus.loading || state.pin == null) {
               return const Center(
