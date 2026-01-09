@@ -1,175 +1,135 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_state.dart';
+import '../../widgets/live_timer_widget.dart';
 
-class HostQuestionView extends StatefulWidget {
+class HostQuestionView extends StatelessWidget {
   const HostQuestionView({super.key});
-
-  @override
-  State<HostQuestionView> createState() => _HostQuestionViewState();
-}
-
-class _HostQuestionViewState extends State<HostQuestionView> {
-  Timer? _timer;
-  int _secondsRemaining = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // Inicializar el tiempo desde el estado actual del BLoC
-    final state = context.read<LiveGameBloc>().state;
-    _secondsRemaining = state.gameData?.currentSlide?.timeLimit ?? 30;
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
-        } else {
-          _timer?.cancel();
-        }
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
         final slide = state.gameData?.currentSlide;
-        final String questionText = slide?.questionText ?? 'Cargando...';
+        final options = slide?.options ?? [];
         final int currentIdx = (slide?.questionIndex ?? 0) + 1;
         final String? imageUrl = slide?.imageUrl;
 
         return Scaffold(
-          backgroundColor: const Color(
-            0xFF46178F,
-          ), // Fondo morado igual al lobby
+          backgroundColor: const Color(0xFF46178F),
           body: SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 20),
-                // 4) Simplificado: Solo "Pregunta X"
-                Text(
-                  'Pregunta $currentIdx',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.bold,
-                  ),
+                // 1) TIMER ARRIBA (Reutilizando tu widget)
+                LiveTimerWidget(
+                  timeLimitSeconds: slide?.timeLimit ?? 30,
+                  onTimerFinished: () {
+                    // Opcional: El host podría recibir una alerta visual aquí
+                  },
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 2) Ajuste de imagen mejorado
-                        if (imageUrl != null && imageUrl.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.white10,
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Image.network(
-                              imageUrl,
-                              height: 220,
-                              width: double.infinity,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                    Icons.image,
-                                    color: Colors.white24,
-                                    size: 50,
-                                  ),
-                            ),
-                          ),
-                        Text(
-                          questionText,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        // 3) Timer que se mueve
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 90,
-                              height: 90,
-                              child: CircularProgressIndicator(
-                                value:
-                                    _secondsRemaining /
-                                    (slide?.timeLimit ?? 30),
-                                strokeWidth: 8,
-                                color: Colors.white,
-                                backgroundColor: Colors.white24,
-                              ),
-                            ),
-                            Text(
-                              '$_secondsRemaining',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    'Pregunta $currentIdx',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                // Grid de opciones visual para el Host
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  height: 180,
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    slide?.questionText ?? "",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // 2) AJUSTE DE IMAGEN
+                if (imageUrl != null && imageUrl.isNotEmpty)
+                  Container(
+                    height: 180,
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.image, color: Colors.white24),
+                      ),
+                    ),
+                  ),
+
+                // 3) GRID DE OPCIONES (Visual para el Host)
+                Expanded(
                   child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 3,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio:
+                              1.5, // Un poco más achatado para el Host
                         ),
-                    itemCount: slide?.options.length ?? 0,
+                    itemCount: options.length,
                     itemBuilder: (context, index) {
                       return Container(
                         decoration: BoxDecoration(
-                          color: _getOptionColor(index),
-                          borderRadius: BorderRadius.circular(8),
+                          color: _getKahootColor(index),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24, width: 1),
                         ),
                         alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.all(10),
                         child: Text(
-                          slide!.options[index].text ?? '',
+                          options[index].text ?? "",
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
                           ),
                         ),
                       );
                     },
+                  ),
+                ),
+
+                // 4) BOTÓN SIGUIENTE (Exclusivo del Anfitrión)
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Aquí llamarías al evento para pasar a la siguiente fase (resultados/podio)
+                      // context.read<LiveGameBloc>().add(NextPhase());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF46178F),
+                      minimumSize: const Size(double.infinity, 60),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      "SIGUIENTE",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -180,7 +140,13 @@ class _HostQuestionViewState extends State<HostQuestionView> {
     );
   }
 
-  Color _getOptionColor(int index) {
-    return [Colors.red, Colors.blue, Colors.orange, Colors.green][index % 4];
+  Color _getKahootColor(int index) {
+    const colors = [
+      Color(0xFFE21B3C),
+      Color(0xFF1368CE),
+      Color(0xFFD89E00),
+      Color(0xFF26890C),
+    ];
+    return colors[index % colors.length];
   }
 }
