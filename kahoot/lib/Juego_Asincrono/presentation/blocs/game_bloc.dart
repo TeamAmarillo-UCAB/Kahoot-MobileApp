@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kahoot/common/core/result.dart';
 import '../../application/usecases/start_attempt.dart';
 import '../../application/usecases/submit_answer.dart';
 import '../../application/usecases/get_summary.dart';
 import '../../application/usecases/get_attempt_status.dart';
+import '../../core/result.dart';
 import 'game_event.dart';
 import 'game_state.dart';
 import '../../domain/entities/attempt.dart';

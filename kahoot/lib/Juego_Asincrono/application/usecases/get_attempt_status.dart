@@ -1,6 +1,7 @@
+import '../../core/result.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/entities/attempt.dart';
-import '../../../common/core/result.dart';
+
 
 class GetAttemptStatus {
   final GameRepository repository;

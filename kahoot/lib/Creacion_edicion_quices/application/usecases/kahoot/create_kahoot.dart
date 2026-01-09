@@ -1,7 +1,7 @@
 import '../../../domain/repositories/kahoot_repository.dart';
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/answer.dart';
-import '../../../../common/core/result.dart';
+import '../../../core/result.dart';
 
 class CreateKahoot {
   final KahootRepository repository;

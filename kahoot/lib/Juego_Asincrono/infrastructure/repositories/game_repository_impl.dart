@@ -2,7 +2,7 @@ import '../../domain/repositories/game_repository.dart';
 import '../../domain/datasource/game_datasource.dart';
 import '../../domain/entities/attempt.dart';
 import '../../domain/entities/game_summary.dart';
-import '../../../common/core/result.dart';
+import '../../core/result.dart';
 
 class GameRepositoryImpl implements GameRepository {
   final GameDatasource datasource;
