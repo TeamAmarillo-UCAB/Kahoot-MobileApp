@@ -29,7 +29,16 @@ class _HostLobbyViewState extends State<HostLobbyView> {
 
     //Configuración de Dio
     final dio = Dio(
-      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com'),
+      BaseOptions(
+        baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'Authorization':
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30',
+          'Content-Type': 'application/json',
+        },
+      ),
     );
 
     //Inyección de Infraestructura

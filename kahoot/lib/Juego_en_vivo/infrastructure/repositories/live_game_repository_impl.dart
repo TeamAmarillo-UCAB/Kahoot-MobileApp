@@ -13,7 +13,9 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
   @override
   Future<Result<LiveSession>> createSession(String kahootId) async {
     try {
+      print("llegó al repo");
       final session = await datasource.createSession(kahootId);
+      print("Éxito en repo");
       return Result.success(session);
     } catch (e) {
       return Result.makeError(Exception('Fallo al crear sesión'));

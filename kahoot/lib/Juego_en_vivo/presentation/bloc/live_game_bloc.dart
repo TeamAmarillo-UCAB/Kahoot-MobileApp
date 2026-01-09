@@ -84,46 +84,96 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     InitHostSession event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    print('[BLOC] Paso 1 Host: Creando sesión para Kahoot: ${event.kahootId}');
-    emit(state.copyWith(status: LiveGameStatus.loading, role: 'HOST'));
+    print(
+      '[DEBUG-BLOC] Paso 1 Host: Iniciando creación de sesión para Kahoot ID: ${event.kahootId}',
+    );
 
-    final result = await createSessionUc.call(event.kahootId);
-
-    if (result.isSuccessful()) {
-      final session = result.getValue();
-      emit(
-        state.copyWith(
-          pin: session.sessionPin,
-          session: session,
-          nickname: 'Pepito',
-        ),
-      );
-
-      // Suscribir al stream
-      _gameStateSubscription?.cancel();
-      _gameStateSubscription = repository.gameStateStream.listen((data) {
-        add(OnGameStateReceived(data));
-      });
-
-      // Handshake del Host
-      connectToSocketUc.call(
-        pin: session.sessionPin,
+    // 1. Iniciamos estado de carga
+    emit(
+      state.copyWith(
+        status: LiveGameStatus.loading,
         role: 'HOST',
-        nickname: 'Pepito',
-        //HARDCOEADO HAY QUE CAMBIARLOOOOOOOOO
-        jwt:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30",
+        errorMessage: null, // Limpiamos errores previos
+      ),
+    );
+
+    try {
+      // 2. Llamada al UseCase
+      print('[DEBUG-BLOC] Paso 2: Ejecutando createSessionUc...');
+      final result = await createSessionUc.call(event.kahootId);
+
+      print(
+        '[DEBUG-BLOC] Paso 3: ¿Resultado exitoso?: ${result.isSuccessful()}',
       );
 
-      await Future.delayed(const Duration(milliseconds: 500));
-      repository.sendClientReady();
+      if (result.isSuccessful()) {
+        final session = result.getValue();
+        final String sessionPin = session.sessionPin
+            .toString(); // Aseguramos que sea String
 
-      emit(state.copyWith(status: LiveGameStatus.lobby));
-    } else {
+        print('[DEBUG-BLOC] Paso 4: Sesión creada. PIN: $sessionPin');
+
+        // 3. Emitimos éxito y pasamos a fase LOBBY
+        emit(
+          state.copyWith(
+            status: LiveGameStatus.lobby,
+            pin: sessionPin,
+            session: session,
+            nickname: 'Pepito', // Placeholder según tu lógica
+          ),
+        );
+
+        // 4. Configuración del Stream de estados del juego
+        print('[DEBUG-BLOC] Paso 5: Suscribiendo al stream de estados...');
+        _gameStateSubscription?.cancel();
+        _gameStateSubscription = repository.gameStateStream.listen(
+          (data) {
+            print(
+              '[DEBUG-BLOC] Stream: Nuevo estado recibido -> ${data.phase}',
+            );
+            add(OnGameStateReceived(data));
+          },
+          onError: (err) {
+            print('[DEBUG-BLOC] ERROR en Stream: $err');
+          },
+        );
+
+        // 5. Conexión al Socket (Handshake)
+        print('[DEBUG-BLOC] Paso 6: Conectando al socket...');
+        connectToSocketUc.call(
+          pin: sessionPin,
+          role: 'HOST',
+          nickname: 'Pepito',
+          // HARDCODEADO según tu código
+          jwt:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30",
+        );
+
+        // 6. Sincronización final
+        await Future.delayed(const Duration(milliseconds: 500));
+        print('[DEBUG-BLOC] Paso 7: Enviando client_ready');
+        repository.sendClientReady();
+      } else {
+        // Caso: El backend respondió pero con un error lógico
+        print('[DEBUG-BLOC] ERROR: El UseCase devolvió isSuccessful = false');
+        emit(
+          state.copyWith(
+            status: LiveGameStatus.error,
+            errorMessage:
+                "El servidor no pudo crear la sesión. Revisa el Kahoot ID.",
+          ),
+        );
+      }
+    } catch (e, stacktrace) {
+      // Caso: Error de red, error de parseo (nulos) o caída del servidor
+      print('[DEBUG-BLOC] EXCEPCIÓN CRÍTICA: $e');
+      print('[DEBUG-BLOC] STACKTRACE: $stacktrace');
+
       emit(
         state.copyWith(
           status: LiveGameStatus.error,
-          errorMessage: "No se pudo crear la sesión",
+          errorMessage:
+              "Error de conexión: No se pudo contactar con el servidor.",
         ),
       );
     }

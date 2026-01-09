@@ -104,7 +104,7 @@ class HomePage extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => const HostLobbyView(
                   kahootId:
-                      "af1b22a1-bf64-4aeb-ac21-e06f86ed608f", // HARDCODEADO HAY QUE CAMBIARLOOOOO
+                      "e78e618b-6a9e-437c-bf67-1138f6700e35", // HARDCODEADO HAY QUE CAMBIARLOOOOO
                 ),
               ),
             );

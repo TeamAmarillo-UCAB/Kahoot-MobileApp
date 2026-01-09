@@ -14,10 +14,13 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
 
   @override
   Future<LiveSession> createSession(String kahootId) async {
+    print('entró al datasource');
     final response = await dio.post(
       '/multiplayer-sessions',
       data: {'kahootId': kahootId},
     );
+    print('imprimiendo datos');
+    print(response.data);
     return LiveSession.fromJson(response.data);
   }
 
