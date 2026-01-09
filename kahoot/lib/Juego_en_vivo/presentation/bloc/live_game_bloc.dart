@@ -39,14 +39,27 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     on<OnGameStateReceived>(_onGameStateUpdate);
     on<SubmitAnswer>(_onSubmitAnswer);
     on<ScanQrCode>(_onScanQr);
+    on<StartGame>(_onStartGame); // NUEVO EVENTO PARA EL HOST
+  }
+
+  // Manejador para que el Host inicie el juego
+  Future<void> _onStartGame(
+    StartGame event,
+    Emitter<LiveGameBlocState> emit,
+  ) async {
+    print('[BLOC] Host disparando inicio de juego...');
+    try {
+      startLiveGameUc.call();
+      // No emitimos estado aquí, esperamos que el socket responda con "question_started"
+    } catch (e) {
+      print('[BLOC] Error al iniciar juego: $e');
+    }
   }
 
   void _onInitPlayer(
     InitPlayerSession event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    print('[BLOC] Paso 1: Iniciando Handshake para PIN: ${event.pin}');
-
     emit(
       state.copyWith(
         pin: event.pin,
@@ -54,16 +67,11 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
         status: LiveGameStatus.loading,
       ),
     );
-
-    //Suscribir stream
-    print('[BLOC] Suscribiendo al stream de estados...');
     _gameStateSubscription?.cancel();
     _gameStateSubscription = repository.gameStateStream.listen((data) {
-      print('[BLOC] Stream notificó nuevo estado: ${data.phase}');
       add(OnGameStateReceived(data));
-    }, onError: (err) => print('[BLOC] Error en Stream: $err'));
+    });
 
-    //Handshake CAMBIAR CUANDO ESTÉ EL JWT AAAAA
     connectToSocketUc.call(
       pin: event.pin,
       role: 'PLAYER',
@@ -71,12 +79,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
     );
 
-    //Sincronización lógica
-    //500ms para que el túnel TCP/WS se estabilice antes de pedir sync
     await Future.delayed(const Duration(milliseconds: 500));
-    print('[BLOC] Enviando client_ready...');
     repository.sendClientReady();
-
     emit(state.copyWith(status: LiveGameStatus.initial));
   }
 
@@ -84,109 +88,64 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     InitHostSession event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    print(
-      '[DEBUG-BLOC] Paso 1 Host: Iniciando creación de sesión para Kahoot ID: ${event.kahootId}',
-    );
-
-    //Iniciar estado de carga
     emit(
       state.copyWith(
         status: LiveGameStatus.loading,
         role: 'HOST',
-        errorMessage: null, //Limpiarerrores previos
+        errorMessage: null,
       ),
     );
-
     try {
-      //Llamar al UseCase
-      print('[DEBUG-BLOC] Paso 2: Ejecutando createSessionUc...');
       final result = await createSessionUc.call(event.kahootId);
-
-      print(
-        '[DEBUG-BLOC] Paso 3: ¿Resultado exitoso?: ${result.isSuccessful()}',
-      );
-
       if (result.isSuccessful()) {
         final session = result.getValue();
-        final String sessionPin = session.sessionPin
-            .toString(); // Asegurar que sea String
+        final String sessionPin = session.sessionPin.toString();
 
-        print('[DEBUG-BLOC] Paso 4: Sesión creada. PIN: $sessionPin');
-
-        //Emitir éxito y pasar a fase LOBBY
         emit(
           state.copyWith(
             status: LiveGameStatus.lobby,
             pin: sessionPin,
             session: session,
-            nickname: 'Pepito', // Placeholder
+            nickname: 'Host',
           ),
         );
 
-        //Configuración del Stream de estados del juego
-        print('[DEBUG-BLOC] Paso 5: Suscribiendo al stream de estados...');
         _gameStateSubscription?.cancel();
-        _gameStateSubscription = repository.gameStateStream.listen(
-          (data) {
-            print(
-              '[DEBUG-BLOC] Stream: Nuevo estado recibido -> ${data.phase}',
-            );
-            add(OnGameStateReceived(data));
-          },
-          onError: (err) {
-            print('[DEBUG-BLOC] ERROR en Stream: $err');
-          },
-        );
+        _gameStateSubscription = repository.gameStateStream.listen((data) {
+          add(OnGameStateReceived(data));
+        });
 
-        //Conexión al Socket (Handshake)
-        print('[DEBUG-BLOC] Paso 6: Conectando al socket...');
         connectToSocketUc.call(
           pin: sessionPin,
           role: 'HOST',
-          nickname: 'Pepito', //HARDCODEADO
+          nickname: 'Host',
           jwt: "7abc6fed-665e-463d-b54d-8d78c1397e6f",
         );
 
-        // 6. Sincronización final
         await Future.delayed(const Duration(milliseconds: 500));
-        print('[DEBUG-BLOC] Paso 7: Enviando client_ready');
         repository.sendClientReady();
       } else {
-        // Caso: El backend respondió pero con un error lógico
-        print('[DEBUG-BLOC] ERROR: El UseCase devolvió isSuccessful = false');
         emit(
           state.copyWith(
             status: LiveGameStatus.error,
-            errorMessage:
-                "El servidor no pudo crear la sesión. Revisa el Kahoot ID.",
+            errorMessage: "No se pudo crear la sesión.",
           ),
         );
       }
-    } catch (e, stacktrace) {
-      // Caso: Error de red, error de parseo (nulos) o caída del servidor
-      print('[DEBUG-BLOC] EXCEPCIÓN CRÍTICA: $e');
-      print('[DEBUG-BLOC] STACKTRACE: $stacktrace');
-
+    } catch (e) {
       emit(
         state.copyWith(
           status: LiveGameStatus.error,
-          errorMessage:
-              "Error de conexión: No se pudo contactar con el servidor.",
+          errorMessage: "Error crítico de conexión.",
         ),
       );
     }
   }
 
   void _onJoinLobby(JoinLobby event, Emitter<LiveGameBlocState> emit) {
-    print(
-      '[BLOC] Guardando nickname y enviando player_join: ${event.nickname}',
-    );
-
-    // Guardar el nickname en el estado local antes de enviarlo
     emit(
       state.copyWith(status: LiveGameStatus.loading, nickname: event.nickname),
     );
-
     joinLiveGameUc.call(event.nickname);
   }
 
@@ -195,9 +154,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final gameData = event.gameState;
-    print('[BLOC] Actualizando UI a fase: ${gameData.phase}');
-
     LiveGameStatus newStatus = state.status;
+
     switch (gameData.phase.toUpperCase()) {
       case 'LOBBY':
         newStatus = LiveGameStatus.lobby;
@@ -219,7 +177,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   @override
   Future<void> close() {
-    print('[BLOC] Cerrando BLoC y liberando recursos');
     _gameStateSubscription?.cancel();
     repository.disconnect();
     return super.close();
@@ -229,12 +186,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     SubmitAnswer event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    // Log para ver qué recibe el Bloc
-    print('[BLOC RECEIVING]: ${event.answerIds}');
-
     emit(state.copyWith(status: LiveGameStatus.waitingResults));
-
-    // Llamada al repositorio
     repository.submitAnswer(
       questionId: event.questionId,
       answerIds: event.answerIds,
@@ -250,8 +202,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     final result = await getPinFromQrUc.call(event.qrToken);
     if (result.isSuccessful()) {
       final session = result.getValue();
-      final pin = session['sessionPin'].toString();
-      add(InitPlayerSession(pin));
+      add(InitPlayerSession(session['sessionPin'].toString()));
     } else {
       emit(
         state.copyWith(

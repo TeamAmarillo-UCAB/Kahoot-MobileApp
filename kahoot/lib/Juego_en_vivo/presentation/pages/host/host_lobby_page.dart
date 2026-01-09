@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
-
-// Infraestructura
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
 import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
-
-// BLoC y pantallas
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
+import 'host_question_page.dart';
 
 class HostLobbyView extends StatefulWidget {
   final String kahootId;
-
   const HostLobbyView({Key? key, required this.kahootId}) : super(key: key);
 
   @override
@@ -26,29 +22,20 @@ class _HostLobbyViewState extends State<HostLobbyView> {
   @override
   void initState() {
     super.initState();
-
-    //Configuración de Dio
     final dio = Dio(
       BaseOptions(
         baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
         headers: {
           'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTU4OTIxLCJleHAiOjE3Njc5NjYxMjF9.hcWKnnA9pIqHUGzIP-7-He0ydO2ZpYzFDdRxp3AAv30',
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTY3NjAyLCJleHAiOjE3Njc5NzQ4MDJ9.4VcrTgTw8bo-bzdZph2fTtlJEP9lCIcBwE5H6K9647w',
           'Content-Type': 'application/json',
         },
       ),
     );
 
-    //Inyección de Infraestructura
     final datasource = LiveGameDatasourceImpl(dio: dio);
     final repository = LiveGameRepositoryImpl(datasource: datasource);
-
-    //Inicializar BLoC
     _bloc = LiveGameBloc(repository: repository);
-
-    //Disparar evento inicial para crear/unirse a la sesión como Host
     _bloc.add(InitHostSession(widget.kahootId));
   }
 
@@ -64,33 +51,30 @@ class _HostLobbyViewState extends State<HostLobbyView> {
       value: _bloc,
       child: Scaffold(
         backgroundColor: const Color(0xFF46178F),
-        appBar: AppBar(
-          title: const Text('Lobby del Host'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
         body: BlocBuilder<LiveGameBloc, LiveGameBlocState>(
           builder: (context, state) {
-            //Acceder a gameData con información de la sesión
-            final gameData = state.gameData;
-            final players = gameData?.players ?? []; // Jugadores
+            // TRANSICIÓN: Si el estado cambia a question, mostramos la vista de la pregunta
+            if (state.status == LiveGameStatus.question) {
+              return const HostQuestionView();
+            }
 
-            //Si aún está cargando o no hay PIN
             if (state.status == LiveGameStatus.loading || state.pin == null) {
               return const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               );
             }
 
+            final players = state.gameData?.players ?? [];
+
             return Column(
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 const Text(
                   'PIN DE JUEGO:',
                   style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
                 Text(
-                  state.pin!, // El PIN viene del estado principal del Bloc
+                  state.pin!,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 60,
@@ -99,47 +83,25 @@ class _HostLobbyViewState extends State<HostLobbyView> {
                 ),
                 const SizedBox(height: 40),
                 Text(
-                  'Jugadores conectados: ${players.length}',
+                  'Jugadores: ${players.length}',
                   style: const TextStyle(color: Colors.white, fontSize: 20),
                 ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: players.length,
-                    itemBuilder: (context, index) {
-                      final player = players[index];
-
-                      // ¡IMPORTANTE!: Agregar el 'return' para que el widget se renderice
-                      return Card(
-                        color: Colors.white.withOpacity(
-                          0.1,
-                        ), // Fondo semitransparente
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 5,
-                        ),
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.person, color: Color(0xFF46178F)),
-                          ),
-                          title: Text(
-                            player['nickname'] ?? 'Anónimo',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors
-                                  .white, // Texto en blanco para que se vea sobre el morado
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                    itemBuilder: (context, index) => ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(
+                        players[index]['nickname'] ?? 'Anónimo',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: ElevatedButton(
-                    //Evento StartGame que ya definido
+                    // Al presionar, disparamos el evento al Bloc
                     onPressed: players.isEmpty
                         ? null
                         : () => context.read<LiveGameBloc>().add(StartGame()),
