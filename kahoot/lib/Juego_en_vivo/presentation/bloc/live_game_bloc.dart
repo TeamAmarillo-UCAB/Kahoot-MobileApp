@@ -66,7 +66,7 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     connectToSocketUc.call(
       pin: event.pin,
       role: 'PLAYER',
-      nickname: 'Carlios',
+      nickname: '',
       jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
     );
 
