@@ -174,6 +174,16 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     : 'public';
                 final isEditing = widget.initialKahoot != null;
 
+                // Validación amigable en UI: si estamos creando (draft) y visibilidad es pública, bloquear y avisar
+                if (!isEditing && visibilityValue == 'public') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cuando el estado es borrador (draft), la visibilidad no puede ser pública.'),
+                    ),
+                  );
+                  return;
+                }
+
                 _editorCubit
                   ..setTitle(title)
                   ..setVisibility(visibilityValue)

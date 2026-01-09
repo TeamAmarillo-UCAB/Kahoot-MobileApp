@@ -11,6 +11,7 @@ import '../application/usecases/update_user.dart';
 import '../application/usecases/login_user.dart';
 import 'pages/post_login_page.dart';
 import '../../main.dart';
+import '../../core/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -72,6 +73,11 @@ class _LoginPageState extends State<LoginPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Inicio de sesión exitoso')),
                       );
+                      // Marcar sesión iniciada y guardar email/username derivados
+                      AuthState.isLoggedIn.value = true;
+                      AuthState.email.value = _emailCtrl.text.trim();
+                      final derived = _emailCtrl.text.trim().split('@').first;
+                      AuthState.username.value = (derived.isNotEmpty ? derived : _emailCtrl.text.trim());
                       // Navega a PostLoginPage y limpia el stack para evitar volver a AccountPage
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const PostLoginPage()),

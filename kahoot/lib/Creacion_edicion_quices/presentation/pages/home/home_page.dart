@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../Gestion_usuarios/presentation/pages/account_page.dart';
+import '../../../../Gestion_usuarios/presentation/pages/post_login_page.dart';
+import '../../../../core/auth_state.dart';
 import '../create/create_kahoot_page.dart';
 import '../../../../biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 
@@ -71,9 +73,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AccountPage()),
-                );
+                final logged = AuthState.isLoggedIn.value;
+                if (logged) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PostLoginPage()),
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AccountPage()),
+                  );
+                }
               },
               child: CircleAvatar(
                 backgroundColor: Colors.brown.shade200,

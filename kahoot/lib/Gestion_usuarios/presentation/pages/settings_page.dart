@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile_configuration.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -34,7 +35,11 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16),
         children: [
           _SectionTitle('Perfil'),
-          _MenuTile('Configuración del perfil'),
+          _MenuTile('Configuración del perfil', onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ProfileConfigurationPage()),
+            );
+          }),
           _MenuTile('Configuración de privacidad'),
           _MenuTile('Eliminar cuenta'),
           _MenuTile('Cerrar sesión'),
@@ -58,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _MenuTile(String title) {
+  Widget _MenuTile(String title, {VoidCallback? onTap}) {
     return Container(
       decoration: BoxDecoration(
         color: cardDark,
@@ -67,11 +72,14 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       margin: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(child: Text(title, style: const TextStyle(color: Colors.white))),
-          const Icon(Icons.chevron_right, color: Colors.white70),
-        ],
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          children: [
+            Expanded(child: Text(title, style: const TextStyle(color: Colors.white))),
+            const Icon(Icons.chevron_right, color: Colors.white70),
+          ],
+        ),
       ),
     );
   }

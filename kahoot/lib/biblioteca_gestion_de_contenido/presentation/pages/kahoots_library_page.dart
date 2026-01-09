@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
-import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
+import 'kahoots_library_details_page.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
 
 class KahootsLibraryPage extends StatelessWidget {
   final List<Kahoot> items;
@@ -10,6 +11,7 @@ class KahootsLibraryPage extends StatelessWidget {
   static const Color bgBrown = Color(0xFF3A240C);
   static const Color headerYellow = Color(0xFFFFB300);
   static const Color cardYellow = Color(0xFFFFB300);
+  static const Color lightYellow = Color(0xFFFFD36F);
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +60,13 @@ class KahootsLibraryPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+          final cross = constraints.maxWidth > 600 ? 3 : 2;
           return GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.7,
+              crossAxisCount: cross,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 18,
+              childAspectRatio: 0.60,
             ),
             itemCount: data.length,
             itemBuilder: (context, index) => _AnimatedAppear(
@@ -83,6 +85,7 @@ class _KahootCard extends StatelessWidget {
   const _KahootCard({required this.item});
 
   static const Color cardYellow = Color(0xFFFFB300);
+  static const Color lightYellow = Color(0xFFFFD36F);
 
   @override
   Widget build(BuildContext context) {
@@ -91,41 +94,94 @@ class _KahootCard extends StatelessWidget {
         color: cardYellow,
         borderRadius: BorderRadius.circular(14),
         boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
-        border: Border.all(color: Colors.blueAccent, width: item.visibility.toShortString() == 'public' ? 3 : 0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.image, color: Colors.black26, size: 48),
+            Positioned(
+              top: -3,
+              right: 6,
+              child: const Icon(Icons.star_border, color: Color(0xFF3A240C), size: 22),
+            ),
+            Positioned(
+              top: -2,
+              left: 8,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: const Icon(Icons.delete, size: 20, color: Color(0xFF3A240C)),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: item)),
+                      );
+                    },
+                    child: const Icon(Icons.edit, size: 20, color: Color(0xFF3A240C)),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('Visibilidad: ${item.visibility.toShortString().capitalize()}', style: const TextStyle(color: Colors.black87)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: const [
-                  Icon(Icons.delete, size: 18, color: Colors.black87),
-                  SizedBox(width: 8),
-                  Icon(Icons.edit, size: 18, color: Colors.black87),
-                ]),
-                TextButton(
-                  style: TextButton.styleFrom(backgroundColor: const Color(0xFFFFEE58), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: item)));
-                  },
-                  child: const Text('Ver detalle'),
+                const SizedBox(height: 26),
+                // Image container with light background
+                Container(
+                  height: 110,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: lightYellow,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: (item.image.isNotEmpty && item.image.startsWith('http'))
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            item.image,
+                            height: 110,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.image, color: Colors.black45, size: 40),
+                          ),
+                        )
+                      : const Icon(Icons.image, color: Colors.black45, size: 40),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Center(
+                  child: Text(
+                    'Visibilidad: ${item.visibility == KahootVisibility.public ? 'Pública' : 'Privada'}',
+                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: GradientButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => LibraryKahootDetailsPage(item: item)),
+                      );
+                    },
+                    child: const Text(
+                      'ver detalles',
+                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -136,9 +192,7 @@ class _KahootCard extends StatelessWidget {
   }
 }
 
-extension _Cap on String {
-  String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
-}
+// capitalize helper removed as unused
 
 class _AnimatedAppear extends StatefulWidget {
   final int delayMs;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'kahoots_library_page.dart';
+import 'kahoots_library_loader.dart';
 
 class BibliotecaPage extends StatelessWidget {
   const BibliotecaPage({Key? key}) : super(key: key);
@@ -151,7 +151,7 @@ class _LibraryCard extends StatelessWidget {
         ? InkWell(
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const KahootsLibraryPage()),
+                MaterialPageRoute(builder: (_) => const KahootsLibraryLoader()),
               );
             },
             child: content,

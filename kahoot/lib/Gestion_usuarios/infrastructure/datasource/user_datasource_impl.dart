@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'dart:convert';
 import '../../domain/datasource/user_datasource.dart';
 import '../../domain/entities/user.dart';
+import '../../../core/auth_state.dart';
 
 class UserDatasourceImpl implements UserDatasource {
   final Dio dio = Dio();
@@ -101,11 +102,37 @@ class UserDatasourceImpl implements UserDatasource {
     };
     // Debug
     print('POST '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/auth/login payload: ' + jsonEncode(body));
-    await dio.post(
+    final Response res = await dio.post(
       '/auth/login',
       data: body,
       options: Options(headers: {'Content-Type': 'application/json'}),
     );
+    try {
+      // Intentar extraer token de distintas formas habituales
+      final data = res.data;
+      String? token;
+      if (data is Map<String, dynamic>) {
+        token = (data['token'] as String?) ??
+                (data['accessToken'] as String?) ??
+                (data['jwt'] as String?) ??
+                (data['authToken'] as String?);
+        if (token == null && data['data'] is Map<String, dynamic>) {
+          final inner = data['data'] as Map<String, dynamic>;
+          token = (inner['token'] as String?) ?? (inner['accessToken'] as String?);
+        }
+      } else if (data is String) {
+        // Si el backend devuelve el token plano como string
+        token = data;
+      }
+      if (token != null && token.isNotEmpty) {
+        AuthState.token.value = token;
+        print('Login token capturado: ' + token);
+      } else {
+        print('Login sin token detectable en la respuesta: ' + res.data.toString());
+      }
+    } catch (e) {
+      print('No se pudo parsear el token del login: ' + e.toString());
+    }
   }
 
   @override

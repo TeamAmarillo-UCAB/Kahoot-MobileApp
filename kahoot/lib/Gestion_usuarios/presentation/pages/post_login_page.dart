@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'settings_page.dart';
 import '../../../main.dart';
+import '../../../core/auth_state.dart';
 
 class PostLoginPage extends StatelessWidget {
   const PostLoginPage({Key? key}) : super(key: key);
@@ -79,11 +80,18 @@ class _Header extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              _Avatar(initial: 'A', username: 'ancorzo19'),
-            ],
+          ValueListenableBuilder<String?>(
+            valueListenable: AuthState.username,
+            builder: (context, username, _) {
+              final display = (username ?? 'usuario');
+              final initial = display.isNotEmpty ? display[0].toUpperCase() : 'U';
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _Avatar(initial: initial, username: display),
+                ],
+              );
+            },
           ),
         ],
       ),

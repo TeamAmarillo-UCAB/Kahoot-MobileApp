@@ -4,10 +4,26 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
+import '../../../core/auth_state.dart';
 
 class KahootDatasourceImpl implements KahootDatasource {
   final Dio dio = Dio();
   String? lastCreatedKahootId;
+
+  KahootDatasourceImpl() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = AuthState.token.value;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer ' + token;
+            // options.auth is not a valid property for RequestOptions in Dio; only set the header.
+          }
+          handler.next(options);
+        },
+      ),
+    );
+  }
 
   @override
   Future<void> createKahoot(
@@ -22,7 +38,12 @@ class KahootDatasourceImpl implements KahootDatasource {
     List<Question> question,
     List<Answer> answer,
   ) async {
-    // Keep status hardcoded as 'published' per request
+    // Validación: si el estado es "draft" la visibilidad no puede ser "public"
+    final String _status = status.trim().toLowerCase();
+    final String _visibility = visibility.trim().toLowerCase();
+    if (_status == 'draft' && _visibility == 'public') {
+      throw Exception('La visibilidad no puede ser pública cuando el estado es "draft".');
+    }
 
     // Build body following backend contract; map empty strings to nulls where applicable
     Map<String, dynamic> body = {
@@ -30,7 +51,7 @@ class KahootDatasourceImpl implements KahootDatasource {
       'description': description,
       'coverImageId': image.isEmpty ? null : image,
       'visibility': visibility,
-      'status': 'draft',
+      'status': status,
       'category': theme,
       'themeId': 'd67b732b-020b-4776-996c-98bbdaa7c263',
       // 'themeId': theme.isEmpty ? null : theme,
@@ -324,11 +345,11 @@ class KahootDatasourceImpl implements KahootDatasource {
     }
   }
 
-  Future<List<Kahoot>> getKahootsByAuthor(String authorId) async {
+  Future<List<Kahoot>> getKahootsByAuthor(String userId) async {
     try {
       final response = await dio.get(
-        '/kahoots',
-        queryParameters: {'authorId': authorId},
+        '/kahoots/userId',
+        queryParameters: {'userId': userId},
         options: Options(
           headers: {'Content-Type': 'application/json'},
           validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
