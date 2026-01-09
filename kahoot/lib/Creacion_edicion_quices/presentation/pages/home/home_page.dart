@@ -1,29 +1,10 @@
 import 'dart:async'; // Para StreamSubscription
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_links/app_links.dart'; // Para escuchar los links
 
-// Importaciones de otras épicas/módulos
 import '../create/create_kahoot_page.dart';
 import '../../../../Motor_Juego_Vivo/presentation/game_module_wrapper.dart';
 
-// --- IMPORTS DE LA ÉPICA 8 (GRUPOS) ---
-
-// 1. Dominio (Interfaz del repositorio)
-import '../../../../Grupos/domain/repositories/group_repository.dart';
-
-// 2. Infraestructura (Implementaciones)
-import '../../../../Grupos/infrastructure/repositories/group_repository_impl.dart';
-import '../../../../Grupos/infrastructure/datasources/group_datasource_impl.dart';
-
-// 3. Casos de uso
-import '../../../../Grupos/application/usecases/get_user_groups.dart';
-import '../../../../Grupos/application/usecases/create_group.dart';
-import '../../../../Grupos/application/usecases/join_group.dart';
-
-// 4. Bloc y Página
-import '../../../../Grupos/presentation/bloc/group_list/group_list_bloc.dart';
-import '../../../../Grupos/presentation/bloc/group_list/group_list_event.dart';
 import '../../../../Grupos/presentation/pages/my_groups_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,8 +15,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  //final String _currentUserId = "7abc6fed-665e-463d-b54d-8d78c1397e6f";
-  final String _currentUserId = 'a25c1189-d3c0-4990-8e30-e5f5603c202c';
+  // Anterior userId hardcoadeado
+  // final String _currentUserId = 'a25c1189-d3c0-4990-8e30-e5f5603c202c';
 
   // Variables para el Deep Linking
   late AppLinks _appLinks;
@@ -53,11 +34,10 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // --- LÓGICA DE DEEP LINKS ---
   void _initDeepLinkListener() {
     _appLinks = AppLinks();
 
-    // Escuchar links (cuando la app se abre o ya está en segundo plano)
+    // Escuchar links
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri? uri) {
         if (uri != null) {
@@ -72,18 +52,23 @@ class _HomePageState extends State<HomePage> {
 
   // Procesar el link específico
   void _handleDeepLink(Uri uri) {
-    // Verificamos el path configurado en AndroidManifest (/groups/join)
+    // Verificar el path configurado en AndroidManifest (/groups/join)
     if (uri.path.contains('/groups/join')) {
-      // Extraemos el token del parámetro '?token=...'
       final String? token = uri.queryParameters['token'];
 
       if (token != null) {
         debugPrint("Token recibido: $token - Navegando a Grupos...");
-
-        // CORRECCIÓN: Llamamos a navegar pasando el token
+        // Navegar pasando el token
         _navigateToGroups(context, token: token);
       }
     }
+  }
+
+  //IMPORTAR ESTOOOO
+  void _navigateToGroups(BuildContext context, {String? token}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MyGroupsPage(invitationToken: token)),
+    );
   }
 
   @override
@@ -172,18 +157,14 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 2) {
-            // Unirse -> Módulo de Juego
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const GameModuleWrapper()),
             );
           } else if (index == 3) {
-            // Crear -> Crear Kahoot
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const CreateKahootPage()));
           } else if (index == 4) {
-            // ✅ BIBLIOTECA -> GRUPOS DE ESTUDIO
-            // Llamada normal (sin token) al pulsar el botón
             _navigateToGroups(context);
           }
         },
@@ -203,45 +184,6 @@ class _HomePageState extends State<HomePage> {
             label: 'Biblioteca',
           ),
         ],
-      ),
-    );
-  }
-
-  // --- MÉTODO CORREGIDO Y ADAPTADO ---
-  // Ahora acepta un parámetro opcional 'token'
-  void _navigateToGroups(BuildContext context, {String? token}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) {
-          final datasource = GroupDatasourceImpl();
-          final repository = GroupRepositoryImpl(datasource: datasource);
-
-          return RepositoryProvider<GroupRepository>.value(
-            value: repository,
-            child: BlocProvider(
-              create: (context) {
-                // 1. Instanciamos el Bloc
-                final bloc = GroupListBloc(
-                  getUserGroups: GetUserGroups(repository),
-                  createGroup: CreateGroup(repository),
-                  joinGroup: JoinGroup(repository),
-                  currentUserId: _currentUserId,
-                );
-
-                // 2. Siempre cargamos la lista de grupos
-                bloc.add(LoadGroupsEvent());
-
-                // 3. SI HAY TOKEN (Venimos de un link): Lanzamos el evento de unirse
-                if (token != null) {
-                  bloc.add(JoinGroupEvent(token: token));
-                }
-
-                return bloc;
-              },
-              child: const MyGroupsPage(),
-            ),
-          );
-        },
       ),
     );
   }

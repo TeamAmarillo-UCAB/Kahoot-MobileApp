@@ -19,12 +19,11 @@ class GroupDatasourceImpl implements GroupDatasource {
               headers: {'Content-Type': 'application/json'},
             ),
           ) {
-    // --- INTERCEPTOR PARA EL JWT ---
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          const String jwtToken =
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTkzNDY0LCJleHAiOjE3NjgwMDA2NjR9.CjmBfJarU1Ff5Om4azMQ0FcvrGsjY1umuocjN9buzuM";
+          const String jwtToken = //HARDCODEADOOOOOOOO
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDAxOTg3LCJleHAiOjE3NjgwMDkxODd9.XKlHgj81-ZP0FH6qANSELlzX6VUaBhLFEwzXrfIURj4";
 
           // Inyección del Token Bearer
           options.headers['Authorization'] = 'Bearer $jwtToken';
@@ -32,7 +31,7 @@ class GroupDatasourceImpl implements GroupDatasource {
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          // Manejo de errores global (ej: Token expirado 401)
+          // Manejo de errores global
           return handler.next(e);
         },
       ),
@@ -41,7 +40,6 @@ class GroupDatasourceImpl implements GroupDatasource {
 
   @override
   Future<List<Group>> getMyGroups(String userId) async {
-    // El userId ya no se envía explícitamente, va en el token
     final response = await dio.get('/groups');
     return (response.data as List).map((e) => Group.fromJson(e)).toList();
   }

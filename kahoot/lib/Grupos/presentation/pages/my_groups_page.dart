@@ -1,27 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kahoot/Grupos/application/usecases/get_group_leaderboard.dart';
+
+import '../../../../Grupos/infrastructure/datasources/group_datasource_impl.dart';
+import '../../../../Grupos/infrastructure/repositories/group_repository_impl.dart';
 
 import '../../../../Grupos/domain/entities/group.dart';
 import '../../../../Grupos/domain/repositories/group_repository.dart';
-
-import '../bloc/group_list/group_list_bloc.dart';
-import '../bloc/group_list/group_list_state.dart';
-import '../bloc/group_list/group_list_event.dart';
-
-import '../bloc/group_detail/group_detail_bloc.dart';
-import 'group_detail_page.dart';
-
+import '../../../../Grupos/application/usecases/get_user_groups.dart';
+import '../../../../Grupos/application/usecases/create_group.dart';
+import '../../../../Grupos/application/usecases/join_group.dart';
+import '../../../../Grupos/application/usecases/get_group_leaderboard.dart';
 import '../../../../Grupos/application/usecases/get_group_details.dart';
 import '../../../../Grupos/application/usecases/generate_invitation.dart';
 import '../../../../Grupos/application/usecases/remove_member.dart';
 import '../../../../Grupos/application/usecases/delete_group.dart';
 import '../../../../Grupos/application/usecases/edit_group.dart';
 
+import '../bloc/group_list/group_list_bloc.dart';
+import '../bloc/group_list/group_list_state.dart';
+import '../bloc/group_list/group_list_event.dart';
+import '../bloc/group_detail/group_detail_bloc.dart';
+import 'group_detail_page.dart';
+
 class MyGroupsPage extends StatelessWidget {
-  const MyGroupsPage({Key? key}) : super(key: key);
+  final String? invitationToken; // Recibir token
+
+  const MyGroupsPage({Key? key, this.invitationToken}) : super(key: key);
+
+  // ID del usuario HARCODEADO ARREGLAR
   final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
-  //final String _currentUserId = "f99e03b5-b87a-47fb-a966-34d03b6d63f4";
+
+  @override
+  Widget build(BuildContext context) {
+    //Instanciar las dependencias
+    final datasource = GroupDatasourceImpl();
+    final repository = GroupRepositoryImpl(datasource: datasource);
+
+    //Repositorio y el Bloc a la Vista
+    return RepositoryProvider<GroupRepository>.value(
+      value: repository,
+      child: BlocProvider(
+        create: (context) {
+          final bloc = GroupListBloc(
+            getUserGroups: GetUserGroups(repository),
+            createGroup: CreateGroup(repository),
+            joinGroup: JoinGroup(repository),
+            currentUserId: _currentUserId,
+          );
+
+          // Cargar grupos iniciales
+          bloc.add(LoadGroupsEvent());
+
+          // Si hay token, lanzar evento de unirse
+          if (invitationToken != null) {
+            bloc.add(JoinGroupEvent(token: invitationToken!));
+          }
+
+          return bloc;
+        },
+        child: _MyGroupsView(currentUserId: _currentUserId),
+      ),
+    );
+  }
+}
+
+class _MyGroupsView extends StatelessWidget {
+  final String currentUserId;
+
+  const _MyGroupsView({Key? key, required this.currentUserId})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +81,6 @@ class MyGroupsPage extends StatelessWidget {
       ),
       body: BlocConsumer<GroupListBloc, GroupListState>(
         listener: (context, state) {
-          // Manejo de errores (SnackBar)
           if (state is GroupListError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -85,7 +131,8 @@ class MyGroupsPage extends StatelessWidget {
           }
 
           if (state is GroupListInitial) {
-            context.read<GroupListBloc>().add(LoadGroupsEvent());
+            // Esto ya no debería ser necesario porque lo llamamos en el create,
+            // pero lo dejamos por seguridad.
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -139,14 +186,13 @@ class MyGroupsPage extends StatelessWidget {
           group.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        // 'role' y 'memberCount'
         subtitle: Text(
           "${group.role} • ${group.memberCount} miembros",
           style: TextStyle(color: Colors.grey[600]),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-
         onTap: () {
+          // Recuperamos el repositorio que inyectamos arriba en MyGroupsPage
           final repository = context.read<GroupRepository>();
 
           Navigator.push(
@@ -161,14 +207,18 @@ class MyGroupsPage extends StatelessWidget {
                     deleteGroup: DeleteGroup(repository),
                     editGroup: EditGroup(repository),
                     getGroupLeaderboard: GetGroupLeaderboard(repository),
-                    currentUserId: _currentUserId,
+                    currentUserId: currentUserId,
                   ),
                   child: GroupDetailPage(group: group),
                 );
               },
             ),
           ).then((_) {
-            context.read<GroupListBloc>().add(LoadGroupsEvent());
+            // Al volver, recargamos la lista
+            // Verificamos que el widget siga montado
+            if (context.mounted) {
+              context.read<GroupListBloc>().add(LoadGroupsEvent());
+            }
           });
         },
       ),
@@ -176,7 +226,6 @@ class MyGroupsPage extends StatelessWidget {
   }
 
   // --- DIALOG DE CREAR GRUPO ---
-
   void _showCreateGroupDialog(BuildContext context) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
@@ -208,7 +257,8 @@ class MyGroupsPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                // Evento con argumentos posicionales (definido así en GroupListEvent)
+                // Como _MyGroupsView está DENTRO del BlocProvider,
+                // context.read<GroupListBloc>() funciona perfectamente aquí.
                 context.read<GroupListBloc>().add(
                   CreateGroupEvent(nameController.text, descController.text),
                 );
