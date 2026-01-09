@@ -18,14 +18,31 @@ class GroupDatasourceImpl implements GroupDatasource {
               baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
               headers: {'Content-Type': 'application/json'},
             ),
-          );
+          ) {
+    // --- INTERCEPTOR PARA EL JWT ---
+    this.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          const String jwtToken =
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTkzNDY0LCJleHAiOjE3NjgwMDA2NjR9.CjmBfJarU1Ff5Om4azMQ0FcvrGsjY1umuocjN9buzuM";
 
-  // Helper para inyectar el userId en los headers
-  Options _getOptions(String userId) => Options(headers: {'userId': userId});
+          // Inyección del Token Bearer
+          options.headers['Authorization'] = 'Bearer $jwtToken';
+
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) {
+          // Manejo de errores global (ej: Token expirado 401)
+          return handler.next(e);
+        },
+      ),
+    );
+  }
 
   @override
   Future<List<Group>> getMyGroups(String userId) async {
-    final response = await dio.get('/groups', options: _getOptions(userId));
+    // El userId ya no se envía explícitamente, va en el token
+    final response = await dio.get('/groups');
     return (response.data as List).map((e) => Group.fromJson(e)).toList();
   }
 
@@ -38,7 +55,6 @@ class GroupDatasourceImpl implements GroupDatasource {
     final response = await dio.post(
       '/groups',
       data: {'name': name, 'description': description},
-      options: _getOptions(userId),
     );
     return GroupDetail.fromJson(response.data);
   }
@@ -53,14 +69,13 @@ class GroupDatasourceImpl implements GroupDatasource {
     final response = await dio.patch(
       '/groups/$groupId',
       data: {'name': name, 'description': description},
-      options: _getOptions(userId),
     );
     return GroupDetail.fromJson(response.data);
   }
 
   @override
   Future<void> deleteGroup(String userId, String groupId) async {
-    await dio.delete('/groups/$groupId', options: _getOptions(userId));
+    await dio.delete('/groups/$groupId');
   }
 
   @override
@@ -68,10 +83,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     String userId,
     String groupId,
   ) async {
-    final response = await dio.get(
-      '/groups/$groupId/members',
-      options: _getOptions(userId),
-    );
+    final response = await dio.get('/groups/$groupId/members');
     return (response.data as List).map((e) => GroupMember.fromJson(e)).toList();
   }
 
@@ -81,10 +93,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     String groupId,
     String memberId,
   ) async {
-    await dio.delete(
-      '/groups/$groupId/members/$memberId',
-      options: _getOptions(userId),
-    );
+    await dio.delete('/groups/$groupId/members/$memberId');
   }
 
   @override
@@ -96,7 +105,6 @@ class GroupDatasourceImpl implements GroupDatasource {
     final response = await dio.patch(
       '/groups/$groupId/transfer-admin',
       data: {'newAdminId': newAdminId},
-      options: _getOptions(userId),
     );
     return response.data;
   }
@@ -106,10 +114,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     String userId,
     String groupId,
   ) async {
-    final response = await dio.post(
-      '/groups/$groupId/invitations',
-      options: _getOptions(userId),
-    );
+    final response = await dio.post('/groups/$groupId/invitations');
     return GroupInvitation.fromJson(response.data);
   }
 
@@ -118,7 +123,6 @@ class GroupDatasourceImpl implements GroupDatasource {
     final response = await dio.post(
       '/groups/join',
       data: {'invitationToken': token},
-      options: _getOptions(userId),
     );
 
     final data = response.data;
@@ -126,7 +130,7 @@ class GroupDatasourceImpl implements GroupDatasource {
       id: data['groupId'],
       name: data['groupName'],
       role: data['role'],
-      memberCount: 1, // OJO Valor placeholder ya que la API no lo devuelve aquí
+      memberCount: 1, // Placeholder
       createdAt: DateTime.tryParse(data['joinedAt'] ?? '') ?? DateTime.now(),
     );
   }
@@ -146,7 +150,6 @@ class GroupDatasourceImpl implements GroupDatasource {
         'availableFrom': from.toIso8601String(),
         'availableUntil': until.toIso8601String(),
       },
-      options: _getOptions(userId),
     );
   }
 
@@ -155,11 +158,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     String userId,
     String groupId,
   ) async {
-    final response = await dio.get(
-      '/groups/$groupId/quizzes',
-      options: _getOptions(userId),
-    );
-    // Importante: La API devuelve { "data": [...] } según el Endpoint 10
+    final response = await dio.get('/groups/$groupId/quizzes');
     final dataList = response.data['data'] as List;
     return dataList.map((e) => AssignedQuiz.fromJson(e)).toList();
   }
@@ -169,10 +168,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     String userId,
     String groupId,
   ) async {
-    final response = await dio.get(
-      '/groups/$groupId/leaderboard',
-      options: _getOptions(userId),
-    );
+    final response = await dio.get('/groups/$groupId/leaderboard');
     return (response.data as List)
         .map((e) => LeaderboardEntry.fromJson(e))
         .toList();
@@ -186,7 +182,6 @@ class GroupDatasourceImpl implements GroupDatasource {
   ) async {
     final response = await dio.get(
       '/groups/$groupId/quizzes/$quizId/leaderboard',
-      options: _getOptions(userId),
     );
     // Endpoint 12 devuelve { "topPlayers": [...] }
     final players = response.data['topPlayers'] as List;

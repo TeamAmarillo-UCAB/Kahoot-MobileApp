@@ -34,8 +34,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
-  //final String _currentUserId = 'f99e03b5-b87a-47fb-a966-34d03b6d63f4';
+  //final String _currentUserId = "7abc6fed-665e-463d-b54d-8d78c1397e6f";
+  final String _currentUserId = 'a25c1189-d3c0-4990-8e30-e5f5603c202c';
 
   // Variables para el Deep Linking
   late AppLinks _appLinks;
