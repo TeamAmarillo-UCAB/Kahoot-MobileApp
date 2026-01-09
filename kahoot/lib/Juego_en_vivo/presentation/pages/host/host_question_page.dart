@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
+import '../../bloc/live_game_event.dart'; // Importante para NextPhase
 import '../../bloc/live_game_state.dart';
 import '../../widgets/live_timer_widget.dart';
 
@@ -21,11 +22,12 @@ class HostQuestionView extends StatelessWidget {
           body: SafeArea(
             child: Column(
               children: [
-                // 1) TIMER ARRIBA (Reutilizando tu widget)
+                // 1) TIMER ARRIBA
                 LiveTimerWidget(
                   timeLimitSeconds: slide?.timeLimit ?? 30,
                   onTimerFinished: () {
-                    // Opcional: El host podría recibir una alerta visual aquí
+                    // Cuando el tiempo acaba, saltamos a resultados automáticamente
+                    context.read<LiveGameBloc>().add(NextPhase());
                   },
                 ),
 
@@ -71,7 +73,7 @@ class HostQuestionView extends StatelessWidget {
                     ),
                   ),
 
-                // 3) GRID DE OPCIONES (Visual para el Host)
+                // 3) GRID DE OPCIONES
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
@@ -80,8 +82,7 @@ class HostQuestionView extends StatelessWidget {
                           crossAxisCount: 2,
                           crossAxisSpacing: 15,
                           mainAxisSpacing: 15,
-                          childAspectRatio:
-                              1.5, // Un poco más achatado para el Host
+                          childAspectRatio: 1.5,
                         ),
                     itemCount: options.length,
                     itemBuilder: (context, index) {
@@ -107,13 +108,13 @@ class HostQuestionView extends StatelessWidget {
                   ),
                 ),
 
-                // 4) BOTÓN SIGUIENTE (Exclusivo del Anfitrión)
+                // BOTÓN SIGUIENTE
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: ElevatedButton(
                     onPressed: () {
-                      // Aquí llamarías al evento para pasar a la siguiente fase (resultados/podio)
-                      // context.read<LiveGameBloc>().add(NextPhase());
+                      // Se añade el evento para forzar el paso a resultados
+                      context.read<LiveGameBloc>().add(NextPhase());
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -124,7 +125,7 @@ class HostQuestionView extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      "SIGUIENTE",
+                      "SIGUIENTE PREGUNTA",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

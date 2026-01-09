@@ -5,6 +5,8 @@ class LiveGameState {
   final LiveSlide? currentSlide;
   final List<dynamic>? players;
   final List<dynamic>? leaderboard;
+  final Map<String, dynamic>? stats;
+  final Map<String, dynamic>? progress;
   final bool? lastWasCorrect;
   final int? lastPointsEarned;
   final int? totalScore;
@@ -22,6 +24,8 @@ class LiveGameState {
     this.currentSlide,
     this.players,
     this.leaderboard,
+    this.stats,
+    this.progress,
     this.lastWasCorrect,
     this.lastPointsEarned,
     this.totalScore,
@@ -43,6 +47,8 @@ class LiveGameState {
           : null,
       players: json['players'],
       leaderboard: json['leaderboard'],
+      stats: json['stats'],
+      progress: json['progress'],
       lastWasCorrect: json['isCorrect'],
       lastPointsEarned: json['pointsEarned'],
       totalScore: json['totalScore'] ?? json['score'],

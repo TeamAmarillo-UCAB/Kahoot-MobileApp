@@ -39,7 +39,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     on<OnGameStateReceived>(_onGameStateUpdate);
     on<SubmitAnswer>(_onSubmitAnswer);
     on<ScanQrCode>(_onScanQr);
-    on<StartGame>(_onStartGame); // NUEVO EVENTO PARA EL HOST
+    on<StartGame>(_onStartGame);
+    on<NextPhase>(_onNextPhase);
   }
 
   // Manejador para que el Host inicie el juego
@@ -211,5 +212,11 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
         ),
       );
     }
+  }
+
+  void _onNextPhase(NextPhase event, Emitter<LiveGameBlocState> emit) {
+    print('[BLOC] Solicitando siguiente fase al servidor...');
+    // Asumiendo que nextGamePhaseUc es de tipo void call()
+    nextGamePhaseUc.call();
   }
 }

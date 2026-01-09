@@ -7,6 +7,7 @@ import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
 import 'host_question_page.dart';
+import 'host_results_page.dart';
 
 class HostLobbyView extends StatefulWidget {
   final String kahootId;
@@ -53,11 +54,13 @@ class _HostLobbyViewState extends State<HostLobbyView> {
         backgroundColor: const Color(0xFF46178F),
         body: BlocBuilder<LiveGameBloc, LiveGameBlocState>(
           builder: (context, state) {
-            // TRANSICIÓN: Si el estado cambia a question, mostramos la vista de la pregunta
+            // TRANSICIÓN: Si el estado cambia a question, muestra la vista de la pregunta
             if (state.status == LiveGameStatus.question) {
               return const HostQuestionView();
             }
-
+            if (state.status == LiveGameStatus.results) {
+              return const HostResultsView();
+            }
             if (state.status == LiveGameStatus.loading || state.pin == null) {
               return const Center(
                 child: CircularProgressIndicator(color: Colors.white),
