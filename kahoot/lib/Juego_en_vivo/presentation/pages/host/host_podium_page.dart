@@ -11,10 +11,6 @@ class HostPodiumView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
-        // SOLUCIÓN AL ERROR:
-        // 1. Usamos ?? [] para que si todo falla, sea una lista vacía y no de crash.
-        // 2. Intentamos sacar los datos de 'podiumData' (fase final).
-        // 3. Si no hay nada, buscamos en 'leaderboard' (fase de salto desde resultados).
         final List winners =
             state.gameData?.podiumData ?? state.gameData?.leaderboard ?? [];
 
@@ -36,16 +32,21 @@ class HostPodiumView extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
 
-                // Lista de ganadores (Top 3)
+                // Lista de ganadores (Top 3) con números
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Column(
-                    // Agregamos una verificación extra para no intentar hacer .take si la lista es nula
-                    children: winners.take(3).map((player) {
-                      // Usamos dynamic o Map para acceder a las keys de forma segura
+                    children: winners.take(3).toList().asMap().entries.map((
+                      entry,
+                    ) {
+                      final int index = entry.key; // El índice empieza en 0
+                      final dynamic player = entry.value;
+
                       final name =
                           player['nickname'] ?? player['name'] ?? 'Jugador';
                       final score = player['score'] ?? 0;
+                      final position =
+                          index + 1; // Sumamos 1 para que sea 1, 2, 3
 
                       return Card(
                         color: Colors.white.withOpacity(0.1),
@@ -55,7 +56,19 @@ class HostPodiumView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: ListTile(
-                          leading: const Icon(Icons.stars, color: Colors.amber),
+                          // REEMPLAZO: Círculo con el número de posición
+                          leading: CircleAvatar(
+                            backgroundColor: _getPositionColor(position),
+                            radius: 15,
+                            child: Text(
+                              '$position',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                           title: Text(
                             name,
                             style: const TextStyle(
@@ -82,9 +95,7 @@ class HostPodiumView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: ElevatedButton(
                     onPressed: () {
-                      // Al presionar aquí, el Bloc enviará el último next_phase al servidor
                       context.read<LiveGameBloc>().add(NextPhase());
-                      // Y cerramos la pantalla volviendo al inicio
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     style: ElevatedButton.styleFrom(
@@ -110,5 +121,19 @@ class HostPodiumView extends StatelessWidget {
         );
       },
     );
+  }
+
+  // Función auxiliar para dar colores de medalla (Opcional)
+  Color _getPositionColor(int position) {
+    switch (position) {
+      case 1:
+        return const Color(0xFFFFD700); // Oro
+      case 2:
+        return const Color(0xFFC0C0C0); // Plata
+      case 3:
+        return const Color(0xFFCD7F32); // Bronce
+      default:
+        return Colors.white24;
+    }
   }
 }
