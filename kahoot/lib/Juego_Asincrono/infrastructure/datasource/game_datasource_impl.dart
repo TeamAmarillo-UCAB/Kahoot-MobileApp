@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../domain/datasource/game_datasource.dart';
 import '../../domain/entities/attempt.dart';
 import '../../domain/entities/game_summary.dart';
+import '../../../core/auth_state.dart';
 
 class GameDatasourceImpl implements GameDatasource {
   final Dio dio;
@@ -19,13 +20,15 @@ class GameDatasourceImpl implements GameDatasource {
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          const String jwtToken =
+          final token = AuthState.token.value;
+          /*const String jwtToken =
               // JWT HARDCODEADO CAMBIARRRRRRRR
               "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDIwMTAxLCJleHAiOjE3NjgwMjczMDF9.AEIywEWaRYQDvso5lzOgGp-2oMMXAVgs65vhK3YIQ90";
-
+          */
           // Inyección de userId como header
-          options.headers['Authorization'] = 'Bearer $jwtToken';
-
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           return handler.next(options);
         },
         onError: (DioException e, handler) {
