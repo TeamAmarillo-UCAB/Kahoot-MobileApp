@@ -7,6 +7,9 @@ import '../../../../core/auth_state.dart';
 import '../create/create_kahoot_page.dart';
 import '../../../../biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import '../../../../Juego_en_vivo/presentation/pages/common/join_game_page.dart';
+import 'dart:async';
+import 'package:app_links/app_links.dart';
+import '../../../../Grupos/presentation/pages/my_groups_page.dart';
 
 class HomePage extends StatefulWidget {
   final bool showFooter;
@@ -25,6 +28,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   static const Color textGold = Color(0xFFD9B36F);
   static const Color iconYellow = Color(0xFFC28B1A); // iconos amarillo oscuro
 
+  //Para deepLinking:
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -36,13 +43,50 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    _initDeepLinkListener();
   }
 
   @override
   void dispose() {
     _catCtrl.dispose();
     _arrowCtrl.dispose();
+    _linkSubscription?.cancel();
     super.dispose();
+  }
+
+  void _initDeepLinkListener() {
+    _appLinks = AppLinks();
+
+    // Escuchar links
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (Uri? uri) {
+        if (uri != null) {
+          _handleDeepLink(uri);
+        }
+      },
+      onError: (err) {
+        debugPrint("Error en deep link: $err");
+      },
+    );
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // Verificar el path configurado en AndroidManifest (/groups/join)
+    if (uri.path.contains('/groups/join')) {
+      final String? token = uri.queryParameters['token'];
+
+      if (token != null) {
+        debugPrint("Token recibido: $token - Navegando a Grupos...");
+        // Navegar pasando el token
+        _navigateToGroups(context, token: token);
+      }
+    }
+  }
+
+  void _navigateToGroups(BuildContext context, {String? token}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MyGroupsPage(invitationToken: token)),
+    );
   }
 
   @override

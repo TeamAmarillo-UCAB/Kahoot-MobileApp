@@ -23,7 +23,7 @@ class GroupDatasourceImpl implements GroupDatasource {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           const String jwtToken = //HARDCODEADOOOOOOOO
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDAxOTg3LCJleHAiOjE3NjgwMDkxODd9.XKlHgj81-ZP0FH6qANSELlzX6VUaBhLFEwzXrfIURj4";
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI0MDM5LCJleHAiOjE3NjgwMzEyMzl9._3Ks0CS4afQo0pJ1wHTjNLfk1m-A_rjH_OIXLxYG-u8";
 
           // Inyección del Token Bearer
           options.headers['Authorization'] = 'Bearer $jwtToken';
