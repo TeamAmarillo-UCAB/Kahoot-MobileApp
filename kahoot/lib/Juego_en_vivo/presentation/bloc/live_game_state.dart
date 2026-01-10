@@ -10,6 +10,7 @@ enum LiveGameStatus {
   waitingResults,
   results,
   end,
+  hostDisconnected,
   error,
 }
 

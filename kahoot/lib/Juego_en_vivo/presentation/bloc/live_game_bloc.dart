@@ -172,10 +172,27 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       case 'RESULTS':
         newStatus = LiveGameStatus.results;
         break;
-      case 'PODIUM':
       case 'END':
         newStatus = LiveGameStatus.end;
         break;
+      case 'HOST_DISCONNECTED':
+        newStatus = LiveGameStatus.hostDisconnected;
+        break;
+    }
+
+    bool incomingHasNoPoints =
+        (gameData.totalScore == null || gameData.totalScore == 0);
+    bool weHavePoints =
+        (state.gameData != null && (state.gameData!.totalScore ?? 0) > 0);
+
+    if ((newStatus == LiveGameStatus.hostDisconnected ||
+            newStatus == LiveGameStatus.end) &&
+        incomingHasNoPoints &&
+        weHavePoints) {
+      print('[BLOC] Bloqueando reset de puntos. Manteniendo datos previos.');
+
+      emit(state.copyWith(status: newStatus));
+      return;
     }
 
     emit(state.copyWith(status: newStatus, gameData: gameData));

@@ -102,6 +102,8 @@ class LiveGameRepositoryImpl implements LiveGameRepository {
           serverState == 'end' ||
           event == 'game_over') {
         phase = 'END';
+      } else if (event == 'host_left_session' || event == 'session_closed') {
+        phase = 'HOST_DISCONNECTED';
       }
 
       if (phase == 'UNKNOWN') {
