@@ -77,7 +77,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       pin: event.pin,
       role: 'PLAYER',
       nickname: '',
-      jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
+      jwt:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDE1NjMzLCJleHAiOjE3NjgwMjI4MzN9.WOY8ZYWtoX_XeNPfDiQvL3DoVSJeFh46qmw3Fky4Oik",
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
