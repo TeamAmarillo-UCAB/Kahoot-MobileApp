@@ -121,7 +121,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
           pin: sessionPin,
           role: 'HOST',
           nickname: 'Host',
-          jwt: "7abc6fed-665e-463d-b54d-8d78c1397e6f",
+          jwt:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDE1Mjg5LCJleHAiOjE3NjgwMjI0ODl9.WnnDmzWHrTDc-LnAv0DaLX6OIUC4RbPVQi5DoAoM-SM",
         );
 
         await Future.delayed(const Duration(milliseconds: 500));
