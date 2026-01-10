@@ -19,4 +19,28 @@ class LibraryKahootRepositoryImpl implements KahootRepository {
 			return Result.makeError(Exception(e));
 		}
 	}
+
+	@override
+	Future<Result<void>> addKahootToFavorites(String kahootId) async {
+		try {
+			await datasource.addKahootToFavorites(kahootId);
+			return Result.success(null);
+		} catch (e, st) {
+			print('Error addKahootToFavorites($kahootId): ' + e.toString());
+			print('Stack: ' + st.toString());
+			return Result.makeError(Exception(e));
+		}
+	}
+
+	@override
+	Future<Result<void>> removeKahootFromFavorites(String kahootId) async {
+		try {
+			await datasource.removeKahootFromFavorites(kahootId);
+			return Result.success(null);
+		} catch (e, st) {
+			print('Error removeKahootFromFavorites($kahootId): ' + e.toString());
+			print('Stack: ' + st.toString());
+			return Result.makeError(Exception(e));
+		}
+	}
 }

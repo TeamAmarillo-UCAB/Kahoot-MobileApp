@@ -49,4 +49,35 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
 		}
 		return const <Kahoot>[];
 	}
+
+  @override
+  Future<void> addKahootToFavorites(String kahootId) async {
+		final token = AuthState.token.value;
+		final headers = {'Content-Type': 'application/json'};
+		if (token != null && token.isNotEmpty) {
+			headers['Authorization'] = 'Bearer ' + token;
+		}
+		final String path = '/library/' + kahootId;
+		final res = await dio.post(
+			path,
+			options: Options(headers: headers),
+		);
+		// Optional logging
+		print('POST ' + path + ' -> ' + (res.statusCode?.toString() ?? '')); 
+  }
+
+	@override
+	Future<void> removeKahootFromFavorites(String kahootId) async {
+		final token = AuthState.token.value;
+		final headers = {'Content-Type': 'application/json'};
+		if (token != null && token.isNotEmpty) {
+			headers['Authorization'] = 'Bearer ' + token;
+		}
+		final String path = '/library/' + kahootId;
+		final res = await dio.delete(
+			path,
+			options: Options(headers: headers),
+		);
+		print('DELETE ' + path + ' -> ' + (res.statusCode?.toString() ?? ''));
+	}
 }

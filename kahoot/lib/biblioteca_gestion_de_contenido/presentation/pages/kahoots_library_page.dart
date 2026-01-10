@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import 'kahoots_library_details_page.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
+import '../blocs/favorites_cubit.dart';
 
 class KahootsLibraryPage extends StatelessWidget {
   final List<Kahoot> items;
@@ -100,9 +102,22 @@ class _KahootCard extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              top: -3,
+              top: -2,
               right: 6,
-              child: const Icon(Icons.star_border, color: Color(0xFF3A240C), size: 22),
+              child: BlocBuilder<FavoritesCubit, FavoritesState>(
+                builder: (context, favState) {
+                  final isFav = favState.favorites.contains(item.kahootId);
+                  final busy = favState.loading.contains(item.kahootId);
+                  return GestureDetector(
+                    onTap: busy ? null : () => context.read<FavoritesCubit>().toggle(item.kahootId),
+                    child: Icon(
+                      isFav ? Icons.star : Icons.star_border,
+                      color: isFav ? Colors.black : const Color(0xFF3A240C),
+                      size: 22,
+                    ),
+                  );
+                },
+              ),
             ),
             Positioned(
               top: -2,

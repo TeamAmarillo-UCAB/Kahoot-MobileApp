@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../infrastructure/datasource/library_kahoot_datasource_impl.dart';
 import '../../infrastructure/repository/library_kahoot_repository_impl.dart';
 import '../../presentation/blocs/library_list_cubit.dart';
+import '../../presentation/blocs/favorites_cubit.dart';
 import 'kahoots_library_page.dart';
 import '../../../main.dart';
 
@@ -17,6 +18,7 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
   late final LibraryKahootDatasourceImpl _ds;
   late final LibraryKahootRepositoryImpl _repo;
   late final LibraryListCubit _cubit;
+  late final FavoritesCubit _favoritesCubit;
 
   @override
   void initState() {
@@ -26,18 +28,23 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
     print('[LIBRARY LOADER] apiBaseUrl usado: ' + _ds.dio.options.baseUrl);
     _repo = LibraryKahootRepositoryImpl(datasource: _ds);
     _cubit = LibraryListCubit(repository: _repo)..load();
+    _favoritesCubit = FavoritesCubit(repository: _repo);
   }
 
   @override
   void dispose() {
     _cubit.close();
+    _favoritesCubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cubit),
+        BlocProvider.value(value: _favoritesCubit),
+      ],
       child: Scaffold(
         backgroundColor: const Color(0xFF3A240C),
         body: SafeArea(
