@@ -160,16 +160,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final gameData = event.gameState;
-
-    if ((gameData.totalScore == null || gameData.totalScore == 0) &&
-        (state.gameData != null && (state.gameData!.totalScore ?? 0) > 0)) {
-      print('[BLOC] Bloqueando actualización de puntos a cero por desconexión');
-
-      // Solo actualizamos el status a END para que el jugador sepa que terminó,
-      // pero mantenemos el gameData que ya teníamos.
-      emit(state.copyWith(status: LiveGameStatus.end));
-      return; // Detenemos la función aquí
-    }
     LiveGameStatus newStatus = state.status;
 
     switch (gameData.phase.toUpperCase()) {
