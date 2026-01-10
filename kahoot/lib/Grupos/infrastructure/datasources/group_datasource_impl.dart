@@ -6,6 +6,7 @@ import '../../domain/entities/group_member.dart';
 import '../../domain/entities/group_invitation.dart';
 import '../../domain/entities/assigned_quiz.dart';
 import '../../domain/entities/leaderboard_entry.dart';
+import '../../../core/auth_state.dart';
 
 class GroupDatasourceImpl implements GroupDatasource {
   final Dio dio;
@@ -22,12 +23,14 @@ class GroupDatasourceImpl implements GroupDatasource {
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          const String jwtToken = //HARDCODEADOOOOOOOO
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI0MDM5LCJleHAiOjE3NjgwMzEyMzl9._3Ks0CS4afQo0pJ1wHTjNLfk1m-A_rjH_OIXLxYG-u8";
+          final token = AuthState.token.value;
+          //const String jwtToken = //HARDCODEADOOOOOOOO
+          //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI0MDM5LCJleHAiOjE3NjgwMzEyMzl9._3Ks0CS4afQo0pJ1wHTjNLfk1m-A_rjH_OIXLxYG-u8";
 
           // Inyección del Token Bearer
-          options.headers['Authorization'] = 'Bearer $jwtToken';
-
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           return handler.next(options);
         },
         onError: (DioException e, handler) {
