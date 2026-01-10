@@ -48,14 +48,14 @@ class Kahoot {
 
   factory Kahoot.fromJson(Map<String, dynamic> json) {
     return Kahoot(
-      kahootId: json['kahootId'] as String,
-      authorId: json['authorId'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
+      kahootId: json['kahootId'] as String? ?? '',
+      authorId: json['authorId'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       image: json['image'] as String? ?? '',
       theme: json['theme'] as String? ?? '',
-      visibility: KahootVisibilityX.fromString(json['visibility'] as String),
-      question: Question.fromJsonList(json['questions'] as List<dynamic>),
+      visibility: KahootVisibilityX.fromString(json['visibility'] as String? ?? ''),
+      question: Question.fromJsonList(json['questions'] as List<dynamic>? ?? const []),
     );
   }
 

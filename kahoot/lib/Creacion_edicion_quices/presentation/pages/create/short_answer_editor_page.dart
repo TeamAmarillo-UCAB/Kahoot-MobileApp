@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
+import '../../../../core/widgets/gradient_button.dart';
 // Dependencias eliminadas, vista solo UI
 
 class ShortAnswerEditorPage extends StatefulWidget {
   final int? index; // null => new
-  const ShortAnswerEditorPage({Key? key, this.index}) : super(key: key);
+  final String? initialTitle;
+  final String? initialCorrect;
+  final List<String>? initialOthers;
+  final int? initialTime;
+  const ShortAnswerEditorPage({Key? key, this.index, this.initialTitle, this.initialCorrect, this.initialOthers, this.initialTime}) : super(key: key);
 
   @override
   State<ShortAnswerEditorPage> createState() => _ShortAnswerEditorPageState();
@@ -21,7 +27,16 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
   @override
   void initState() {
     super.initState();
-    // Solo UI, sin lógica de persistencia
+    if (widget.initialTitle != null) questionController.text = widget.initialTitle!;
+    if (widget.initialCorrect != null) correctController.text = widget.initialCorrect!;
+    if (widget.initialTime != null) selectedTime = widget.initialTime!;
+    final others = widget.initialOthers ?? const <String>[];
+    if (others.isNotEmpty) {
+      showExtra = true;
+      for (final t in others) {
+        extraControllers.add(TextEditingController(text: t));
+      }
+    }
   }
 
   void _openTimeMenu() {
@@ -119,7 +134,7 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF222222),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFD54F),
+        backgroundColor: const Color(0xFFF2C147),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.brown),
@@ -132,16 +147,9 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB300),
-                foregroundColor: Colors.brown,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: _save,
-              child: const Text('Listo'),
+            child: GradientButton(
+              onTap: _save,
+              child: const Text('Listo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -197,17 +205,36 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.all(12),
-                child: TextField(
-                  controller: correctController,
-                  decoration: const InputDecoration(
-                    hintText: 'Pulsa para escribir la respuesta correcta',
-                    hintStyle: TextStyle(color: Colors.white),
-                    border: InputBorder.none,
-                  ),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: correctController,
+                        decoration: const InputDecoration(
+                          hintText: 'Pulsa para escribir la respuesta correcta',
+                          hintStyle: TextStyle(color: Colors.white),
+                          border: InputBorder.none,
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Subir imagen',
+                      icon: const Icon(Icons.image, color: Colors.white),
+                      onPressed: () async {
+                        final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
+                        final name = res?.files.first.name;
+                        if (name != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Imagen seleccionada: $name')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -239,14 +266,33 @@ class _ShortAnswerEditorPageState extends State<ShortAnswerEditorPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.all(12),
-                        child: TextField(
-                          controller: c,
-                          decoration: const InputDecoration(
-                            hintText: 'Respuesta aceptada',
-                            hintStyle: TextStyle(color: Colors.white70),
-                            border: InputBorder.none,
-                          ),
-                          style: const TextStyle(color: Colors.white),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: c,
+                                decoration: const InputDecoration(
+                                  hintText: 'Respuesta aceptada',
+                                  hintStyle: TextStyle(color: Colors.white70),
+                                  border: InputBorder.none,
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Subir imagen',
+                              icon: const Icon(Icons.image, color: Colors.white),
+                              onPressed: () async {
+                                final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
+                                final name = res?.files.first.name;
+                                if (name != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Imagen seleccionada: $name')),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     ),

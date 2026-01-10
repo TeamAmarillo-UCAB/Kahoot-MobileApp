@@ -3,7 +3,7 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
-import '../../core/result.dart';
+import '../../../core/result.dart';
 
 
 class KahootRepositoryImpl implements KahootRepository{
@@ -12,9 +12,9 @@ class KahootRepositoryImpl implements KahootRepository{
   KahootRepositoryImpl({required this.datasource});
 
   @override
-  Future<Result<void>> createKahoot(String kahootId, String authorId, String title, String description, String image, String visibility, String theme, List<Question> question, List<Answer> answer) async {
+  Future<Result<void>> createKahoot(String kahootId, String authorId, String title, String description, String image, String visibility, String status, String theme, List<Question> question, List<Answer> answer) async {
     try {
-      await datasource.createKahoot(kahootId, authorId, title, description, image, visibility, theme, question, answer);
+      await datasource.createKahoot(kahootId, authorId, title, description, image, visibility, status, theme, question, answer);
       return Result.voidSuccess();
     } catch (e, stackTrace) {
       print("Error creating kahoot: $e");
