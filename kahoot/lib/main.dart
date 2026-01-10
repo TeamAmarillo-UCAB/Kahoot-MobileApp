@@ -5,10 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
 
-const String apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api',
-); //back 1
+const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api'); //back 1
 // const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backcomun-gc5j.onrender.com'); //back comun
 void main() {
   runApp(const MyApp());
@@ -57,7 +54,10 @@ class _MainShellState extends State<MainShell> {
       BibliotecaPage(), // 3
     ];
 
-    final body = IndexedStack(index: _index, children: pages);
+    final body = IndexedStack(
+      index: _index,
+      children: pages,
+    );
 
     return Scaffold(
       backgroundColor: bgBrown,
@@ -137,22 +137,13 @@ class _BottomNavItemState extends State<_BottomNavItem> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.selected
-        ? Colors.brown
-        : _MainShellState.iconDarkYellow;
+    final color = widget.selected ? Colors.brown : _MainShellState.iconDarkYellow;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(widget.icon, color: color, size: widget.iconSize),
         const SizedBox(height: 2),
-        Text(
-          widget.label,
-          style: TextStyle(
-            color: color,
-            fontWeight: widget.selected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
-          ),
-        ),
+        Text(widget.label, style: TextStyle(color: color, fontWeight: widget.selected ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
       ],
     );
     final child = Transform.translate(

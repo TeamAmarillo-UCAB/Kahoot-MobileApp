@@ -165,6 +165,7 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
         state.description,
         state.coverImageId,
         state.visibility,
+        'draft',
         state.themeId,
         state.questions,
         const <Answer>[],

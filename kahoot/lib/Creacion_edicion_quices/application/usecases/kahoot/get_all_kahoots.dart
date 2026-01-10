@@ -1,4 +1,4 @@
-import '../../../core/result.dart';
+import '../../../../core/result.dart';
 import'../../../domain/repositories/kahoot_repository.dart';
 import '../../../domain/entities/kahoot.dart';
 

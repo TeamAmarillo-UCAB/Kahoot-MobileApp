@@ -27,14 +27,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _catCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _arrowCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    _catCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _arrowCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
   }
 
   @override
@@ -93,11 +87,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: CircleAvatar(
                 backgroundColor: Colors.brown.shade200,
                 radius: 22,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.brown.shade800,
-                  size: 26,
-                ),
+                child: Icon(Icons.person, color: Colors.brown.shade800, size: 26),
               ),
             ),
             const SizedBox(width: 10),
@@ -127,6 +117,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+
+
+
+
   Widget _buildBody() {
     return Stack(
       children: [
@@ -139,10 +133,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 animation: _catCtrl,
                 builder: (context, child) {
                   final dy = math.sin(_catCtrl.value * math.pi * 2) * 6;
-                  return Transform.translate(
-                    offset: Offset(0, dy),
-                    child: child,
-                  );
+                  return Transform.translate(offset: Offset(0, dy), child: child);
                 },
                 child: _SafeAsset(
                   path: 'assets/cat_kahoot.png',
@@ -153,21 +144,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               const SizedBox(height: 16),
               const Text(
                 '¡Hola!',
-                style: TextStyle(
-                  color: headerYellow,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(color: headerYellow, fontSize: 34, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 10),
               const Text(
                 'Unete a un Kahoot\no crealo tu mismo',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: textGold,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: textGold, fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -189,22 +172,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          const _BottomNavItem(
-            icon: Icons.home,
-            label: 'Inicio',
-            selected: true,
-            iconSize: 28,
-          ),
-          const _BottomNavItem(
-            icon: Icons.search,
-            label: 'Descubre',
-            iconSize: 28,
-          ),
-          const _BottomNavItem(
-            icon: Icons.group_add_outlined,
-            label: 'Unirse',
-            iconSize: 28,
-          ),
+          const _BottomNavItem(icon: Icons.home, label: 'Inicio', selected: true, iconSize: 28),
+          const _BottomNavItem(icon: Icons.search, label: 'Descubre', iconSize: 28),
+          const _BottomNavItem(icon: Icons.group_add_outlined, label: 'Unirse', iconSize: 28),
           _BottomNavItem(
             icon: Icons.add_box,
             label: 'Crear',
@@ -253,21 +223,11 @@ class _BottomNavItem extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: iconSize),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
-          ),
-        ),
+        Text(label, style: TextStyle(color: color, fontWeight: selected ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
       ],
     );
     return onTap != null
-        ? InkWell(
-            onTap: onTap,
-            child: Padding(padding: const EdgeInsets.all(4), child: widget),
-          )
+        ? InkWell(onTap: onTap, child: Padding(padding: const EdgeInsets.all(4), child: widget))
         : widget;
   }
 }
@@ -280,11 +240,7 @@ class _SafeAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      path,
-      height: height,
-      errorBuilder: (context, error, stack) => fallback,
-    );
+    return Image.asset(path, height: height, errorBuilder: (context, error, stack) => fallback);
   }
 }
 
@@ -296,11 +252,7 @@ class _LogoTitle extends StatelessWidget {
       height: 28,
       errorBuilder: (context, error, stack) => const Text(
         'Kahoot!',
-        style: TextStyle(
-          color: Colors.brown,
-          fontWeight: FontWeight.w900,
-          fontSize: 22,
-        ),
+        style: TextStyle(color: Colors.brown, fontWeight: FontWeight.w900, fontSize: 22),
       ),
     );
   }
@@ -315,17 +267,13 @@ class _AnimatedShapes extends StatefulWidget {
   State<_AnimatedShapes> createState() => _AnimatedShapesState();
 }
 
-class _AnimatedShapesState extends State<_AnimatedShapes>
-    with SingleTickerProviderStateMixin {
+class _AnimatedShapesState extends State<_AnimatedShapes> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
   }
 
   @override
@@ -375,11 +323,7 @@ class _PathArrowPainter extends CustomPainter {
   final double t;
   final Color pathColor;
   final Color headColor;
-  _PathArrowPainter({
-    required this.t,
-    required this.pathColor,
-    required this.headColor,
-  });
+  _PathArrowPainter({required this.t, required this.pathColor, required this.headColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -428,18 +372,8 @@ class _PathArrowPainter extends CustomPainter {
     final a = angle;
     final p0 = pos;
     final p1 = p0 + Offset(-length * math.cos(a), -length * math.sin(a));
-    final left =
-        p0 +
-        Offset(
-          -length * 0.6 * math.cos(a) + width * math.sin(a),
-          -length * 0.6 * math.sin(a) - width * math.cos(a),
-        );
-    final right =
-        p0 +
-        Offset(
-          -length * 0.6 * math.cos(a) - width * math.sin(a),
-          -length * 0.6 * math.sin(a) + width * math.cos(a),
-        );
+    final left = p0 + Offset(-length * 0.6 * math.cos(a) + width * math.sin(a), -length * 0.6 * math.sin(a) - width * math.cos(a));
+    final right = p0 + Offset(-length * 0.6 * math.cos(a) - width * math.sin(a), -length * 0.6 * math.sin(a) + width * math.cos(a));
     final path = Path()
       ..moveTo(p0.dx, p0.dy)
       ..lineTo(left.dx, left.dy)
@@ -454,9 +388,7 @@ class _PathArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PathArrowPainter oldDelegate) {
-    return oldDelegate.t != t ||
-        oldDelegate.pathColor != pathColor ||
-        oldDelegate.headColor != headColor;
+    return oldDelegate.t != t || oldDelegate.pathColor != pathColor || oldDelegate.headColor != headColor;
   }
 }
 
@@ -473,8 +405,6 @@ class _TrianglePainter extends CustomPainter {
       ..close();
     canvas.drawPath(path, paint);
   }
-
   @override
-  bool shouldRepaint(covariant _TrianglePainter oldDelegate) =>
-      oldDelegate.color != color;
+  bool shouldRepaint(covariant _TrianglePainter oldDelegate) => oldDelegate.color != color;
 }
