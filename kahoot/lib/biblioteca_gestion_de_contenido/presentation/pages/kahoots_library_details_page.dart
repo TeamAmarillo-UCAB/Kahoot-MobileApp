@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kahoot/Juego_Asincrono/presentation/pages/game_page.dart';
 import 'package:kahoot/Juego_en_vivo/presentation/pages/host/host_lobby_page.dart';
 import '../../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../../core/widgets/gradient_button.dart';
@@ -133,7 +134,11 @@ class LibraryKahootDetailsPage extends StatelessWidget {
                           Radius.circular(14),
                         ),
                         onTap: () {
-                          // TODO: implementar jugar en solitario
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => GamePage(kahootId: item.kahootId),
+                            ),
+                          );
                         },
                         child: const Text(
                           'Jugar solitario',

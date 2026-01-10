@@ -54,6 +54,9 @@ dependencies:
   mobile_scanner: ^7.1.4
   qr_flutter: ^4.1.0
 
+  #Épica 5
+  shared_preferences: ^2.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

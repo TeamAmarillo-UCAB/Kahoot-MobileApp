@@ -21,7 +21,7 @@ class GameDatasourceImpl implements GameDatasource {
         onRequest: (options, handler) {
           const String jwtToken =
               // JWT HARDCODEADO CAMBIARRRRRRRR
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY3OTg1MDE3LCJleHAiOjE3Njc5OTIyMTd9.AMhPYrzGeSZjUSLMGvJtsnQ93cZByLaNQEQU_u-3AGk";
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDIwMTAxLCJleHAiOjE3NjgwMjczMDF9.AEIywEWaRYQDvso5lzOgGp-2oMMXAVgs65vhK3YIQ90";
 
           // Inyección de userId como header
           options.headers['Authorization'] = 'Bearer $jwtToken';
