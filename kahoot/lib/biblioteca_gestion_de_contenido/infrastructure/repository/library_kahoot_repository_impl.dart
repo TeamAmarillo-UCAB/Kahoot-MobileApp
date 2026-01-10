@@ -43,4 +43,16 @@ class LibraryKahootRepositoryImpl implements KahootRepository {
 			return Result.makeError(Exception(e));
 		}
 	}
+
+  @override
+  Future<Result<void>> deleteKahoot(String kahootId) async {
+    try {
+      await datasource.deleteKahoot(kahootId);
+      return Result.success(null);
+    } catch (e, st) {
+      print('Error deleteKahoot($kahootId): ' + e.toString());
+      print('Stack: ' + st.toString());
+      return Result.makeError(Exception(e));
+    }
+  }
 }

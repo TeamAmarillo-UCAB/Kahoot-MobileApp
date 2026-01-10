@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../infrastructure/datasource/library_kahoot_datasource_impl.dart';
 import '../../infrastructure/repository/library_kahoot_repository_impl.dart';
+import '../../application/get_my_khoots_usecase.dart';
+import '../../application/add_kahoot_to_favorite_usecase.dart';
+import '../../application/remove_kahoot_from_favorite_usecase.dart';
+import '../../application/delete_kahoot_usecase.dart';
 import '../../presentation/blocs/library_list_cubit.dart';
 import '../../presentation/blocs/favorites_cubit.dart';
+import '../../presentation/blocs/delete_kahoot_cubit.dart';
 import 'kahoots_library_page.dart';
 import '../../../main.dart';
 
@@ -19,6 +24,7 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
   late final LibraryKahootRepositoryImpl _repo;
   late final LibraryListCubit _cubit;
   late final FavoritesCubit _favoritesCubit;
+  late final DeleteKahootCubit _deleteCubit;
 
   @override
   void initState() {
@@ -27,14 +33,16 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
     _ds.dio.options.baseUrl = apiBaseUrl.trim();
     print('[LIBRARY LOADER] apiBaseUrl usado: ' + _ds.dio.options.baseUrl);
     _repo = LibraryKahootRepositoryImpl(datasource: _ds);
-    _cubit = LibraryListCubit(repository: _repo)..load();
-    _favoritesCubit = FavoritesCubit(repository: _repo);
+    _cubit = LibraryListCubit(getMyKhoots: GetMyKhootsUseCase(repository: _repo))..load();
+    _favoritesCubit = FavoritesCubit(addFavorite: AddKahootToFavoriteUseCase(repository: _repo), removeFavorite: RemoveKahootFromFavoriteUseCase(repository: _repo));
+    _deleteCubit = DeleteKahootCubit(deleteKahoot: DeleteKahootUseCase(repository: _repo));
   }
 
   @override
   void dispose() {
     _cubit.close();
     _favoritesCubit.close();
+    _deleteCubit.close();
     super.dispose();
   }
 
@@ -44,6 +52,7 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
       providers: [
         BlocProvider.value(value: _cubit),
         BlocProvider.value(value: _favoritesCubit),
+        BlocProvider.value(value: _deleteCubit),
       ],
       child: Scaffold(
         backgroundColor: const Color(0xFF3A240C),

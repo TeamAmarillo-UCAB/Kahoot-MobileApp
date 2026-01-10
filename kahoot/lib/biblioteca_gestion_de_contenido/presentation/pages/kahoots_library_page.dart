@@ -5,6 +5,8 @@ import 'kahoots_library_details_page.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
 import '../blocs/favorites_cubit.dart';
+import '../blocs/delete_kahoot_cubit.dart';
+import '../blocs/library_list_cubit.dart';
 
 class KahootsLibraryPage extends StatelessWidget {
   final List<Kahoot> items;
@@ -17,14 +19,24 @@ class KahootsLibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: bgBrown,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _header(context),
-            Expanded(child: _grid(context)),
-          ],
+    return BlocListener<DeleteKahootCubit, DeleteKahootState>(
+      listener: (context, state) {
+        if (state.status == DeleteKahootStatus.deleted) {
+          context.read<LibraryListCubit>().load();
+        } else if (state.status == DeleteKahootStatus.error) {
+          final msg = state.errorMessage ?? 'Error al eliminar';
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgBrown,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _header(context),
+              Expanded(child: _grid(context)),
+            ],
+          ),
         ),
       ),
     );
@@ -125,7 +137,7 @@ class _KahootCard extends StatelessWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () => context.read<DeleteKahootCubit>().removeById(item.kahootId),
                     child: const Icon(Icons.delete, size: 20, color: Color(0xFF3A240C)),
                   ),
                   const SizedBox(width: 6),

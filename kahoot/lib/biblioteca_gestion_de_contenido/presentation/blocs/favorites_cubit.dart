@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/repositories/library_repository.dart';
+import '../../application/add_kahoot_to_favorite_usecase.dart';
+import '../../application/remove_kahoot_from_favorite_usecase.dart';
 import '../../../core/result.dart';
 
 class FavoritesState extends Equatable {
@@ -21,8 +22,9 @@ class FavoritesState extends Equatable {
 }
 
 class FavoritesCubit extends Cubit<FavoritesState> {
-  final KahootRepository repository;
-  FavoritesCubit({required this.repository}) : super(const FavoritesState());
+  final AddKahootToFavoriteUseCase addFavorite;
+  final RemoveKahootFromFavoriteUseCase removeFavorite;
+  FavoritesCubit({required this.addFavorite, required this.removeFavorite}) : super(const FavoritesState());
 
   bool isFavorite(String id) => state.favorites.contains(id);
   bool isBusy(String id) => state.loading.contains(id);
@@ -35,9 +37,9 @@ class FavoritesCubit extends Cubit<FavoritesState> {
     final bool willFav = !state.favorites.contains(id);
     Result<void> result;
     if (willFav) {
-      result = await repository.addKahootToFavorites(id);
+      result = await addFavorite.call(id);
     } else {
-      result = await repository.removeKahootFromFavorites(id);
+      result = await removeFavorite.call(id);
     }
 
     final updatedLoading = Set<String>.from(state.loading)..remove(id);

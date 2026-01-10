@@ -4,4 +4,5 @@ abstract class LibraryDatasource {
   Future<List<Kahoot>> getMyKahoots();
   Future<void> addKahootToFavorites(String kahootId);
   Future<void> removeKahootFromFavorites(String kahootId);
+  Future<void> deleteKahoot(String kahootId);
 }

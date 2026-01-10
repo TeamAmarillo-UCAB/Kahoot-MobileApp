@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
-import '../../domain/repositories/library_repository.dart';
+import '../../application/get_my_khoots_usecase.dart';
 import '../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../../core/result.dart';
 
@@ -33,15 +33,15 @@ class LibraryListState extends Equatable {
 }
 
 class LibraryListCubit extends Cubit<LibraryListState> {
-  final KahootRepository repository;
+  final GetMyKhootsUseCase getMyKhoots;
 
-  LibraryListCubit({required this.repository})
+  LibraryListCubit({required this.getMyKhoots})
       : super(const LibraryListState(status: LibraryListStatus.initial, items: []));
 
   Future<void> load() async {
     emit(state.copyWith(status: LibraryListStatus.loading, errorMessage: null));
     try {
-      final Result<List<Kahoot>> result = await repository.getMyKahoots();
+      final Result<List<Kahoot>> result = await getMyKhoots.call();
       if (result.isSuccessful()) {
         final data = result.getValue();
         emit(state.copyWith(status: LibraryListStatus.loaded, items: data));
