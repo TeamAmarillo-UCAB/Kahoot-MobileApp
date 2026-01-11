@@ -26,8 +26,12 @@ class HostQuestionView extends StatelessWidget {
               children: [
                 LiveTimerWidget(
                   timeLimitSeconds: slide?.timeLimit ?? 30,
-                  onTimerFinished: () {
-                    context.read<LiveGameBloc>().add(NextPhase());
+                  onTimerFinished: () async {
+                    await Future.delayed(const Duration(seconds: 1));
+
+                    if (context.mounted) {
+                      context.read<LiveGameBloc>().add(NextPhase());
+                    }
                   },
                 ),
 
