@@ -134,12 +134,26 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
                         onPressed: isLoading
                             ? null
                             : () {
-                                if (_controller.text.trim().isNotEmpty) {
-                                  _startTimeoutCheck();
-                                  context.read<LiveGameBloc>().add(
-                                    JoinLobby(_controller.text.trim()),
+                                final nickname = _controller.text.trim();
+
+                                if (nickname.length < 4 ||
+                                    nickname.length > 20) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'El apodo debe tener entre 4 y 20 caracteres',
+                                      ),
+                                      backgroundColor: Colors.orangeAccent,
+                                      duration: Duration(seconds: 2),
+                                    ),
                                   );
+                                  return;
                                 }
+
+                                _startTimeoutCheck();
+                                context.read<LiveGameBloc>().add(
+                                  JoinLobby(nickname),
+                                );
                               },
                         child: isLoading
                             ? const CircularProgressIndicator(

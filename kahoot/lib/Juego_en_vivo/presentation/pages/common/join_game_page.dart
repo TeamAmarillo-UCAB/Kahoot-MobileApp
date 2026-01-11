@@ -123,6 +123,7 @@ class _JoinGamePageState extends State<JoinGamePage> {
                 TextField(
                   controller: _pinController,
                   textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     hintText: 'PIN DE JUEGO',
                     filled: true,
