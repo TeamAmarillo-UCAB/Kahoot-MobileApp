@@ -78,6 +78,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       'player_answer_confirmation',
       'host_left_session',
       'session_closed',
+      'host_returned_to_session',
       'game_error',
       'sync_error',
       'host_lobby_update', // Este actualizará tu lista de jugadores

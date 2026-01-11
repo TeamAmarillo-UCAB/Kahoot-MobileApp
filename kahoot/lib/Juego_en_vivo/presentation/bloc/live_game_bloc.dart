@@ -160,42 +160,47 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final gameData = event.gameState;
-    LiveGameStatus newStatus = state.status;
 
-    switch (gameData.phase.toUpperCase()) {
-      case 'LOBBY':
-        newStatus = LiveGameStatus.lobby;
-        break;
-      case 'QUESTION':
-        newStatus = LiveGameStatus.question;
-        break;
-      case 'RESULTS':
-        newStatus = LiveGameStatus.results;
-        break;
-      case 'END':
-        newStatus = LiveGameStatus.end;
-        break;
-      case 'HOST_DISCONNECTED':
-        newStatus = LiveGameStatus.hostDisconnected;
-        break;
-    }
-
-    bool incomingHasNoPoints =
-        (gameData.totalScore == null || gameData.totalScore == 0);
-    bool weHavePoints =
-        (state.gameData != null && (state.gameData!.totalScore ?? 0) > 0);
-
-    if ((newStatus == LiveGameStatus.hostDisconnected ||
-            newStatus == LiveGameStatus.end) &&
-        incomingHasNoPoints &&
-        weHavePoints) {
-      print('[BLOC] Bloqueando reset de puntos. Manteniendo datos previos.');
-
-      emit(state.copyWith(status: newStatus));
+    if (gameData.phase == 'SYNC') {
+      repository.sendClientReady();
+      emit(state.copyWith(status: LiveGameStatus.loading));
       return;
     }
 
-    emit(state.copyWith(status: newStatus, gameData: gameData));
+    LiveGameStatus _mapPhaseToStatus(String phase) {
+      switch (phase.toUpperCase()) {
+        case 'LOBBY':
+          return LiveGameStatus.lobby;
+        case 'QUESTION':
+          return LiveGameStatus.question;
+        case 'RESULTS':
+          return LiveGameStatus.results;
+        case 'WAITING_RESULTS':
+          return LiveGameStatus.waitingResults;
+        case 'END':
+          return LiveGameStatus.end;
+        case 'HOST_DISCONNECTED':
+          return LiveGameStatus.hostDisconnected;
+        default:
+          return state.status;
+      }
+    }
+
+    LiveGameStatus newStatus = _mapPhaseToStatus(gameData.phase);
+
+    final mergedGameData = gameData.copyWith(
+      totalScore: (gameData.totalScore == null || gameData.totalScore == 0)
+          ? state.gameData?.totalScore
+          : gameData.totalScore,
+      rank: (gameData.rank == null || gameData.rank == 0)
+          ? state.gameData?.rank
+          : gameData.rank,
+      streak: (gameData.streak == null || gameData.streak == 0)
+          ? state.gameData?.streak
+          : gameData.streak,
+    );
+
+    emit(state.copyWith(status: newStatus, gameData: mergedGameData));
   }
 
   @override
