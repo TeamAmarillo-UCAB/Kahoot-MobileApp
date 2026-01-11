@@ -186,6 +186,14 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
     LiveGameStatus newStatus = _mapPhaseToStatus(gameData.phase);
 
+    if (state.status == LiveGameStatus.end &&
+        newStatus == LiveGameStatus.hostDisconnected) {
+      print(
+        '[BLOC] Bloqueando transición a HostDisconnected porque estamos en el Podio.',
+      );
+      return;
+    }
+
     final mergedGameData = gameData.copyWith(
       currentSlide: gameData.currentSlide ?? state.gameData?.currentSlide,
 
