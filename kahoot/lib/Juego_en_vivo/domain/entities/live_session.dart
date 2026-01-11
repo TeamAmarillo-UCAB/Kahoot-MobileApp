@@ -16,7 +16,7 @@ class LiveSession {
       sessionPin: json['sessionPin']?.toString() ?? '',
       sessionId: json['sessionId'] ?? '',
       qrToken: json['qrToken'] ?? '',
-      themeUrl: json['theme'] != null ? json['theme']['url'] : null,
+      themeUrl: json['themeUrl'] != null ? json['theme']['url'] : null,
     );
   }
 }
