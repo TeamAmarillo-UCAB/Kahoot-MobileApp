@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
 import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
 import '../../bloc/live_game_bloc.dart';
@@ -93,6 +94,20 @@ class _HostLobbyViewState extends State<HostLobbyView> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (state.session?.qrToken != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: QrImageView(
+                      data: state.session!.qrToken,
+                      version: QrVersions.auto,
+                      size: 180.0,
+                    ),
+                  ),
                 const SizedBox(height: 40),
                 Text(
                   'Jugadores: ${players.length}',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 // Importaciones de infraestructura (según tus indicaciones)
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
@@ -22,6 +23,7 @@ class JoinGamePage extends StatefulWidget {
 class _JoinGamePageState extends State<JoinGamePage> {
   late final LiveGameBloc _bloc;
   final TextEditingController _pinController = TextEditingController();
+  bool _isScanning = false;
 
   @override
   void initState() {
@@ -29,7 +31,7 @@ class _JoinGamePageState extends State<JoinGamePage> {
 
     //Dio
     final dio = Dio(
-      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com'),
+      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
     );
 
     //Infraestructura
@@ -47,6 +49,39 @@ class _JoinGamePageState extends State<JoinGamePage> {
     super.dispose();
   }
 
+  void _showScanner(BuildContext context) {
+    _isScanning = false;
+    final MobileScannerController scannerController = MobileScannerController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: MobileScanner(
+          controller: scannerController,
+          onDetect: (capture) {
+            if (_isScanning) return;
+
+            final List<Barcode> barcodes = capture.barcodes;
+            for (final barcode in barcodes) {
+              if (barcode.rawValue != null) {
+                _isScanning = true;
+                final String code = barcode.rawValue!;
+
+                _bloc.add(ScanQrCode(code));
+
+                scannerController.stop();
+                Navigator.pop(context);
+                break;
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Proveer el bloc
@@ -56,8 +91,15 @@ class _JoinGamePageState extends State<JoinGamePage> {
         backgroundColor: const Color(0xFF46178F),
         body: BlocListener<LiveGameBloc, LiveGameBlocState>(
           listener: (context, state) {
-            // Si el PIN es válido, navega pasando el BLoC existente
-            if (state.pin != null && state.status == LiveGameStatus.initial) {
+            // AUTO-RELLENADO: Si el bloc tiene un pin que no está en el cuadrito, lo pon
+            if (state.pin != null && _pinController.text != state.pin) {
+              _pinController.text = state.pin!;
+            }
+
+            // REDIRECCIÓN: Si el pin ya está y el estado es inicial (o lobby si fue muy rápido)
+            if (state.pin != null &&
+                (state.status == LiveGameStatus.initial ||
+                    state.status == LiveGameStatus.lobby)) {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
@@ -99,6 +141,15 @@ class _JoinGamePageState extends State<JoinGamePage> {
                     }
                   },
                   child: const Text('INGRESAR'),
+                ),
+                const SizedBox(height: 10),
+                TextButton.icon(
+                  onPressed: () => _showScanner(context),
+                  icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  label: const Text(
+                    'ESCANEAR QR',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),

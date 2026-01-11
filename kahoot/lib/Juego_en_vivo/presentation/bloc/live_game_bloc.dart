@@ -226,16 +226,36 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     ScanQrCode event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    emit(state.copyWith(status: LiveGameStatus.loading));
-    final result = await getPinFromQrUc.call(event.qrToken);
-    if (result.isSuccessful()) {
-      final session = result.getValue();
-      add(InitPlayerSession(session['sessionPin'].toString()));
-    } else {
+    emit(state.copyWith(status: LiveGameStatus.loading, errorMessage: null));
+
+    try {
+      final result = await getPinFromQrUc.call(event.qrToken);
+
+      if (result.isSuccessful()) {
+        final session = result.getValue();
+        final String pinObtenido = session['sessionPin'].toString();
+
+        // Primero emite el PIN para que la UI lo vea y lo ponga en el TextField
+        emit(state.copyWith(pin: pinObtenido));
+
+        // Luego dispara la lógica de conexión (que internamente volverá a poner status: loading)
+        add(InitPlayerSession(pinObtenido));
+      } else {
+        // DEBUG: Imprime el error real del servidor para saber si es expiración
+        print("Error al validar QR: ${result.getError()}");
+
+        emit(
+          state.copyWith(
+            status: LiveGameStatus.error,
+            errorMessage: "El QR ha expirado o ya no es válido",
+          ),
+        );
+      }
+    } catch (e) {
       emit(
         state.copyWith(
           status: LiveGameStatus.error,
-          errorMessage: "QR inválido",
+          errorMessage: "Error de conexión al escanear",
         ),
       );
     }
