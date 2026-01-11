@@ -12,11 +12,9 @@ class PlayerLobbyView extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: const Color(0xFF46178F),
-      // Agregar Padding para que el texto no toque los bordes en nombres largos
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        // Asegurar el centrado horizontal de los widgets dentro de la columna
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const CircularProgressIndicator(
@@ -25,8 +23,7 @@ class PlayerLobbyView extends StatelessWidget {
           const SizedBox(height: 40),
           Text(
             '¡Estás dentro, $myNickname!',
-            textAlign:
-                TextAlign.center, // Centra el texto si ocupa varias líneas
+            textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,

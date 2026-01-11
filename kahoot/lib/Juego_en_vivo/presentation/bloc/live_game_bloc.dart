@@ -243,13 +243,10 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
         final session = result.getValue();
         final String pinObtenido = session['sessionPin'].toString();
 
-        // Primero emite el PIN para que la UI lo vea y lo ponga en el TextField
         emit(state.copyWith(pin: pinObtenido));
 
-        // Luego dispara la lógica de conexión (que internamente volverá a poner status: loading)
         add(InitPlayerSession(pinObtenido));
       } else {
-        // DEBUG: Imprime el error real del servidor para saber si es expiración
         print("Error al validar QR: ${result.getError()}");
 
         emit(

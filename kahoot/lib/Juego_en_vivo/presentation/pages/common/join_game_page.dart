@@ -3,11 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-// Importaciones de infraestructura (según tus indicaciones)
 import '../../../infrastructure/repositories/live_game_repository_impl.dart';
 import '../../../infrastructure/datasource/live_game_datasource_impl.dart';
 
-// BLoC y pantallas
 import '../../bloc/live_game_bloc.dart';
 import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
@@ -91,12 +89,10 @@ class _JoinGamePageState extends State<JoinGamePage> {
         backgroundColor: const Color(0xFF46178F),
         body: BlocListener<LiveGameBloc, LiveGameBlocState>(
           listener: (context, state) {
-            // AUTO-RELLENADO: Si el bloc tiene un pin que no está en el cuadrito, lo pon
             if (state.pin != null && _pinController.text != state.pin) {
               _pinController.text = state.pin!;
             }
 
-            // REDIRECCIÓN: Si el pin ya está y el estado es inicial (o lobby si fue muy rápido)
             if (state.pin != null &&
                 (state.status == LiveGameStatus.initial ||
                     state.status == LiveGameStatus.lobby)) {

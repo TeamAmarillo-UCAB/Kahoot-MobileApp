@@ -49,7 +49,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
           .setExtraHeaders({
             'pin': pin,
             'role': role.toUpperCase(), // HOST
-            'jwt': jwt, // El UUID
+            'jwt': jwt, // El JWT
           })
           .setQuery({'pin': pin, 'role': role.toUpperCase(), 'jwt': jwt})
           .enableAutoConnect()
@@ -57,20 +57,20 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     );
 
     _socket!.onConnect((_) {
-      print('[DATASOURCE] ✅ Socket Conectado Exitosamente');
+      print('[DATASOURCE] Socket Conectado Exitosamente');
       // Sincronización inicial
       _socket!.emit('client_ready', {});
     });
 
     _socket!.onConnectError((data) {
-      print('[DATASOURCE] ❌ Error de Conexión: $data');
+      print('[DATASOURCE] Error de Conexión: $data');
     });
 
     _socket!.onDisconnect((data) {
       print('🔌 [DATASOURCE] Socket Desconectado: $data');
     });
 
-    // Eventos que escuchamos del servidor
+    // Eventos que escucha eel servidor
     final serverEvents = [
       'player_connected_to_session',
       'question_started',
@@ -81,7 +81,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       'host_returned_to_session',
       'game_error',
       'sync_error',
-      'host_lobby_update', // Este actualizará tu lista de jugadores
+      'host_lobby_update',
       'host_results',
       'player_game_end',
     ];
@@ -90,7 +90,6 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       _socket!.on(event, (data) {
         print('[DATASOURCE] Evento Recibido: $event');
 
-        // Log detallado para ver la lista de jugadores cuando llega 'host_lobby_update'
         if (event == 'host_lobby_update') {
           print('[DATASOURCE] Datos del Lobby: $data');
         }
@@ -112,9 +111,7 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       print('[DATASOURCE] Emitiendo: $eventName con datos: $data');
       _socket!.emit(eventName, data);
     } else {
-      print(
-        '[DATASOURCE] ⚠️ Error: Socket no conectado para emitir $eventName',
-      );
+      print('[DATASOURCE] Error: Socket no conectado para emitir $eventName');
     }
   }
 

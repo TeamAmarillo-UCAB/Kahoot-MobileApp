@@ -16,7 +16,6 @@ class HostQuestionView extends StatelessWidget {
         final options = slide?.options ?? [];
         final int currentIdx = (slide?.questionIndex ?? 0) + 1;
         final String? imageUrl = slide?.imageUrl;
-        // Detectar si es la última para cambiar el texto
         final isLast = state.gameData?.progress?['isLastSlide'] ?? false;
 
         return Scaffold(

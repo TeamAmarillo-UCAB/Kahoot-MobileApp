@@ -57,18 +57,16 @@ class _HostLobbyViewState extends State<HostLobbyView> {
         backgroundColor: const Color(0xFF46178F),
         body: BlocBuilder<LiveGameBloc, LiveGameBlocState>(
           builder: (context, state) {
-            // TRANSICIÓN: Si el estado cambia a question, muestra la vista de la pregunta
             if (state.status == LiveGameStatus.question) {
               return const HostQuestionView();
             }
             if (state.status == LiveGameStatus.results) {
-              // Verificar si es la última pregunta
               final isLast = state.gameData?.progress?['isLastSlide'] ?? false;
 
               if (isLast) {
-                return const HostPodiumView(); // Si es la última, mostramos podio directamente
+                return const HostPodiumView();
               } else {
-                return const HostResultsView(); // Si no, mostramos la tabla de posiciones normal
+                return const HostResultsView();
               }
             }
             if (state.status == LiveGameStatus.loading || state.pin == null) {
@@ -128,7 +126,6 @@ class _HostLobbyViewState extends State<HostLobbyView> {
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: ElevatedButton(
-                    // Al presionar, disparamos el evento al Bloc
                     onPressed: players.isEmpty
                         ? null
                         : () => context.read<LiveGameBloc>().add(StartGame()),

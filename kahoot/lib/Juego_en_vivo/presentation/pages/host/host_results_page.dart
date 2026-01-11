@@ -11,7 +11,6 @@ class HostResultsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LiveGameBloc, LiveGameBlocState>(
       builder: (context, state) {
-        // Datos del estado
         final leaderboard = state.gameData?.leaderboard ?? [];
         final stats = state.gameData?.stats ?? {};
         final distribution =
@@ -34,7 +33,6 @@ class HostResultsView extends StatelessWidget {
                   ),
                 ),
 
-                // --- Gráfica de Barras ---
                 Container(
                   height: 180,
                   margin: const EdgeInsets.symmetric(vertical: 20),
@@ -62,7 +60,6 @@ class HostResultsView extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
 
-                // --- Lista de Puntuaciones ---
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -108,12 +105,10 @@ class HostResultsView extends StatelessWidget {
                   ),
                 ),
 
-                // --- Botón Dinámico ---
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: ElevatedButton(
                     onPressed: () {
-                      // Se añade el evento al Bloc para avanzar de fase
                       context.read<LiveGameBloc>().add(NextPhase());
                     },
                     style: ElevatedButton.styleFrom(
