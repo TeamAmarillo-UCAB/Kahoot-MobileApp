@@ -77,6 +77,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
     }
 
     final slide = widget.state.gameData?.currentSlide;
+    final int currentIdx = (slide?.questionIndex ?? 0) + 1;
     final options = slide?.options ?? [];
     final isMultiple = slide?.slideType == "MULTIPLE";
 
@@ -93,6 +94,18 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                   _submit(slide?.id, _selectedOptions.toList());
                 }
               },
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Text(
+                'Pregunta $currentIdx',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
 
             Padding(
