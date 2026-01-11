@@ -42,6 +42,13 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.state.status == LiveGameStatus.loading ||
+        widget.state.gameData?.currentSlide == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF46178F),
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
     if (widget.state.status == LiveGameStatus.waitingResults) {
       return Container(
         color: const Color(0xFF46178F),

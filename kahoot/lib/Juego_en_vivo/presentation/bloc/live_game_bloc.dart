@@ -46,7 +46,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     on<NextPhase>(_onNextPhase);
   }
 
-  // Manejador para que el Host inicie el juego
   Future<void> _onStartGame(
     StartGame event,
     Emitter<LiveGameBlocState> emit,
@@ -54,7 +53,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     print('[BLOC] Host disparando inicio de juego...');
     try {
       startLiveGameUc.call();
-      // No emitimos estado aquí, esperamos que el socket responda con "question_started"
     } catch (e) {
       print('[BLOC] Error al iniciar juego: $e');
     }
@@ -189,6 +187,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     LiveGameStatus newStatus = _mapPhaseToStatus(gameData.phase);
 
     final mergedGameData = gameData.copyWith(
+      currentSlide: gameData.currentSlide ?? state.gameData?.currentSlide,
+
       totalScore: (gameData.totalScore == null || gameData.totalScore == 0)
           ? state.gameData?.totalScore
           : gameData.totalScore,
@@ -243,7 +243,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   void _onNextPhase(NextPhase event, Emitter<LiveGameBlocState> emit) {
     print('[BLOC] Solicitando siguiente fase al servidor...');
-    // Asumiendo que nextGamePhaseUc es de tipo void call()
     nextGamePhaseUc.call();
   }
 }
