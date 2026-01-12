@@ -243,7 +243,17 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
-                const MediaResourceSelector(),
+                MediaResourceSelector(
+                  onIdSelected: (assetId) {
+                    _editorCubit.setCoverImage(assetId);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Imagen cargada correctamente'),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -179,7 +179,7 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
         id,
         state.authorId,
         state.title,
-        'hhuwhuwuhws', //state.description,,
+        'djjeju', //state.description,
         state.coverImageId,
         state.visibility,
         'publish',
