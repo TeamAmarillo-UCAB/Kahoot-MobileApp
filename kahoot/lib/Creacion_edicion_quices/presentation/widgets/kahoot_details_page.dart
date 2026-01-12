@@ -30,7 +30,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
-    final TextEditingController _themeController = TextEditingController();
+  final TextEditingController _themeController = TextEditingController();
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
@@ -45,7 +45,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     // set base URL from main.dart constant (trim to avoid whitespace issues)
     _datasource.dio.options.baseUrl = apiBaseUrl.trim();
     // ignore: avoid_print
-    print('KahootDatasource baseUrl: ' + _datasource.dio.options.baseUrl.toString());
+    print(
+      'KahootDatasource baseUrl: ' + _datasource.dio.options.baseUrl.toString(),
+    );
     _repository = KahootRepositoryImpl(datasource: _datasource);
     _createKahoot = CreateKahoot(_repository);
     _updateKahoot = UpdateKahoot(_repository);
@@ -147,7 +149,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-            Padding(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: GradientButton(
               onTap: () async {
@@ -175,14 +177,14 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 final isEditing = widget.initialKahoot != null;
 
                 // Validación amigable en UI: si estamos creando (draft) y visibilidad es pública, bloquear y avisar
-                if (!isEditing && visibilityValue == 'public') {
+                /*if (!isEditing && visibilityValue == 'public') {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Cuando el estado es borrador (draft), la visibilidad no puede ser pública.'),
                     ),
                   );
                   return;
-                }
+                }*/
 
                 _editorCubit
                   ..setTitle(title)
@@ -224,7 +226,10 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
               },
               child: const Text(
                 'Guardar',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -349,15 +354,27 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                         builder: (_) => TrueFalseEditorPage(
                                           index: i,
                                           initialTitle: q.title,
-                                          initialTrueText: q.answer.isNotEmpty ? q.answer.first.text : 'Verdadero',
-                                          initialFalseText: q.answer.length > 1 ? q.answer[1].text : 'Falso',
+                                          initialTrueText: q.answer.isNotEmpty
+                                              ? q.answer.first.text
+                                              : 'Verdadero',
+                                          initialFalseText: q.answer.length > 1
+                                              ? q.answer[1].text
+                                              : 'Falso',
                                           initialTime: q.timeLimitSeconds,
                                         ),
                                       ),
                                     );
-                                  } else if (q.type == QuestionType.short_answer) {
-                                    final correct = q.answer.isNotEmpty ? q.answer.first.text : '';
-                                    final others = q.answer.length > 1 ? q.answer.skip(1).map((a) => a.text).toList() : <String>[];
+                                  } else if (q.type ==
+                                      QuestionType.short_answer) {
+                                    final correct = q.answer.isNotEmpty
+                                        ? q.answer.first.text
+                                        : '';
+                                    final others = q.answer.length > 1
+                                        ? q.answer
+                                              .skip(1)
+                                              .map((a) => a.text)
+                                              .toList()
+                                        : <String>[];
                                     result = await Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => ShortAnswerEditorPage(
@@ -371,7 +388,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                     );
                                   } else {
                                     // quiz_single
-                                    final texts = q.answer.map((a) => a.text).toList();
+                                    final texts = q.answer
+                                        .map((a) => a.text)
+                                        .toList();
                                     result = await Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => QuizEditorPage(
@@ -384,33 +403,37 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                     );
                                   }
                                   if (result != null) {
-                                    final updated = _mapResultToQuestion(result);
+                                    final updated = _mapResultToQuestion(
+                                      result,
+                                    );
                                     if (updated != null) {
                                       _editorCubit.updateQuestion(i, updated);
                                     }
                                   }
                                 },
                                 child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    state.questions[i].title.isNotEmpty
-                                        ? state.questions[i].title
-                                        : 'Pregunta ${i + 1}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.redAccent,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      state.questions[i].title.isNotEmpty
+                                          ? state.questions[i].title
+                                          : 'Pregunta ${i + 1}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                    onPressed: () {
-                                      _editorCubit.removeQuestion(i);
-                                    },
-                                  ),
-                                ],
-                              ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.redAccent,
+                                      ),
+                                      onPressed: () {
+                                        _editorCubit.removeQuestion(i);
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
