@@ -25,7 +25,7 @@ class UserDatasourceImpl implements UserDatasource {
         'username': username,
         'password': password,
         'name': AuthState.fullName.value ?? '',
-        'type': AuthState.userType.value ?? 'student',
+        'type': AuthState.userType.value ?? 'STUDENT',
       };
     // Debug: imprimir el JSON que se envía
     // ignore: avoid_print
@@ -33,7 +33,7 @@ class UserDatasourceImpl implements UserDatasource {
 
     try {
       final res = await dio.post(
-        '/users',
+        '/user/register',
         data: body,
         options: Options(headers: {'Content-Type': 'application/json'}),
       );

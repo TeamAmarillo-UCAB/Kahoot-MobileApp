@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
 
-const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api'); //back 1
+const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzybackend.app/api'); //back 1
 // const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backcomun-gc5j.onrender.com'); //back comun
 void main() {
   runApp(const MyApp());

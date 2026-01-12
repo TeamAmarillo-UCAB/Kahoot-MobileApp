@@ -14,7 +14,7 @@ import '../application/usecases/delete_user.dart';
 import '../application/usecases/login_user.dart';
 import 'login_page.dart';
 import '../../../main.dart';
-import 'pages/account_page.dart';
+
 import '../../core/auth_state.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -96,10 +96,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Usuario registrado/actualizado exitosamente')),
                     );
-                    // Navegar de regreso a AccountPage después de registrar correctamente
+                    // Redirigir a LoginPage tras registro exitoso
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const AccountPage()),
-                      (route) => route.isFirst,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
                     );
                   }
                 },
@@ -215,15 +215,36 @@ class _RegisterPageState extends State<RegisterPage> {
                                   final username = _nameCtrl.text.trim();
                                   final email = _emailCtrl.text.trim();
                                   final password = _passwordCtrl.text.trim();
-                                  if (username.isEmpty || email.isEmpty || password.isEmpty || _selectedType.isEmpty) {
+                                  final fullName = _fullNameCtrl.text.trim();
+                                  if (username.isEmpty || email.isEmpty || password.isEmpty || fullName.isEmpty || _selectedType.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Completa todos los campos.')),
                                     );
                                     return;
                                   }
+                                  // Validar dominio del email
+                                  final emailPattern = RegExp('^[A-Za-z0-9._%+-]+@(gmail|hotmail)\\.com\$');
+                                  if (!emailPattern.hasMatch(email)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('El email debe ser @gmail.com o @hotmail.com.')),
+                                    );
+                                    return;
+                                  }
+                                  if (username.length < 6) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('El nombre de usuario debe tener al menos 6 caracteres.')),
+                                    );
+                                    return;
+                                  }
+                                  if (password.length < 6) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres.')),
+                                    );
+                                    return;
+                                  }
                                   // Persistir auxiliarmente nombre completo y tipo para createUser
-                                  AuthState.fullName.value = _fullNameCtrl.text.trim();
-                                  AuthState.userType.value = _selectedType;
+                                  AuthState.fullName.value = fullName;
+                                  AuthState.userType.value = (_selectedType == 'Estudiante' ? 'STUDENT' : (_selectedType == 'Profesor' ? 'TEACHER' : _selectedType.toUpperCase()));
                                   final cubit = context.read<UserEditorCubit>();
                                   cubit
                                     ..setName(username)
