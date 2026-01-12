@@ -107,6 +107,24 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
     emit(state.copyWith(questions: updated));
   }
 
+  //PARA ASOCIAR LA IMAGENNNNN
+  void setQuestionMedia(int index, String mediaId) {
+    if (index < 0 || index >= state.questions.length) return;
+
+    final q = state.questions[index];
+    final updatedQ = Question(
+      text: q.text,
+      title: q.title,
+      mediaId: mediaId,
+      type: q.type,
+      points: q.points,
+      timeLimitSeconds: q.timeLimitSeconds,
+      answer: q.answer,
+    );
+
+    updateQuestion(index, updatedQ);
+  }
+
   void removeQuestion(int index) {
     if (index < 0 || index >= state.questions.length) return;
     final updated = List<Question>.from(state.questions)..removeAt(index);

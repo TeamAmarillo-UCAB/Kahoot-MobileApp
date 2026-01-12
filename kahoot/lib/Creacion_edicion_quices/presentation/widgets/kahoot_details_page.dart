@@ -90,6 +90,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       final String type = (result['type'] as String?) ?? '';
       final String title = (result['title'] as String?)?.trim() ?? '';
       final int time = (result['time'] as int?) ?? 20;
+      final String? mediaId = result['mediaId'] as String?;
       final List answersRaw = (result['answers'] as List?) ?? [];
       final answers = answersRaw
           .map(
@@ -118,7 +119,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       return Question(
         text: title,
         title: title,
-        mediaId: '',
+        mediaId: mediaId ?? '',
         type: qType,
         points: 1000,
         timeLimitSeconds: time,
@@ -406,6 +407,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                                         builder: (_) => QuizEditorPage(
                                           index: i,
                                           initialTitle: q.title,
+                                          initialMediaId: q.mediaId,
                                           initialAnswers: texts,
                                           initialTime: q.timeLimitSeconds,
                                         ),
