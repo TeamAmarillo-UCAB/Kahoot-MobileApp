@@ -75,7 +75,7 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
       }
     }
     Navigator.of(context).pop({
-      'type': 'quiz',
+      'type': 'multiple',
       'title': questionText,
       'time': selectedTime,
       'answers': answers,

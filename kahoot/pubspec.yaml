@@ -1,7 +1,7 @@
 name: kahoot
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
+# pub.dev using flutter pub publish. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
@@ -23,10 +23,10 @@ environment:
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# consider running flutter pub upgrade --major-versions. Alternatively,
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
+# versions available, run flutter pub outdated.
 dependencies:
   flutter:
     sdk: flutter
@@ -47,13 +47,26 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  #Épica 4
+  socket_io_client: ^2.0.0
+  json_annotation: ^4.8.0
+  freezed_annotation: ^2.0.0
+  mobile_scanner: ^7.1.4
+  qr_flutter: ^4.1.0
+
+  #Épica 5
+  shared_preferences: ^2.2.0
+
+  #Épica 8
+  app_links: ^6.4.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
+  # activated in the analysis_options.yaml file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
@@ -67,6 +80,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/nombre.png
+    - assets/letra.png
+    - assets/images/game/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

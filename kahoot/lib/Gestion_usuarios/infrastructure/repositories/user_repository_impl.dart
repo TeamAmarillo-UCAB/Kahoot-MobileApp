@@ -57,9 +57,9 @@ class UserRepositoryImpl implements UserRepository {
   }
 
 	@override
-	Future<Result<void>> userLogin(String email, String password) async {
+	Future<Result<void>> userLogin(String userName, String password) async {
 		try {
-			await datasource.userLogin(email, password);
+			await datasource.userLogin(userName, password);
 			return Result.voidSuccess();
 		} catch (e, stackTrace) {
 			print('Error logging in: ' + e.toString());

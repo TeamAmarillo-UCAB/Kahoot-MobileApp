@@ -24,6 +24,8 @@ class UserDatasourceImpl implements UserDatasource {
         'email': email,
         'username': username,
         'password': password,
+        'name': AuthState.fullName.value ?? '',
+        'type': AuthState.userType.value ?? 'student',
       };
     // Debug: imprimir el JSON que se envía
     // ignore: avoid_print
@@ -95,9 +97,9 @@ class UserDatasourceImpl implements UserDatasource {
   }
 
   @override
-  Future<void> userLogin(String email, String password) async {
+  Future<void> userLogin(String userName, String password) async {
     final body = {
-      'email': email,
+      'username': userName,
       'password': password,
     };
     // Debug

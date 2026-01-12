@@ -110,15 +110,15 @@ class UserEditorCubit extends Cubit<UserEditorState> {
   Future<void> login() async {
     try {
       emit(state.copyWith(status: UserEditorStatus.saving, errorMessage: null));
-      final email = state.email.trim();
+      final userName = state.email.trim();
       final password = state.password.trim();
-      if (email.isEmpty) {
-        throw Exception('El email es requerido para iniciar sesión.');
+      if (userName.isEmpty) {
+        throw Exception('El nombre de usuario es requerido para iniciar sesión.');
       }
       if (password.isEmpty) {
         throw Exception('La contraseña es requerida para iniciar sesión.');
       }
-      final result = await loginUserUseCase(email, password);
+      final result = await loginUserUseCase(userName, password);
       if (result.isSuccessful()) {
         emit(state.copyWith(status: UserEditorStatus.saved));
       } else {
