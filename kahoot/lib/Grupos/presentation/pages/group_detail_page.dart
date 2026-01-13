@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kahoot/Grupos/domain/entities/group_detail.dart';
-
-// BloC y Eventos
 import '../bloc/group_detail/group_detail_bloc.dart';
 import '../bloc/group_detail/group_detail_event.dart';
 import '../bloc/group_detail/group_detail_state.dart';
-
-// Entidades
 import '../../domain/entities/group.dart';
-
-// Widgets y Páginas
-import 'invite_success_dialog.dart'; // Importar el dialog
+import 'invite_success_dialog.dart';
 import 'group_leaderboard_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -27,13 +21,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Cargar los detalles completos al entrar (miembros, quizzes, ranking)
     context.read<GroupDetailBloc>().add(LoadGroupDetailsEvent(widget.group.id));
   }
 
   @override
   Widget build(BuildContext context) {
-    //  escuchar cambios de estado (Listeners) y reconstruir UI (Builder)
     return BlocConsumer<GroupDetailBloc, GroupDetailState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
@@ -55,34 +47,32 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         }
 
         if (state is GroupDeletedState) {
-          Navigator.of(context).pop(); // Volver a la lista
+          Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Grupo eliminado correctamente")),
           );
         }
       },
       builder: (context, state) {
-        // Mientras carga, mostrar loading, pero mantener la estructura básica
         final bool isLoading = state.isLoading;
 
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.amber.shade200,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.amber,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
             title: const Text(
-              "Gestionar grupo de estudio",
+              "Gestionar grupo",
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
-              // Menú de opciones (3 puntitos)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.black),
                 onSelected: (value) {
@@ -114,67 +104,89 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ],
           ),
           body: isLoading && state.members.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.amber),
+                )
               : SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // --- HEADER DEL GRUPO ---
-                        const CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.blueAccent,
-                          child: Icon(
-                            Icons.group,
-                            size: 40,
-                            color: Colors.white,
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.amber, width: 2),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 38,
+                            backgroundColor: Colors.amber,
+                            child: Icon(
+                              Icons.group_rounded,
+                              size: 40,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Text(
                           widget.group.name,
                           style: const TextStyle(
-                            fontSize: 22,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           widget.group.description,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            color: Colors.grey[700],
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "${state.members.length} miembros",
+                            style: TextStyle(
+                              color: Colors.amber[900],
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "${state.members.length} miembros",
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             _ActionButton(
-                              icon: Icons.person_add,
+                              icon: Icons.person_add_rounded,
                               label: "Invitar",
                               onTap: () {
-                                // DISPARADOR: Generar invitación
                                 context.read<GroupDetailBloc>().add(
                                   GenerateInvitationEvent(widget.group.id),
                                 );
                               },
                             ),
                             _ActionButton(
-                              icon: Icons.leaderboard,
+                              icon: Icons.emoji_events_rounded,
                               label: "Ranking",
                               onTap: () {
                                 final groupDetailBloc = context
                                     .read<GroupDetailBloc>();
-
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => BlocProvider.value(
@@ -191,13 +203,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                         ),
 
                         const SizedBox(height: 32),
-                        const Divider(),
+                        const Divider(thickness: 1, height: 1),
+                        const SizedBox(height: 24),
 
                         _SectionHeader(
                           title: "Quizzes Asignados",
-                          onTapAdd: () {
-                            // Navegar a pantalla de asignar quiz
-                          },
+                          onTapAdd: () {},
                         ),
                         if (state.quizzes.isEmpty)
                           _EmptyStateMessage(
@@ -211,34 +222,56 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             itemCount: state.quizzes.length,
                             itemBuilder: (context, index) {
                               final quiz = state.quizzes[index];
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.quiz,
-                                  color: Colors.purple,
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                elevation: 0,
+                                color: Colors.grey.shade50,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                title: Text(quiz.quizId),
-                                subtitle: Text(
-                                  "Hasta: ${quiz.availableUntil.toString().split(' ')[0]}",
-                                ),
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(12),
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.shade100,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      Icons.quiz_rounded,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    quiz.quizId,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    "Hasta: ${quiz.availableUntil.toString().split(' ')[0]}",
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               );
                             },
                           ),
 
-                        const Divider(),
+                        const SizedBox(height: 24),
 
-                        const SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             "Miembros",
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -248,38 +281,50 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             final displayName =
                                 state.memberNames[member.userId] ??
                                 "Cargando...";
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.grey[200],
-                                child: Text(
-                                  displayName.substring(0, 1).toUpperCase(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                tileColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.amber.shade100,
+                                  child: Text(
+                                    displayName.substring(0, 1).toUpperCase(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              title: Text(
-                                displayName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                title: Text(
+                                  displayName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
+                                subtitle: Text(member.role),
+                                trailing: member.role != 'member'
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.red.shade400,
+                                        ),
+                                        onPressed: () {
+                                          context.read<GroupDetailBloc>().add(
+                                            RemoveMemberEvent(
+                                              memberId: member.userId,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : null,
                               ),
-                              subtitle: Text(member.role),
-                              trailing: member.role != 'member'
-                                  ? IconButton(
-                                      icon: const Icon(
-                                        Icons.remove_circle_outline,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: () {
-                                        context.read<GroupDetailBloc>().add(
-                                          RemoveMemberEvent(
-                                            memberId: member.userId,
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : null,
                             );
                           },
                         ),
@@ -293,7 +338,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void _showEditGroupDialog(BuildContext context, GroupDetail group) {
-    // Controladores pre-llenados con la info actual del grupo
     final nameController = TextEditingController(text: group.name);
     final descController = TextEditingController(text: group.description);
 
@@ -301,32 +345,52 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Editar Grupo'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Editar Grupo',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
+                cursorColor: Colors.amber,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del grupo',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.amber),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: descController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
+                cursorColor: Colors.amber,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  labelStyle: TextStyle(color: Colors.grey),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.amber),
+                  ),
+                ),
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext), // Cancelar
-              child: const Text('Cancelar'),
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.black),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-
                 context.read<GroupDetailBloc>().add(
                   EditGroupEvent(
                     groupId: group.id,
@@ -335,6 +399,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   ),
                 );
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('Guardar'),
             ),
           ],
@@ -347,12 +419,16 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("Eliminar grupo"),
         content: const Text("¿Estás seguro? Esta acción no se puede deshacer."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancelar"),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(color: Colors.black),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -369,7 +445,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 }
 
-// Widgets auxiliares para limpiar el código principal
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -385,19 +460,24 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.amber.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.amber.shade100),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.amber.shade900, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
-            child: Icon(icon, color: Colors.blue, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -414,9 +494,14 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
         IconButton(
-          icon: const Icon(Icons.add_circle, color: Colors.blue),
+          icon: const Icon(Icons.add_circle, color: Colors.amber, size: 30),
           onPressed: onTapAdd,
         ),
       ],
@@ -434,12 +519,19 @@ class _EmptyStateMessage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 24.0),
       child: Column(
         children: [
-          Icon(Icons.inbox, size: 48, color: Colors.grey[300]),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.inbox_rounded, size: 40, color: Colors.grey[300]),
+          ),
+          const SizedBox(height: 12),
           Text(
             msg,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ],
       ),

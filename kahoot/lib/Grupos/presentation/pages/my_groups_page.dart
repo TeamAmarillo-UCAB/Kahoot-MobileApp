@@ -27,23 +27,20 @@ import '../bloc/group_detail/group_detail_bloc.dart';
 import 'group_detail_page.dart';
 
 class MyGroupsPage extends StatelessWidget {
-  final String? invitationToken; // Recibir token
+  final String? invitationToken;
 
   const MyGroupsPage({Key? key, this.invitationToken}) : super(key: key);
 
-  // ID del usuario HARCODEADO ARREGLAR
   final String _currentUserId = "c5b09c21-bcfd-492e-9f3b-d7089074185d";
 
   @override
   Widget build(BuildContext context) {
-    //Instanciar las dependencias
     final datasource = GroupDatasourceImpl();
     final repository = GroupRepositoryImpl(datasource: datasource);
 
     final userDatasource = UserDatasourceImpl();
     final userRepository = UserRepositoryImpl(datasource: userDatasource);
 
-    //Repositorio y el Bloc a la Vista
     return RepositoryProvider<GroupRepository>.value(
       value: repository,
       child: BlocProvider(
@@ -55,10 +52,8 @@ class MyGroupsPage extends StatelessWidget {
             currentUserId: _currentUserId,
           );
 
-          // Cargar grupos iniciales
           bloc.add(LoadGroupsEvent());
 
-          // Si hay token, lanzar evento de unirse
           if (invitationToken != null) {
             bloc.add(JoinGroupEvent(token: invitationToken!));
           }
@@ -87,11 +82,15 @@ class _MyGroupsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF3A240C),
       appBar: AppBar(
-        title: const Text("Mis Grupos de Estudio"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: const Text(
+          "Mis Grupos",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.amber,
         elevation: 0,
+        centerTitle: false,
       ),
       body: BlocConsumer<GroupListBloc, GroupListState>(
         listener: (context, state) {
@@ -106,7 +105,9 @@ class _MyGroupsView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is GroupListLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.amber),
+            );
           }
 
           if (state is GroupListError) {
@@ -114,12 +115,35 @@ class _MyGroupsView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 8),
-                  Text("Error: ${state.message}"),
-                  TextButton(
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 60,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Ocurrió un error",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    state.message,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
                     onPressed: () =>
                         context.read<GroupListBloc>().add(LoadGroupsEvent()),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     child: const Text("Reintentar"),
                   ),
                 ],
@@ -134,9 +158,10 @@ class _MyGroupsView extends StatelessWidget {
               return _buildEmptyState(context);
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
+            return ListView.separated(
+              padding: const EdgeInsets.all(24),
               itemCount: groups.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final group = groups[index];
                 return _buildGroupCard(context, group);
@@ -144,19 +169,16 @@ class _MyGroupsView extends StatelessWidget {
             );
           }
 
-          if (state is GroupListInitial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           return const SizedBox.shrink();
         },
       ),
-
       floatingActionButton: FloatingActionButton(
         heroTag: "btnCreate",
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.amber,
+        foregroundColor: Colors.black,
+        elevation: 4,
         onPressed: () => _showCreateGroupDialog(context),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded, size: 32),
       ),
     );
   }
@@ -166,13 +188,54 @@ class _MyGroupsView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.group_off, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text("No tienes grupos aún."),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.05),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.group_off_rounded,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "No tienes grupos aún",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
           const SizedBox(height: 8),
-          ElevatedButton(
+          Text(
+            "Crea uno nuevo para empezar a estudiar",
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
             onPressed: () => _showCreateGroupDialog(context),
-            child: const Text("Crear mi primer grupo"),
+            icon: const Icon(Icons.add),
+            label: const Text("Crear mi primer grupo"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              elevation: 0,
+            ),
           ),
         ],
       ),
@@ -180,62 +243,148 @@ class _MyGroupsView extends StatelessWidget {
   }
 
   Widget _buildGroupCard(BuildContext context, Group group) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blueAccent,
-          child: Text(
-            group.name.isNotEmpty
-                ? group.name.substring(0, 1).toUpperCase()
-                : "?",
-            style: const TextStyle(color: Colors.white),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.amber.shade300,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            final repository = context.read<GroupRepository>();
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) {
+                  return BlocProvider(
+                    create: (ctx) => GroupDetailBloc(
+                      getGroupDetails: GetGroupDetails(repository),
+                      generateInvitation: GenerateInvitation(repository),
+                      removeMember: RemoveMember(repository),
+                      deleteGroup: DeleteGroup(repository),
+                      editGroup: EditGroup(repository),
+                      getGroupLeaderboard: GetGroupLeaderboard(repository),
+                      currentUserId: currentUserId,
+                      getUserById: GetUserById(userRepository),
+                    ),
+                    child: GroupDetailPage(group: group),
+                  );
+                },
+              ),
+            ).then((_) {
+              if (context.mounted) {
+                context.read<GroupListBloc>().add(LoadGroupsEvent());
+              }
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    group.name.isNotEmpty
+                        ? group.name.substring(0, 1).toUpperCase()
+                        : "?",
+                    style: TextStyle(
+                      color: Colors.amber.shade900,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline_rounded,
+                            size: 16,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${group.memberCount} miembros",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              group.role,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (group.description.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          group.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 18,
+                  color: Colors.grey.shade300,
+                ),
+              ],
+            ),
           ),
         ),
-        title: Text(
-          group.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          "${group.role} • ${group.memberCount} miembros",
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          final repository = context.read<GroupRepository>();
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) {
-                return BlocProvider(
-                  create: (ctx) => GroupDetailBloc(
-                    getGroupDetails: GetGroupDetails(repository),
-                    generateInvitation: GenerateInvitation(repository),
-                    removeMember: RemoveMember(repository),
-                    deleteGroup: DeleteGroup(repository),
-                    editGroup: EditGroup(repository),
-                    getGroupLeaderboard: GetGroupLeaderboard(repository),
-                    currentUserId: currentUserId,
-                    getUserById: GetUserById(userRepository),
-                  ),
-                  child: GroupDetailPage(group: group),
-                );
-              },
-            ),
-          ).then((_) {
-            if (context.mounted) {
-              context.read<GroupListBloc>().add(LoadGroupsEvent());
-            }
-          });
-        },
       ),
     );
   }
 
-  // --- DIALOG DE CREAR GRUPO ---
   void _showCreateGroupDialog(BuildContext context) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
@@ -243,18 +392,33 @@ class _MyGroupsView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Nuevo Grupo"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          "Nuevo Grupo",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: "Nombre"),
+              cursorColor: Colors.amber,
+              decoration: const InputDecoration(
+                labelText: "Nombre",
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber),
+                ),
+              ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: descController,
+              cursorColor: Colors.amber,
               decoration: const InputDecoration(
                 labelText: "Descripción (Opcional)",
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber),
+                ),
               ),
             ),
           ],
@@ -262,7 +426,10 @@ class _MyGroupsView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancelar"),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(color: Colors.black),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -273,6 +440,14 @@ class _MyGroupsView extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: const Text("Crear"),
           ),
         ],
