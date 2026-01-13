@@ -312,7 +312,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: headerYellow,
-                      hintText: 'Categoría/Tema',
+                      hintText: 'Categoría',
                       hintStyle: const TextStyle(color: Colors.black54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -324,6 +324,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     },
                   ),
                 ),
+                const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _isLoadingThemes
@@ -335,7 +336,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: headerYellow,
-                            labelText: 'Estilo visual del Kahoot',
+                            labelText: 'Tema',
                             labelStyle: const TextStyle(
                               color: Colors.brown,
                               fontWeight: FontWeight.bold,
