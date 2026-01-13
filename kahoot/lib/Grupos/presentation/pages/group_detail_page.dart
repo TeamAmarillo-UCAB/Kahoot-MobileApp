@@ -139,7 +139,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.group.description,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Text(
                           "${state.members.length} miembros",
                           style: TextStyle(color: Colors.grey[600]),
@@ -208,9 +216,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                   Icons.quiz,
                                   color: Colors.purple,
                                 ),
-                                title: Text(
-                                  quiz.quizId,
-                                ), // Deberías tener el nombre del quiz aquí
+                                title: Text(quiz.quizId),
                                 subtitle: Text(
                                   "Hasta: ${quiz.availableUntil.toString().split(' ')[0]}",
                                 ),
@@ -239,20 +245,27 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           itemCount: state.members.length,
                           itemBuilder: (context, index) {
                             final member = state.members[index];
+                            final displayName =
+                                state.memberNames[member.userId] ??
+                                "Cargando...";
                             return ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Colors.grey[200],
                                 child: Text(
-                                  member.userId.substring(0, 1).toUpperCase(),
-                                ), // Inicial
+                                  displayName.substring(0, 1).toUpperCase(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                               title: Text(
-                                member.userId,
-                              ), // Mapear ID a Nombre real (PENDIENTE)
+                                displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               subtitle: Text(member.role),
-                              trailing:
-                                  member.role !=
-                                      'admin' // Solo permitir borrar si no es admin (simplificado)
+                              trailing: member.role != 'member'
                                   ? IconButton(
                                       icon: const Icon(
                                         Icons.remove_circle_outline,

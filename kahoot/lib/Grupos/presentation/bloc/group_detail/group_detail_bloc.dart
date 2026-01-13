@@ -5,6 +5,7 @@ import '../../../application/usecases/remove_member.dart';
 import '../../../application/usecases/delete_group.dart';
 import '../../../application/usecases/edit_group.dart';
 import '../../../application/usecases/get_group_leaderboard.dart';
+import '../../../../Gestion_usuarios/application/usecases/get_user_by_id.dart';
 import 'group_detail_event.dart';
 import 'group_detail_state.dart';
 
@@ -15,6 +16,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
   final DeleteGroup deleteGroup;
   final EditGroup editGroup;
   final GetGroupLeaderboard getGroupLeaderboard;
+  final GetUserById getUserById;
 
   final String currentUserId;
   String? _currentGroupId;
@@ -26,6 +28,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     required this.deleteGroup,
     required this.editGroup,
     required this.getGroupLeaderboard,
+    required this.getUserById,
     required this.currentUserId,
   }) : super(GroupDetailState.initial()) {
     on<LoadGroupDetailsEvent>((event, emit) async {
@@ -44,6 +47,21 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
             leaderboard: data.leaderboard,
           ),
         );
+        final Map<String, String> namesMap = Map.from(state.memberNames);
+
+        await Future.wait(
+          data.members.map((member) async {
+            if (!namesMap.containsKey(member.userId)) {
+              final userResult = await getUserById(member.userId);
+              if (userResult.isSuccessful() && userResult.getValue() != null) {
+                print(namesMap[member.userId] = userResult.getValue()!.name);
+              } else {
+                namesMap[member.userId] = "Usuario desconocido";
+              }
+            }
+          }),
+        );
+        emit(state.copyWith(memberNames: namesMap));
       } else {
         emit(
           state.copyWith(
@@ -72,13 +90,7 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
 
     // 3. Eliminar miembro (Story 8.4)
     on<RemoveMemberEvent>((event, emit) async {
-      if (_currentGroupId == null) return;
-
-      final result = await removeMember(
-        currentUserId,
-        _currentGroupId!,
-        event.memberId,
-      );
+      final result = await removeMember(_currentGroupId!, event.memberId);
 
       if (result.isSuccessful()) {
         add(LoadGroupDetailsEvent(_currentGroupId!)); // Recargar lista

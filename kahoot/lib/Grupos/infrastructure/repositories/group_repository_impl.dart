@@ -82,13 +82,9 @@ class GroupRepositoryImpl implements GroupRepository {
   }
 
   @override
-  Future<Result<void>> removeMember(
-    String userId,
-    String groupId,
-    String memberId,
-  ) async {
+  Future<Result<void>> removeMember(String groupId, String memberId) async {
     try {
-      await datasource.removeMember(userId, groupId, memberId);
+      await datasource.removeMember(groupId, memberId);
       return Result.success(null);
     } catch (e) {
       return Result.error(ServerFailure("Error al eliminar miembro: $e"));

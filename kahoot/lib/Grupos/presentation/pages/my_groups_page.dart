@@ -16,6 +16,10 @@ import '../../../../Grupos/application/usecases/remove_member.dart';
 import '../../../../Grupos/application/usecases/delete_group.dart';
 import '../../../../Grupos/application/usecases/edit_group.dart';
 
+import '../../../../Gestion_usuarios/infrastructure/datasource/user_datasource_impl.dart';
+import '../../../../Gestion_usuarios/infrastructure/repositories/user_repository_impl.dart';
+import '../../../../Gestion_usuarios/application/usecases/get_user_by_id.dart';
+
 import '../bloc/group_list/group_list_bloc.dart';
 import '../bloc/group_list/group_list_state.dart';
 import '../bloc/group_list/group_list_event.dart';
@@ -28,13 +32,16 @@ class MyGroupsPage extends StatelessWidget {
   const MyGroupsPage({Key? key, this.invitationToken}) : super(key: key);
 
   // ID del usuario HARCODEADO ARREGLAR
-  final String _currentUserId = "397b9a84-f851-417e-91da-fdfc271b1a81";
+  final String _currentUserId = "c5b09c21-bcfd-492e-9f3b-d7089074185d";
 
   @override
   Widget build(BuildContext context) {
     //Instanciar las dependencias
     final datasource = GroupDatasourceImpl();
     final repository = GroupRepositoryImpl(datasource: datasource);
+
+    final userDatasource = UserDatasourceImpl();
+    final userRepository = UserRepositoryImpl(datasource: userDatasource);
 
     //Repositorio y el Bloc a la Vista
     return RepositoryProvider<GroupRepository>.value(
@@ -58,7 +65,10 @@ class MyGroupsPage extends StatelessWidget {
 
           return bloc;
         },
-        child: _MyGroupsView(currentUserId: _currentUserId),
+        child: _MyGroupsView(
+          currentUserId: _currentUserId,
+          userRepository: userRepository,
+        ),
       ),
     );
   }
@@ -66,9 +76,13 @@ class MyGroupsPage extends StatelessWidget {
 
 class _MyGroupsView extends StatelessWidget {
   final String currentUserId;
+  final UserRepositoryImpl userRepository;
 
-  const _MyGroupsView({Key? key, required this.currentUserId})
-    : super(key: key);
+  const _MyGroupsView({
+    Key? key,
+    required this.currentUserId,
+    required this.userRepository,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -131,8 +145,6 @@ class _MyGroupsView extends StatelessWidget {
           }
 
           if (state is GroupListInitial) {
-            // Esto ya no debería ser necesario porque lo llamamos en el create,
-            // pero lo dejamos por seguridad.
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -192,7 +204,6 @@ class _MyGroupsView extends StatelessWidget {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
-          // Recuperamos el repositorio que inyectamos arriba en MyGroupsPage
           final repository = context.read<GroupRepository>();
 
           Navigator.push(
@@ -208,14 +219,13 @@ class _MyGroupsView extends StatelessWidget {
                     editGroup: EditGroup(repository),
                     getGroupLeaderboard: GetGroupLeaderboard(repository),
                     currentUserId: currentUserId,
+                    getUserById: GetUserById(userRepository),
                   ),
                   child: GroupDetailPage(group: group),
                 );
               },
             ),
           ).then((_) {
-            // Al volver, recargamos la lista
-            // Verificamos que el widget siga montado
             if (context.mounted) {
               context.read<GroupListBloc>().add(LoadGroupsEvent());
             }
@@ -257,8 +267,6 @@ class _MyGroupsView extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                // Como _MyGroupsView está DENTRO del BlocProvider,
-                // context.read<GroupListBloc>() funciona perfectamente aquí.
                 context.read<GroupListBloc>().add(
                   CreateGroupEvent(nameController.text, descController.text),
                 );

@@ -25,11 +25,7 @@ abstract class GroupRepository {
     String userId,
     String groupId,
   );
-  Future<Result<void>> removeMember(
-    String userId,
-    String groupId,
-    String memberId,
-  );
+  Future<Result<void>> removeMember(String groupId, String memberId);
   Future<Result<void>> transferAdmin(
     String userId,
     String groupId,
