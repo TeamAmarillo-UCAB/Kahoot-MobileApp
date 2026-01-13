@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/usecases/kahoot/create_kahoot.dart';
 import '../../application/usecases/kahoot/update_kahoot.dart';
+import '../../application/usecases/kahoot/get_themes.dart';
 import '../../infrastructure/datasource/kahoot_datasource_impl.dart';
 import '../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../presentation/blocs/kahoot_editor_cubit.dart';
@@ -13,6 +14,7 @@ import '../../../main.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
 import '../../domain/entities/kahoot.dart';
+import '../../../Creacion_edicion_quices/domain/entities/theme.dart' as entity;
 
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 import '../../../core/widgets/gradient_button.dart';
@@ -27,6 +29,7 @@ class KahootDetailsPage extends StatefulWidget {
 
 class _KahootDetailsPageState extends State<KahootDetailsPage> {
   String visibility = 'private';
+  String? _selectedThemeId; //THEMES
   final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
@@ -37,6 +40,11 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   late final CreateKahoot _createKahoot;
   late final UpdateKahoot _updateKahoot;
   late final KahootEditorCubit _editorCubit;
+
+  late final GetKahootThemes _getThemes;
+  List<entity.KahootTheme> _availableThemes = [];
+  String? _selectedThemeUrl;
+  bool _isLoadingThemes = true;
 
   @override
   void initState() {
@@ -57,13 +65,16 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       initialAuthorId: 'author123',
     );
 
+    _getThemes = GetKahootThemes(_repository);
+    _loadThemes();
+
     final k = widget.initialKahoot;
     if (k != null) {
       _titleController.text = k.title;
       visibility = k.visibility == KahootVisibility.private
           ? 'private'
           : 'public';
-      _themeController.text = k.theme;
+      _selectedThemeId = k.theme;
       _editorCubit
         ..setAuthor(k.authorId)
         ..setTitle(k.title)
@@ -74,6 +85,21 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       for (final q in k.question) {
         _editorCubit.addQuestion(q);
       }
+    }
+  }
+
+  Future<void> _loadThemes() async {
+    try {
+      final themes = await _getThemes.execute();
+      setState(() {
+        _availableThemes = themes;
+        _isLoadingThemes = false;
+
+        if (widget.initialKahoot != null && _selectedThemeId == null) {}
+      });
+    } catch (e) {
+      setState(() => _isLoadingThemes = false);
+      debugPrint('Error cargando temas: $e');
     }
   }
 
@@ -298,6 +324,65 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                     },
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _isLoadingThemes
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        )
+                      : DropdownButtonFormField<String>(
+                          value: _selectedThemeId,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: headerYellow,
+                            labelText: 'Estilo visual del Kahoot',
+                            labelStyle: const TextStyle(
+                              color: Colors.brown,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          dropdownColor: cardDark,
+                          items: _availableThemes.map((
+                            entity.KahootTheme theme,
+                          ) {
+                            return DropdownMenuItem<String>(
+                              value: theme.assetId,
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.network(
+                                      theme.url,
+                                      width: 40,
+                                      height: 25,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.palette, size: 20),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    theme.name,
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (newId) {
+                            if (newId != null) {
+                              setState(() => _selectedThemeId = newId);
+                              _editorCubit.setTheme(newId);
+                            }
+                          },
+                        ),
+                ),
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -498,6 +583,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
 
   Kahoot _buildKahootFromState(Kahoot original) {
     final vis = KahootVisibilityX.fromString(_editorCubit.state.visibility);
+    print(_selectedThemeId ?? original.theme);
     return Kahoot(
       kahootId: original.kahootId,
       authorId: _editorCubit.state.authorId,
@@ -506,7 +592,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       visibility: vis,
       question: _editorCubit.state.questions,
       image: _editorCubit.state.coverImageId,
-      theme: _editorCubit.state.themeId,
+      theme: _selectedThemeId ?? original.theme,
     );
   }
 }

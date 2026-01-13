@@ -519,6 +519,18 @@ class KahootDatasourceImpl implements KahootDatasource {
       throw e;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getThemes() async {
+    try {
+      final response = await dio.get('/media/themes');
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(response.data);
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Error al obtener temas: $e');
+    }
+  }
 }
 
 String _mapQuestionTypeV2(QuestionType t) {
