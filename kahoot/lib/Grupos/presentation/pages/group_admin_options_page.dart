@@ -14,21 +14,25 @@ class GroupAdminOptionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text("Volver", style: TextStyle(color: Colors.black)),
+          child: const Text("Volver", style: TextStyle(color: Colors.black)),
         ),
         leadingWidth: 80,
-        title: Text("Gestionar grupo", style: TextStyle(color: Colors.black)),
+        title: const Text(
+          "Gestionar grupo",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         children: [
           _AdminOptionTile(
-            icon: Icons.people,
+            icon: Icons.people_rounded,
             title: "Gestionar miembros",
             onTap: () => Navigator.push(
               context,
@@ -38,7 +42,7 @@ class GroupAdminOptionsPage extends StatelessWidget {
             ),
           ),
           _AdminOptionTile(
-            icon: Icons.edit,
+            icon: Icons.edit_rounded,
             title: "Editar grupo",
             onTap: () => Navigator.push(
               context,
@@ -51,11 +55,13 @@ class GroupAdminOptionsPage extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 20),
           _AdminOptionTile(
-            icon: Icons.delete_outline,
+            icon: Icons.delete_outline_rounded,
             title: "Eliminar grupo",
             textColor: Colors.red,
             iconColor: Colors.red,
+            bgColor: Colors.red.shade50,
             onTap: () => _showDeleteConfirmDialog(context),
           ),
         ],
@@ -67,21 +73,33 @@ class GroupAdminOptionsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("¿Quieres eliminar este grupo?"),
-        content: Text("Esta acción no se puede deshacer."),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("¿Quieres eliminar este grupo?"),
+        content: const Text("Esta acción no se puede deshacer."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancelar"),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(color: Colors.black),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               context.read<GroupDetailBloc>().add(DeleteGroupEvent(groupId));
-              Navigator.pop(context); // Cierra dialogo
-              Navigator.pop(context); // Cierra admin options
-              Navigator.pop(context); // Cierra detail (Vuelve a Mis Grupos)
+              Navigator.pop(context);
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
-            child: Text("Sí, eliminar", style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text("Sí, eliminar"),
           ),
         ],
       ),
@@ -95,6 +113,7 @@ class _AdminOptionTile extends StatelessWidget {
   final VoidCallback onTap;
   final Color textColor;
   final Color iconColor;
+  final Color? bgColor;
 
   const _AdminOptionTile({
     required this.icon,
@@ -102,26 +121,52 @@ class _AdminOptionTile extends StatelessWidget {
     required this.onTap,
     this.textColor = Colors.black,
     this.iconColor = Colors.black,
+    this.bgColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Icon(icon, color: iconColor),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: bgColor ?? Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: bgColor != null ? iconColor : Colors.amber.shade900,
+          ),
         ),
         title: Text(
           title,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
         ),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 18,
+          color: Colors.grey.shade400,
+        ),
         onTap: onTap,
       ),
     );

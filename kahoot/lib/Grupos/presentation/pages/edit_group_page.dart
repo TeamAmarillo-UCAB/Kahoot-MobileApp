@@ -9,10 +9,10 @@ class EditGroupPage extends StatefulWidget {
   final String currentDescription;
 
   const EditGroupPage({
-    super.key, // Uso moderno de super.key
+    super.key,
     required this.groupId,
     required this.currentName,
-    required this.currentDescription, // Requerido para inicializar el campo
+    required this.currentDescription,
   });
 
   @override
@@ -21,15 +21,13 @@ class EditGroupPage extends StatefulWidget {
 
 class _EditGroupPageState extends State<EditGroupPage> {
   late TextEditingController _nameController;
-  late TextEditingController _descController; //controlador de descripcion
+  late TextEditingController _descController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentName);
-    _descController = TextEditingController(
-      text: widget.currentDescription,
-    ); // Inicializa con valor actual de descripción
+    _descController = TextEditingController(text: widget.currentDescription);
   }
 
   @override
@@ -42,6 +40,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
@@ -50,7 +49,7 @@ class _EditGroupPageState extends State<EditGroupPage> {
         leadingWidth: 80,
         title: const Text(
           "Editar grupo",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -67,16 +66,22 @@ class _EditGroupPageState extends State<EditGroupPage> {
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
+              cursorColor: Colors.amber,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.amber, width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.grey.shade50,
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             const Text(
               "Descripción",
@@ -85,33 +90,55 @@ class _EditGroupPageState extends State<EditGroupPage> {
             const SizedBox(height: 8),
             TextField(
               controller: _descController,
+              cursorColor: Colors.amber,
               maxLines: 3,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.amber, width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.grey.shade50,
               ),
             ),
 
             const SizedBox(height: 24),
 
             Container(
-              height: 150,
+              height: 160,
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.amber.shade200),
               ),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.image, size: 40, color: Colors.grey),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.image,
+                        size: 32,
+                        color: Colors.amber,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      "Pulsa para añadir una\nimagen de portada",
+                      "Cambiar imagen de portada",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Colors.amber.shade900,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -127,6 +154,11 @@ class _EditGroupPageState extends State<EditGroupPage> {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: Colors.black,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text("Cancelar"),
                   ),
@@ -137,21 +169,24 @@ class _EditGroupPageState extends State<EditGroupPage> {
                     onPressed: () {
                       context.read<GroupDetailBloc>().add(
                         EditGroupEvent(
-                          groupId: widget
-                              .groupId, // Usa widget.groupId, NO widget.group.id
+                          groupId: widget.groupId,
                           name: _nameController.text,
-                          description: _descController
-                              .text, // Ahora sí existe esta variable
+                          description: _descController.text,
                         ),
                       );
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    child: const Text("Guardar cambios"),
+                    child: const Text("Guardar"),
                   ),
                 ),
               ],

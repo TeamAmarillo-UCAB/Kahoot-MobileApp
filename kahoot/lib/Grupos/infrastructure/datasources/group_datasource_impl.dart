@@ -89,11 +89,7 @@ class GroupDatasourceImpl implements GroupDatasource {
   }
 
   @override
-  Future<void> removeMember(
-    String userId,
-    String groupId,
-    String memberId,
-  ) async {
+  Future<void> removeMember(String groupId, String memberId) async {
     await dio.delete('/groups/$groupId/members/$memberId');
   }
 
@@ -130,6 +126,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     return Group(
       id: data['groupId'],
       name: data['groupName'],
+      description: data['groupName'],
       role: data['role'],
       memberCount: 1, // Placeholder
       createdAt: DateTime.tryParse(data['joinedAt'] ?? '') ?? DateTime.now(),
