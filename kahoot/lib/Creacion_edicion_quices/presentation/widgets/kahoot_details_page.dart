@@ -19,6 +19,8 @@ import '../../../Creacion_edicion_quices/domain/entities/theme.dart' as entity;
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 import '../../../core/widgets/gradient_button.dart';
 
+import '../../../config/api_config.dart';
+
 class KahootDetailsPage extends StatefulWidget {
   final Kahoot? initialKahoot;
   const KahootDetailsPage({Key? key, this.initialKahoot}) : super(key: key);
@@ -51,7 +53,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     super.initState();
     _datasource = KahootDatasourceImpl();
     // set base URL from main.dart constant (trim to avoid whitespace issues)
-    _datasource.dio.options.baseUrl = apiBaseUrl.trim();
+    _datasource.dio.options.baseUrl = ApiConfig().baseUrl.trim();
     // ignore: avoid_print
     print(
       'KahootDatasource baseUrl: ' + _datasource.dio.options.baseUrl.toString(),

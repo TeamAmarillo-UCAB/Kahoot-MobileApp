@@ -12,6 +12,7 @@ import '../application/usecases/login_user.dart';
 import '../../Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 import '../../main.dart';
 import '../../core/auth_state.dart';
+import '../../config/api_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -35,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final datasource = UserDatasourceImpl();
-    datasource.dio.options.baseUrl = apiBaseUrl.trim();
+    datasource.dio.options.baseUrl = ApiConfig().baseUrl.trim();
     print('Login datasource baseUrl: ' + datasource.dio.options.baseUrl);
     final repository = UserRepositoryImpl(datasource: datasource);
 
@@ -61,23 +62,37 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 4, offset: Offset(0, 1))],
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
                 ),
                 child: BlocListener<UserEditorCubit, UserEditorState>(
                   listener: (context, state) {
                     if (state.status == UserEditorStatus.error) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.errorMessage ?? 'Error al iniciar sesión')),
+                        SnackBar(
+                          content: Text(
+                            state.errorMessage ?? 'Error al iniciar sesión',
+                          ),
+                        ),
                       );
                     } else if (state.status == UserEditorStatus.saved) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Inicio de sesión exitoso')),
+                        const SnackBar(
+                          content: Text('Inicio de sesión exitoso'),
+                        ),
                       );
                       // Marcar sesión iniciada y guardar email/username derivados
                       AuthState.isLoggedIn.value = true;
                       AuthState.email.value = _emailCtrl.text.trim();
                       final derived = _emailCtrl.text.trim().split('@').first;
-                      AuthState.username.value = (derived.isNotEmpty ? derived : _emailCtrl.text.trim());
+                      AuthState.username.value = (derived.isNotEmpty
+                          ? derived
+                          : _emailCtrl.text.trim());
                       // Navega al MainShell con footer y limpia el stack
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const MainShell()),
@@ -88,11 +103,14 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       const SizedBox(height: 14),
                       const Text(
                         'Iniciar sesión',
-                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(height: 18),
 
@@ -101,12 +119,25 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 14),
                       Row(
                         children: const [
-                          Expanded(child: Divider(thickness: 2, color: Color(0xFFFFD54F))),
+                          Expanded(
+                            child: Divider(
+                              thickness: 2,
+                              color: Color(0xFFFFD54F),
+                            ),
+                          ),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text('o', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text(
+                              'o',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          Expanded(child: Divider(thickness: 2, color: Color(0xFFFFD54F))),
+                          Expanded(
+                            child: Divider(
+                              thickness: 2,
+                              color: Color(0xFFFFD54F),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 14),
@@ -116,8 +147,14 @@ class _LoginPageState extends State<LoginPage> {
                           hintText: 'Nombre de usuario',
                           filled: true,
                           fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -128,11 +165,22 @@ class _LoginPageState extends State<LoginPage> {
                           hintText: 'Password',
                           filled: true,
                           fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                           ),
                         ),
                       ),
@@ -144,7 +192,10 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: () {},
                             child: const Text(
                               'Request a New Password',
-                              style: TextStyle(decoration: TextDecoration.underline, color: Colors.white70),
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                                color: Colors.white70,
+                              ),
                             ),
                           ),
                         ],
@@ -152,7 +203,8 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 8),
                       BlocBuilder<UserEditorCubit, UserEditorState>(
                         builder: (context, state) {
-                          final saving = state.status == UserEditorStatus.saving;
+                          final saving =
+                              state.status == UserEditorStatus.saving;
                           return GradientButton(
                             onTap: saving
                                 ? null
@@ -160,12 +212,19 @@ class _LoginPageState extends State<LoginPage> {
                                     final userName = _emailCtrl.text.trim();
                                     final password = _passwordCtrl.text.trim();
                                     if (userName.isEmpty || password.isEmpty) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Completa usuario y contraseña.')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Completa usuario y contraseña.',
+                                          ),
+                                        ),
                                       );
                                       return;
                                     }
-                                    final cubit = context.read<UserEditorCubit>();
+                                    final cubit = context
+                                        .read<UserEditorCubit>();
                                     cubit
                                       ..setEmail(userName)
                                       ..setPassword(password);
@@ -173,7 +232,10 @@ class _LoginPageState extends State<LoginPage> {
                                   },
                             child: const Text(
                               'Iniciar sesión',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           );
                         },
@@ -185,12 +247,17 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             TextSpan(
                               text: 'Terminos y condiciones',
-                              style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             TextSpan(text: '. Lee nuestro '),
                             TextSpan(
                               text: 'aviso de privacidad.',
-                              style: TextStyle(decoration: TextDecoration.underline),
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ],
                         ),
@@ -201,12 +268,17 @@ class _LoginPageState extends State<LoginPage> {
                         child: TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const RegisterPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterPage(),
+                              ),
                             );
                           },
                           child: const Text(
                             'New here? Create an account',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -221,5 +293,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-

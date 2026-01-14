@@ -11,6 +11,7 @@ import '../../presentation/blocs/favorites_cubit.dart';
 import '../../presentation/blocs/delete_kahoot_cubit.dart';
 import 'kahoots_library_page.dart';
 import '../../../main.dart';
+import '../../../config/api_config.dart';
 
 class KahootsLibraryLoader extends StatefulWidget {
   const KahootsLibraryLoader({Key? key}) : super(key: key);
@@ -30,12 +31,19 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
   void initState() {
     super.initState();
     _ds = LibraryKahootDatasourceImpl();
-    _ds.dio.options.baseUrl = apiBaseUrl.trim();
+    _ds.dio.options.baseUrl = ApiConfig().baseUrl.trim();
     print('[LIBRARY LOADER] apiBaseUrl usado: ' + _ds.dio.options.baseUrl);
     _repo = LibraryKahootRepositoryImpl(datasource: _ds);
-    _cubit = LibraryListCubit(getMyKhoots: GetMyKhootsUseCase(repository: _repo))..load();
-    _favoritesCubit = FavoritesCubit(addFavorite: AddKahootToFavoriteUseCase(repository: _repo), removeFavorite: RemoveKahootFromFavoriteUseCase(repository: _repo));
-    _deleteCubit = DeleteKahootCubit(deleteKahoot: DeleteKahootUseCase(repository: _repo));
+    _cubit = LibraryListCubit(
+      getMyKhoots: GetMyKhootsUseCase(repository: _repo),
+    )..load();
+    _favoritesCubit = FavoritesCubit(
+      addFavorite: AddKahootToFavoriteUseCase(repository: _repo),
+      removeFavorite: RemoveKahootFromFavoriteUseCase(repository: _repo),
+    );
+    _deleteCubit = DeleteKahootCubit(
+      deleteKahoot: DeleteKahootUseCase(repository: _repo),
+    );
   }
 
   @override
@@ -62,18 +70,23 @@ class _KahootsLibraryLoaderState extends State<KahootsLibraryLoader> {
               switch (state.status) {
                 case LibraryListStatus.loading:
                 case LibraryListStatus.initial:
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFFF2C147)));
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFF2C147)),
+                  );
                 case LibraryListStatus.error:
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(state.errorMessage ?? 'Error cargando tus kahoots', style: const TextStyle(color: Colors.white)),
+                        Text(
+                          state.errorMessage ?? 'Error cargando tus kahoots',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: () => _cubit.load(),
                           child: const Text('Reintentar'),
-                        )
+                        ),
                       ],
                     ),
                   );

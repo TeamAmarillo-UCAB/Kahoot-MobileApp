@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../../../core/auth_state.dart';
 import '../../../main.dart';
 import '../../domain/entities/category.dart';
+import '../../../config/api_config.dart';
 
 class ExploreDatasourceImpl implements ExploreDatasource {
   final Dio dio = Dio();
@@ -23,7 +24,7 @@ class ExploreDatasourceImpl implements ExploreDatasource {
         },
       ),
     );
-    dio.options.baseUrl = apiBaseUrl.trim();
+    dio.options.baseUrl = ApiConfig().baseUrl.trim();
   }
 
   // Map common English category names to Spanish equivalents.
@@ -80,9 +81,15 @@ class ExploreDatasourceImpl implements ExploreDatasource {
     final Response res = await dio.get('/explore/categories');
     // Log for debugging
     try {
-      print('GET /explore/categories (status ${res.statusCode}) -> ' + jsonEncode(res.data));
+      print(
+        'GET /explore/categories (status ${res.statusCode}) -> ' +
+            jsonEncode(res.data),
+      );
     } catch (_) {
-      print('GET /explore/categories (status ${res.statusCode}) -> ' + res.data.toString());
+      print(
+        'GET /explore/categories (status ${res.statusCode}) -> ' +
+            res.data.toString(),
+      );
     }
 
     final data = res.data;
@@ -94,7 +101,9 @@ class ExploreDatasourceImpl implements ExploreDatasource {
     } else {
       list = const [];
     }
-    return list.map((e) => Category.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => Category.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -117,7 +126,11 @@ class ExploreDatasourceImpl implements ExploreDatasource {
       return Kahoot.fromJsonList(data);
     }
     if (data is Map<String, dynamic>) {
-      final list = (data['data'] as List?) ?? (data['items'] as List?) ?? (data['results'] as List?) ?? const [];
+      final list =
+          (data['data'] as List?) ??
+          (data['items'] as List?) ??
+          (data['results'] as List?) ??
+          const [];
       return Kahoot.fromJsonList(list);
     }
     return const <Kahoot>[];

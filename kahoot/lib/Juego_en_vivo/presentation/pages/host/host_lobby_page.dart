@@ -12,6 +12,7 @@ import 'host_question_page.dart';
 import 'host_results_page.dart';
 import 'host_podium_page.dart';
 import '../../..../../../../core/auth_state.dart';
+import '../../../../config/api_config.dart';
 
 class HostLobbyView extends StatefulWidget {
   final String kahootId;
@@ -30,7 +31,7 @@ class _HostLobbyViewState extends State<HostLobbyView> {
     super.initState();
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
+        baseUrl: ApiConfig().baseUrl,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

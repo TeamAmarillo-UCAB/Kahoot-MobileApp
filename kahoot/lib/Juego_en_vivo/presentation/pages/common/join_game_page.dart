@@ -11,6 +11,8 @@ import '../../bloc/live_game_event.dart';
 import '../../bloc/live_game_state.dart';
 import '../common/nickname_entry_page.dart';
 
+import '../../../../config/api_config.dart';
+
 class JoinGamePage extends StatefulWidget {
   const JoinGamePage({Key? key}) : super(key: key);
 
@@ -28,9 +30,7 @@ class _JoinGamePageState extends State<JoinGamePage> {
     super.initState();
 
     //Dio
-    final dio = Dio(
-      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
-    );
+    final dio = Dio(BaseOptions(baseUrl: ApiConfig().baseUrl));
 
     //Infraestructura
     final datasource = LiveGameDatasourceImpl(dio: dio);

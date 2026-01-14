@@ -4,6 +4,7 @@ import 'package:http/http.dart' show MediaType;
 import '../../domain/entities/media_resource.dart';
 import '../../domain/datasource/media_resource_datasource.dart';
 import '../../../core/auth_state.dart';
+import '../../../config/api_config.dart';
 
 class MediaResourceDatasourceImpl implements MediaResourceDataSource {
   final Dio dio;
@@ -12,7 +13,6 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
           dio ??
           Dio(
             BaseOptions(
-              baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
             ),
@@ -23,7 +23,7 @@ class MediaResourceDatasourceImpl implements MediaResourceDataSource {
         onRequest: (options, handler) {
           // Obtener token
           final token = AuthState.token.value;
-
+          options.baseUrl = ApiConfig().baseUrl;
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
