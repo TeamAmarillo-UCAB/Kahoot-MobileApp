@@ -13,7 +13,6 @@ class QRViewerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // La URL se construye según el endpoint del backend para que el jugador se una
     final String joinUrl = qrToken;
 
     return AlertDialog(
@@ -29,9 +28,7 @@ class QRViewerDialog extends StatelessWidget {
               version: QrVersions.auto,
               size: 250.0,
               gapless: false,
-              embeddedImage: const AssetImage(
-                'assets/images/logo_icon.png',
-              ), // Opcional
+              embeddedImage: const AssetImage('assets/images/logo_icon.png'),
               embeddedImageStyle: const QrEmbeddedImageStyle(
                 size: Size(40, 40),
               ),

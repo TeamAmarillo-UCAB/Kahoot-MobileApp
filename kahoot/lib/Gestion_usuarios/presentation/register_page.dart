@@ -14,7 +14,8 @@ import '../application/usecases/delete_user.dart';
 import '../application/usecases/login_user.dart';
 import 'login_page.dart';
 import '../../../main.dart';
-import 'pages/account_page.dart';
+
+import '../../core/auth_state.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -28,6 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _userIdCtrl = TextEditingController();
+  final TextEditingController _fullNameCtrl = TextEditingController();
   String _selectedType = 'student';
   bool _obscurePassword = true;
 
@@ -37,6 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _userIdCtrl.dispose();
+    _fullNameCtrl.dispose();
     super.dispose();
   }
 
@@ -65,30 +68,11 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ],
       child: Scaffold(
-        backgroundColor: const Color(0xFF3A240C),
+        backgroundColor: const Color(0xFF9A5C0A),
         body: Column(
           children: [
-            Container(
-              color: const Color(0xFF1E1E1E),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Volver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    },
-                    child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
+            // Encabezado eliminado para diseño limpio
+            const SizedBox(height: 0),
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -98,11 +82,9 @@ class _RegisterPageState extends State<RegisterPage> {
               width: 360,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2C147),
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2)),
-                ],
+                boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 4, offset: Offset(0, 1))],
               ),
               child: BlocListener<UserEditorCubit, UserEditorState>(
                 listener: (context, state) {
@@ -114,10 +96,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Usuario registrado/actualizado exitosamente')),
                     );
-                    // Navegar de regreso a AccountPage después de registrar correctamente
+                    // Redirigir a LoginPage tras registro exitoso
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const AccountPage()),
-                      (route) => route.isFirst,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
                     );
                   }
                 },
@@ -127,38 +109,41 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 14),
                   const Text(
                     'Registrarse',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const SizedBox(height: 18),
                   const SizedBox(height: 8),
-                  const Text('Email'),
-                  const SizedBox(height: 6),
                   TextField(
                     controller: _emailCtrl,
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      hintText: 'Email',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text('Nombre de usuario'),
-                  const SizedBox(height: 6),
                   TextField(
                     controller: _nameCtrl,
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      hintText: 'Nombre de usuario',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text('Contraseña'),
-                  const SizedBox(height: 6),
                   TextField(
                     controller: _passwordCtrl,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      hintText: 'Contraseña',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                         onPressed: () {
@@ -170,60 +155,108 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text('Tipo de usuario'),
-                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _fullNameCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Nombre y Apellido',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
                   const SizedBox(height: 10),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Ya tienes cuenta? Inicia sesión',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text('Tipo de usuario', style: TextStyle(color: Colors.white)),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
-                      Checkbox(value: false, onChanged: null),
-                      const Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            text: 'Quiero recibir informacion, ofertas, recomendaciones y actualizaciones de kahoot! y ',
-                            children: [
-                              TextSpan(
-                                text: 'Otras empresas de kahoot!',
-                                style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-                              ),
-                            ],
-                          ),
-                          style: TextStyle(fontSize: 13),
-                        ),
+                      Checkbox(
+                        value: _selectedType == 'student',
+                        onChanged: (val) {
+                          setState(() => _selectedType = 'student');
+                        },
                       ),
+                      const Text('Estudiante', style: TextStyle(color: Colors.white)),
+                      const SizedBox(width: 16),
+                      Checkbox(
+                        value: _selectedType == 'teacher',
+                        onChanged: (val) {
+                          setState(() => _selectedType = 'teacher');
+                        },
+                      ),
+                      const Text('Profesor', style: TextStyle(color: Colors.white)),
                     ],
                   ),
                   const SizedBox(height: 8),
                   BlocBuilder<UserEditorCubit, UserEditorState>(
                     builder: (context, state) {
                       final saving = state.status == UserEditorStatus.saving;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          GradientButton(
-                            onTap: saving
-                                ? null
-                                : () {
-                                    final name = _nameCtrl.text.trim();
-                                    final email = _emailCtrl.text.trim();
-                                    final password = _passwordCtrl.text.trim();
-                                    if (name.isEmpty || email.isEmpty || password.isEmpty || _selectedType.isEmpty) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Completa todos los campos.')),
-                                      );
-                                      return;
-                                    }
-                                    final cubit = context.read<UserEditorCubit>();
-                                    cubit
-                                      ..setName(name)
-                                      ..setEmail(email)
-                                      ..setPassword(password);                                    cubit.saveCreate();
-                                  },
-                            child: Text(
-                              saving ? 'Guardando...' : 'Continuar',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            ),
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: GradientButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          onTap: saving
+                              ? null
+                              : () {
+                                  final username = _nameCtrl.text.trim();
+                                  final email = _emailCtrl.text.trim();
+                                  final password = _passwordCtrl.text.trim();
+                                  final fullName = _fullNameCtrl.text.trim();
+                                  if (username.isEmpty || email.isEmpty || password.isEmpty || fullName.isEmpty || _selectedType.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Completa todos los campos.')),
+                                    );
+                                    return;
+                                  }
+                                  // Validar dominio del email
+                                  final emailPattern = RegExp('^[A-Za-z0-9._%+-]+@(gmail|hotmail)\\.com\$');
+                                  if (!emailPattern.hasMatch(email)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('El email debe ser @gmail.com o @hotmail.com.')),
+                                    );
+                                    return;
+                                  }
+                                  if (username.length < 6) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('El nombre de usuario debe tener al menos 6 caracteres.')),
+                                    );
+                                    return;
+                                  }
+                                  if (password.length < 6) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres.')),
+                                    );
+                                    return;
+                                  }
+                                  // Persistir auxiliarmente nombre completo y tipo para createUser
+                                  AuthState.fullName.value = fullName;
+                                  AuthState.userType.value = (_selectedType == 'Estudiante' ? 'STUDENT' : (_selectedType == 'Profesor' ? 'TEACHER' : _selectedType.toUpperCase()));
+                                  final cubit = context.read<UserEditorCubit>();
+                                  cubit
+                                    ..setName(username)
+                                    ..setEmail(email)
+                                    ..setPassword(password);
+                                  cubit.saveCreate();
+                                },
+                          child: Text(
+                            saving ? 'Guardando...' : 'Crear cuenta',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
-                        ],
+                        ),
                       );
                     },
                   ),

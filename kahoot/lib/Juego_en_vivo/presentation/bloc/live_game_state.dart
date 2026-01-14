@@ -1,4 +1,3 @@
-// lib/presentation/bloc/live_game_state.dart
 import '../../domain/entities/live_game_state.dart';
 import '../../domain/entities/live_session.dart';
 
@@ -10,6 +9,7 @@ enum LiveGameStatus {
   waitingResults,
   results,
   end,
+  hostDisconnected,
   error,
 }
 

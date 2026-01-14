@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
@@ -122,8 +123,24 @@ class KahootDatasourceImpl implements KahootDatasource {
       );
       if (res.data is Map<String, dynamic>) {
         final map = res.data as Map<String, dynamic>;
-        lastCreatedKahootId =
-            (map['kahootId'] as String?) ?? (map['id'] as String?);
+        lastCreatedKahootId = (map['kahootId'] as String?) ?? (map['id'] as String?);
+        // Persist UI snapshot locally keyed by backend id
+        final String keyId = (lastCreatedKahootId ?? kahootId);
+        if (keyId.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final snapshot = {
+            'questions': question.map((q) => {
+              'type': _mapQuestionTypeV2(q.type),
+              'title': q.title.isNotEmpty ? q.title : q.text,
+              'time': q.timeLimitSeconds,
+              'answers': q.answer.map((a) => {
+                'text': a.text,
+                'isCorrect': a.isCorrect,
+              }).toList(),
+            }).toList(),
+          };
+          await prefs.setString('uiState:' + keyId, jsonEncode(snapshot));
+        }
       }
     } catch (_) {
       // Si no es JSON serializable, mostrar como string
@@ -146,7 +163,7 @@ class KahootDatasourceImpl implements KahootDatasource {
       existing = null;
     }
     // Keep status hardcoded as 'published' per request
-    const String status = 'published';
+    const String status = 'draft';
 
     final Map<String, dynamic> body = {
       'title': kahoot.title.isNotEmpty
@@ -430,9 +447,7 @@ class KahootDatasourceImpl implements KahootDatasource {
             text: (qm['text'] as String?) ?? '',
             title: (qm['text'] as String?) ?? '',
             mediaId: (qm['mediaId'] as String?) ?? '',
-            type: QuestionTypeX.fromString(
-              (qm['questionType'] as String?) ?? 'quiz',
-            ),
+            type: (() { final raw = (qm['questionType'] as String?) ?? (qm['type'] as String?) ?? 'single'; final v = raw.toLowerCase().replaceAll(' ', '_'); if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz') return QuestionType.quiz_multiple; if (v == 'single' || v == 'quiz_single') return QuestionType.quiz_single; if (v == 'true_false' || v == 'true_or_false') return QuestionType.true_false; if (v == 'short_answer') return QuestionType.short_answer; return QuestionType.quiz_single; })(),
             points: (qm['points'] as int?) ?? 0,
             timeLimitSeconds: (qm['timeLimit'] as int?) ?? 0,
             answer: answersRaw.map((a) {
@@ -487,9 +502,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           text: (qm['text'] as String?) ?? '',
           title: (qm['text'] as String?) ?? '',
           mediaId: (qm['mediaId'] as String?) ?? '',
-          type: QuestionTypeX.fromString(
-            (qm['questionType'] as String?) ?? 'quiz',
-          ),
+          type: (() { final raw = (qm['questionType'] as String?) ?? (qm['type'] as String?) ?? 'single'; final v = raw.toLowerCase().replaceAll(' ', '_'); if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz') return QuestionType.quiz_multiple; if (v == 'single' || v == 'quiz_single') return QuestionType.quiz_single; if (v == 'true_false' || v == 'true_or_false') return QuestionType.true_false; if (v == 'short_answer') return QuestionType.short_answer; return QuestionType.quiz_single; })(),
           points: (qm['points'] as int?) ?? 0,
           timeLimitSeconds: (qm['timeLimit'] as int?) ?? 0,
           answer: answersRaw.map((a) {

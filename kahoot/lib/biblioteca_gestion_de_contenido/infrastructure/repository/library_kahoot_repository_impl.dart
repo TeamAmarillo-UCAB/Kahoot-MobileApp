@@ -2,6 +2,8 @@ import '../../domain/repositories/library_repository.dart';
 import '../../domain/datasource/library_datasource.dart';
 import '../../../core/result.dart';
 import '../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
+import '../../../Creacion_edicion_quices/domain/entities/question.dart';
+import '../../../Creacion_edicion_quices/domain/entities/answer.dart';
 
 class LibraryKahootRepositoryImpl implements KahootRepository {
 	final LibraryDatasource datasource;
@@ -51,6 +53,28 @@ class LibraryKahootRepositoryImpl implements KahootRepository {
       return Result.success(null);
     } catch (e, st) {
       print('Error deleteKahoot($kahootId): ' + e.toString());
+      print('Stack: ' + st.toString());
+      return Result.makeError(Exception(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> updateMyKahoot(
+    String kahootId,
+    String title,
+    String description,
+    String image,
+    String visibility,
+    String status,
+    String theme,
+    List<Question> question,
+    List<Answer> answer,
+  ) async {
+    try {
+      await datasource.updateMyKahoot(kahootId, title, description, image, visibility, status, theme, question, answer);
+      return Result.success(null);
+    } catch (e, st) {
+      print('Error updateMyKahoot($kahootId): ' + e.toString());
       print('Stack: ' + st.toString());
       return Result.makeError(Exception(e));
     }
