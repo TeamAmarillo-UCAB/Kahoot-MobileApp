@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'kahoots_library_loader.dart';
+import '../../../../Grupos/presentation/pages/my_groups_page.dart';
 
 class BibliotecaPage extends StatelessWidget {
   const BibliotecaPage({Key? key}) : super(key: key);
@@ -18,7 +19,10 @@ class BibliotecaPage extends StatelessWidget {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Column(
                   children: [
                     _AnimatedAppear(
@@ -39,6 +43,14 @@ class BibliotecaPage extends StatelessWidget {
                         titleBottom: 'Grupos',
                         topIcon: Icons.sticky_note_2_outlined,
                         bottomIcon: Icons.group,
+                        onTapBottom: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MyGroupsPage(),
+                            ),
+                          );
+                        },
+                        navigateTop: true,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -104,12 +116,14 @@ class _LibraryCard extends StatelessWidget {
   final IconData topIcon;
   final IconData bottomIcon;
   final bool navigateTop;
+  final VoidCallback? onTapBottom;
   const _LibraryCard({
     required this.titleTop,
     required this.titleBottom,
     required this.topIcon,
     required this.bottomIcon,
     this.navigateTop = false,
+    this.onTapBottom,
   });
 
   static const Color cardYellow = Color(0xFFFFB300);
@@ -122,41 +136,73 @@ class _LibraryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardYellow,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           _tile(context, topIcon, titleTop, top: true),
           const Divider(height: 1, thickness: 1, color: dividerColor),
-          _tile(context, bottomIcon, titleBottom, top: false),
+          _tile(
+            context,
+            bottomIcon,
+            titleBottom,
+            top: false,
+            customOnTap: onTapBottom,
+          ),
         ],
       ),
     );
     return card;
   }
 
-  Widget _tile(BuildContext context, IconData icon, String title, {required bool top}) {
+  Widget _tile(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    required bool top,
+    VoidCallback? customOnTap,
+  }) {
     final content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Row(
         children: [
           Icon(icon, color: Colors.black87),
           const SizedBox(width: 8),
-          Text(title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
-    final isTopNavigable = navigateTop && top;
-    return isTopNavigable
-        ? InkWell(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const KahootsLibraryLoader()),
-              );
-            },
-            child: content,
-          )
-        : content;
+
+    //Navegación a librería
+    if (top && navigateTop) {
+      return InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const KahootsLibraryLoader()),
+          );
+        },
+        child: content,
+      );
+    }
+
+    // Navegación a grupos
+    if (customOnTap != null) {
+      return InkWell(onTap: customOnTap, child: content);
+    }
+
+    return content;
   }
 }
 
@@ -174,7 +220,13 @@ class _SingleCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardYellow,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -182,7 +234,13 @@ class _SingleCard extends StatelessWidget {
           children: [
             Icon(icon, color: Colors.black87),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
