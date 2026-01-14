@@ -31,6 +31,7 @@ class MyGroupsPage extends StatelessWidget {
 
   const MyGroupsPage({Key? key, this.invitationToken}) : super(key: key);
 
+  //ALERTA ESTO ESTA HARDCODEADOOOOOOOOOOOO AAAAAAA
   final String _currentUserId = "c5b09c21-bcfd-492e-9f3b-d7089074185d";
 
   @override
