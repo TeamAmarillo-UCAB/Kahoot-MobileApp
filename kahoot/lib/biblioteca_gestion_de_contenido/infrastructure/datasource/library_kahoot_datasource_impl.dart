@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'dart:convert';
 import '../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
+import '../../../Creacion_edicion_quices/domain/entities/question.dart';
+import '../../../Creacion_edicion_quices/domain/entities/answer.dart';
 import '../../domain/datasource/library_datasource.dart';
 import '../../../core/auth_state.dart';
 
@@ -51,19 +53,62 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
     }
 
     final data = res.data;
+
+    QuestionType _parseType(String? raw) {
+      final v = (raw ?? 'single').toLowerCase().replaceAll(' ', '_');
+      if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz') return QuestionType.quiz_multiple;
+      if (v == 'single' || v == 'quiz_single') return QuestionType.quiz_single;
+      if (v == 'true_false' || v == 'true_or_false') return QuestionType.true_false;
+      if (v == 'short_answer') return QuestionType.short_answer;
+      return QuestionType.quiz_single;
+    }
+
+    List<Kahoot> _mapList(List<Map<String, dynamic>> rawList) {
+      return rawList.map((raw) {
+        final m = Map<String, dynamic>.from(raw);
+        final id = (m['kahootId'] ?? m['id'] ?? m['_id'] ?? '').toString();
+        final questionsRaw = (m['questions'] as List?) ?? const [];
+        final questions = questionsRaw.map((q) {
+          final qm = q as Map<String, dynamic>;
+          final answersRaw = (qm['answers'] as List?) ?? const [];
+          return Question(
+            text: (qm['text'] as String?) ?? '',
+            title: (qm['title'] as String?) ?? (qm['text'] as String?) ?? '',
+            mediaId: (qm['mediaId'] as String?) ?? '',
+            type: _parseType((qm['questionType'] as String?) ?? (qm['type'] as String?)),
+            points: (qm['points'] as int?) ?? 0,
+            timeLimitSeconds: (qm['timeLimitSeconds'] as int?) ?? (qm['timeLimit'] as int?) ?? 0,
+            answer: answersRaw.map((a) {
+              final am = a as Map<String, dynamic>;
+              return Answer(
+                text: (am['text'] as String?) ?? '',
+                image: (am['mediaId'] as String?) ?? '',
+                isCorrect: (am['isCorrect'] as bool?) ?? false,
+                questionId: '',
+              );
+            }).toList(),
+          );
+        }).toList();
+        return Kahoot(
+          kahootId: id,
+          authorId: (m['authorId'] as String?) ?? '',
+          title: (m['title'] as String?) ?? '',
+          description: (m['description'] as String?) ?? '',
+          visibility: KahootVisibilityX.fromString((m['visibility'] as String?) ?? 'private'),
+          question: questions,
+          image: (m['coverImageId'] as String?) ?? (m['image'] as String?) ?? '',
+          theme: (m['themeId'] as String?) ?? (m['theme'] as String?) ?? '',
+        );
+      }).toList();
+    }
+
     if (data is List) {
       final rawList = data.cast<Map<String, dynamic>>();
-      final normalized = rawList.map((m) {
-        final map = Map<String, dynamic>.from(m);
-        map['kahootId'] = (map['kahootId'] ?? map['id'] ?? map['_id'] ?? '').toString();
-        return map;
-      }).toList();
-      // Debug: print ids
-      for (final m in normalized) {
-        final id = m['kahootId'] ?? '';
-        print('[LIBRARY] kahootId: ' + id.toString());
+      final list = _mapList(rawList);
+      for (final k in list) {
+        print('[LIBRARY] kahootId: ' + k.kahootId);
       }
-      return Kahoot.fromJsonList(normalized);
+      return list;
     } else if (data is Map<String, dynamic>) {
       final list =
           (data['data'] as List?) ??
@@ -71,16 +116,11 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
           (data['results'] as List?) ??
           const [];
       final rawList = list.cast<Map<String, dynamic>>();
-      final normalized = rawList.map((m) {
-        final map = Map<String, dynamic>.from(m);
-        map['kahootId'] = (map['kahootId'] ?? map['id'] ?? map['_id'] ?? '').toString();
-        return map;
-      }).toList();
-      for (final m in normalized) {
-        final id = m['kahootId'] ?? '';
-        print('[LIBRARY] kahootId: ' + id.toString());
+      final mapped = _mapList(rawList);
+      for (final k in mapped) {
+        print('[LIBRARY] kahootId: ' + k.kahootId);
       }
-      return Kahoot.fromJsonList(normalized);
+      return mapped;
     }
     return const <Kahoot>[];
   }
@@ -124,5 +164,74 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
     final String path = '/kahoots/' + kahootId;
     final res = await dio.delete(path, options: Options(headers: headers));
     print('DELETE ' + path + ' -> ' + (res.statusCode?.toString() ?? ''));
+  }
+
+  @override
+  Future<void> updateMyKahoot(
+    String kahootId,
+    String title,
+    String description,
+    String image,
+    String visibility,
+    String status,
+    String theme,
+    List<Question> question,
+    List<Answer> answer,
+  ) async {
+    final token = AuthState.token.value;
+    final headers = {'Content-Type': 'application/json'};
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+
+    String _mapType(QuestionType t) {
+      switch (t) {
+        case QuestionType.true_false:
+          return 'true_false';
+        case QuestionType.quiz_multiple:
+          return 'multiple';
+        case QuestionType.quiz_single:
+        default:
+          return 'single';
+      }
+    }
+
+    final body = {
+      'title': title,
+      'description': description,
+      'coverImageId': image.isNotEmpty ? image : null,
+      'visibility': visibility,
+      'status': 'draft',
+      'category': theme,
+      //'themeId': theme.isNotEmpty ? theme : null,
+      'themeId': 'd67b732b-020b-4776-996c-98bbdaa7c263',
+      'questions': question.map((q) {
+        final qType = _mapType(q.type);
+        final answersSnapshot = q.answer.map((a) => {
+          'text': a.text.isNotEmpty ? a.text : null,
+          'isCorrect': a.isCorrect,
+        }).toList();
+        return {
+          'text': q.text.isNotEmpty ? q.text : q.title,
+          'mediaId': q.mediaId.isNotEmpty ? q.mediaId : null,
+          'type': qType,
+          'timeLimit': q.timeLimitSeconds,
+          'points': q.points,
+          'answers': q.answer.map((a) => {
+                'text': a.text.isNotEmpty ? a.text : null,
+                'mediaId': a.image.isNotEmpty ? a.image : null,
+                'isCorrect': a.isCorrect,
+              }).where((m) => m['text'] != null || m['mediaId'] != null).toList(),
+        };
+      }).toList(),
+    };
+
+    print('PUT /kahoots/' + kahootId + ' payload: ' + jsonEncode(body));
+    final res = await dio.put(
+      '/kahoots/' + kahootId,
+      options: Options(headers: headers),
+      data: body,
+    );
+    print('PUT /kahoots/' + kahootId + ' -> ' + (res.statusCode?.toString() ?? ''));
   }
 }

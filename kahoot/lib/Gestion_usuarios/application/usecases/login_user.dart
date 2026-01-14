@@ -5,7 +5,7 @@ class LoginUser {
   final UserRepository repository;
   LoginUser(this.repository);
 
-  Future<Result<void>> call(String email, String password) async {
-    return await repository.userLogin(email, password);
+  Future<Result<void>> call(String userName, String password) async {
+    return await repository.userLogin(userName, password);
   }
 }

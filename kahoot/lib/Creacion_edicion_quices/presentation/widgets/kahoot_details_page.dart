@@ -108,6 +108,12 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
         case 'short_answer':
           qType = QuestionType.short_answer;
           break;
+        case 'multiple':
+          qType = QuestionType.quiz_multiple;
+          break;
+        case 'single':
+          qType = QuestionType.quiz_single;
+          break;
         case 'quiz':
         default:
           qType = QuestionType.quiz_single;
