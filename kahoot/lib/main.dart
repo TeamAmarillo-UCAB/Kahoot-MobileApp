@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:kahoot/Juego_en_vivo/presentation/pages/common/join_game_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
+import 'Gestion_usuarios/presentation/login_page.dart';
 import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
 
-const String apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://quizzy-backend-0wh2.onrender.com/api',
-); //back 1
-// const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backcomun-gc5j.onrender.com'); //back comun
+const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-1-zpvc.onrender.com/api'); //host pub
+//const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzybackend.app/api'); //host priv
+
 void main() {
   runApp(const MyApp());
 }
@@ -28,12 +27,51 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.nunitoTextTheme(),
       ),
-      home: const MainShell(),
+      home: const SplashScreen(),
     );
   }
 }
 
 // La página de creación real ahora está en create_kahoot_page.dart
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const Color splashYellow = Color(0xFFF2C147);
+    return Scaffold(
+      backgroundColor: splashYellow,
+      body: SafeArea(
+        child: Center(
+          child: Image.asset(
+            'assets/letra.png',
+            height: 120,
+            errorBuilder: (_, __, ___) => const Text(
+              'K!',
+              style: TextStyle(color: Colors.brown, fontSize: 64, fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class MainShell extends StatefulWidget {
   const MainShell({Key? key}) : super(key: key);

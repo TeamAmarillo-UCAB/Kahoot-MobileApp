@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import 'kahoots_library_details_page.dart';
 import '../../../core/widgets/gradient_button.dart';
-import '../../../../Creacion_edicion_quices/presentation/widgets/kahoot_details_page.dart';
+import 'library_kahoot_editor_page.dart';
 import '../blocs/favorites_cubit.dart';
 import '../blocs/delete_kahoot_cubit.dart';
 import '../blocs/library_list_cubit.dart';
@@ -144,7 +144,7 @@ class _KahootCard extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => KahootDetailsPage(initialKahoot: item)),
+                        MaterialPageRoute(builder: (_) => LibraryKahootEditorPage(initialKahoot: item)),
                       );
                     },
                     child: const Icon(Icons.edit, size: 20, color: Color(0xFF3A240C)),
