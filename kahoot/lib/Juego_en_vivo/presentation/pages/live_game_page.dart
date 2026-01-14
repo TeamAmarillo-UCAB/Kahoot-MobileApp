@@ -13,7 +13,6 @@ class LiveGamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // BlocListener solo para errores o salidas definitivas
       body: BlocListener<LiveGameBloc, LiveGameBlocState>(
         listener: (context, state) {
           if (state.status == LiveGameStatus.error) {

@@ -24,7 +24,7 @@ class LiveSlide {
   factory LiveSlide.fromJson(Map<String, dynamic> json) {
     return LiveSlide(
       id: json['id']?.toString() ?? '',
-      questionIndex: json['questionIndex'] ?? 0,
+      questionIndex: json['position'] ?? 0,
       totalQuestions: json['totalQuestions'] ?? 0,
       slideType: json['slideType'] ?? '',
       timeLimit: json['timeLimitSeconds'] ?? 0,

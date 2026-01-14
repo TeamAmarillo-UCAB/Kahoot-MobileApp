@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/live_game_bloc.dart';
@@ -14,12 +15,34 @@ class NicknameEntryPage extends StatefulWidget {
 }
 
 class _NicknameEntryPageState extends State<NicknameEntryPage> {
+  Timer? _timeoutTimer;
   final TextEditingController _controller = TextEditingController();
+  bool _showLocalLoading = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _timeoutTimer?.cancel();
     super.dispose();
+  }
+
+  void _startTimeoutCheck() {
+    setState(() => _showLocalLoading = true);
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        final state = context.read<LiveGameBloc>().state;
+        if (state.status == LiveGameStatus.loading) {
+          setState(() => _showLocalLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El PIN no pertenece a ninguna sesión activa'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -28,6 +51,10 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
       listener: (context, state) {
         if (state.status == LiveGameStatus.lobby) {
           print("Nickname aceptado. Entrando a la sesión de juego...");
+
+          _timeoutTimer?.cancel();
+
+          setState(() => _showLocalLoading = false);
 
           final liveGameBloc = context.read<LiveGameBloc>();
 
@@ -42,6 +69,8 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
         }
 
         if (state.status == LiveGameStatus.error) {
+          setState(() => _showLocalLoading = false);
+          _timeoutTimer?.cancel();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.errorMessage ?? 'Error al unirse')),
           );
@@ -90,7 +119,7 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
                 const SizedBox(height: 24),
                 BlocBuilder<LiveGameBloc, LiveGameBlocState>(
                   builder: (context, state) {
-                    final isLoading = state.status == LiveGameStatus.loading;
+                    final isLoading = _showLocalLoading;
                     return SizedBox(
                       width: double.infinity,
                       height: 60,
@@ -105,11 +134,26 @@ class _NicknameEntryPageState extends State<NicknameEntryPage> {
                         onPressed: isLoading
                             ? null
                             : () {
-                                if (_controller.text.trim().isNotEmpty) {
-                                  context.read<LiveGameBloc>().add(
-                                    JoinLobby(_controller.text.trim()),
+                                final nickname = _controller.text.trim();
+
+                                if (nickname.length < 4 ||
+                                    nickname.length > 20) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'El apodo debe tener entre 4 y 20 caracteres',
+                                      ),
+                                      backgroundColor: Colors.orangeAccent,
+                                      duration: Duration(seconds: 2),
+                                    ),
                                   );
+                                  return;
                                 }
+
+                                _startTimeoutCheck();
+                                context.read<LiveGameBloc>().add(
+                                  JoinLobby(nickname),
+                                );
                               },
                         child: isLoading
                             ? const CircularProgressIndicator(
