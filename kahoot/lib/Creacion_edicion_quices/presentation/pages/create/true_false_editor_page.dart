@@ -10,7 +10,16 @@ class TrueFalseEditorPage extends StatefulWidget {
   final String? initialTrueText;
   final String? initialFalseText;
   final int? initialTime;
-  const TrueFalseEditorPage({Key? key, this.index, this.initialTitle, this.initialTrueText, this.initialFalseText, this.initialTime}) : super(key: key);
+  final String? initialMediaId;
+  const TrueFalseEditorPage({
+    Key? key,
+    this.index,
+    this.initialTitle,
+    this.initialTrueText,
+    this.initialFalseText,
+    this.initialTime,
+    this.initialMediaId,
+  }) : super(key: key);
 
   @override
   State<TrueFalseEditorPage> createState() => _TrueFalseEditorPageState();
@@ -27,12 +36,18 @@ class _TrueFalseEditorPageState extends State<TrueFalseEditorPage> {
   final List<int> timeOptions = [5, 10, 20, 45, 60, 90, 120, 180, 240];
   int selectedTime = 20;
 
+  String? currentMediaId;
+
   @override
   void initState() {
     super.initState();
-    if (widget.initialTitle != null) questionController.text = widget.initialTitle!;
-    if (widget.initialTrueText != null) trueController.text = widget.initialTrueText!;
-    if (widget.initialFalseText != null) falseController.text = widget.initialFalseText!;
+    currentMediaId = widget.initialMediaId;
+    if (widget.initialTitle != null)
+      questionController.text = widget.initialTitle!;
+    if (widget.initialTrueText != null)
+      trueController.text = widget.initialTrueText!;
+    if (widget.initialFalseText != null)
+      falseController.text = widget.initialFalseText!;
     if (widget.initialTime != null) selectedTime = widget.initialTime!;
   }
 
@@ -103,9 +118,11 @@ class _TrueFalseEditorPageState extends State<TrueFalseEditorPage> {
       {'text': trueController.text.trim(), 'isCorrect': true},
       {'text': falseController.text.trim(), 'isCorrect': false},
     ];
+    print("Guardando pregunta con mediaId: $currentMediaId");
     Navigator.of(context).pop({
       'type': 'true_false',
       'title': questionText,
+      'mediaId': currentMediaId,
       'time': selectedTime,
       'answers': answers,
     });
@@ -131,7 +148,13 @@ class _TrueFalseEditorPageState extends State<TrueFalseEditorPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: GradientButton(
               onTap: _save,
-              child: const Text('Listo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Listo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -142,7 +165,11 @@ class _TrueFalseEditorPageState extends State<TrueFalseEditorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            const MediaResourceSelector(),
+            MediaResourceSelector(
+              onIdSelected: (id) {
+                setState(() => currentMediaId = id);
+              },
+            ),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -239,7 +266,10 @@ class _TFBox extends StatelessWidget {
             tooltip: 'Subir imagen',
             icon: const Icon(Icons.image, color: Colors.white),
             onPressed: () async {
-              final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
+              final res = await FilePicker.platform.pickFiles(
+                type: FileType.image,
+                allowMultiple: false,
+              );
               final name = res?.files.first.name;
               if (name != null) {
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -44,19 +44,29 @@ class KahootEditorState extends Equatable {
     EditorStatus? status,
     String? errorMessage,
   }) => KahootEditorState(
-        authorId: authorId ?? this.authorId,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        coverImageId: coverImageId ?? this.coverImageId,
-        visibility: visibility ?? this.visibility,
-        themeId: themeId ?? this.themeId,
-        questions: questions ?? this.questions,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+    authorId: authorId ?? this.authorId,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    coverImageId: coverImageId ?? this.coverImageId,
+    visibility: visibility ?? this.visibility,
+    themeId: themeId ?? this.themeId,
+    questions: questions ?? this.questions,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 
   @override
-  List<Object?> get props => [authorId, title, description, coverImageId, visibility, themeId, questions, status, errorMessage];
+  List<Object?> get props => [
+    authorId,
+    title,
+    description,
+    coverImageId,
+    visibility,
+    themeId,
+    questions,
+    status,
+    errorMessage,
+  ];
 }
 
 class KahootEditorCubit extends Cubit<KahootEditorState> {
@@ -67,16 +77,18 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
     required this.createKahootUseCase,
     required this.updateKahootUseCase,
     String? initialAuthorId,
-  }) : super(KahootEditorState(
-          authorId: initialAuthorId ?? '',
-          title: '',
-          description: '',
-          coverImageId: '',
-          visibility: 'private',
-          themeId: '',
-          questions: const [],
-          status: EditorStatus.idle,
-        ));
+  }) : super(
+         KahootEditorState(
+           authorId: initialAuthorId ?? '',
+           title: '',
+           description: '',
+           coverImageId: '',
+           visibility: 'private',
+           themeId: '',
+           questions: const [],
+           status: EditorStatus.idle,
+         ),
+       );
 
   void setAuthor(String id) => emit(state.copyWith(authorId: id));
   void setTitle(String v) => emit(state.copyWith(title: v));
@@ -85,13 +97,34 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
   void setVisibility(String v) => emit(state.copyWith(visibility: v));
   void setTheme(String v) => emit(state.copyWith(themeId: v));
 
-  void addQuestion(Question q) => emit(state.copyWith(questions: List<Question>.from(state.questions)..add(q)));
+  void addQuestion(Question q) => emit(
+    state.copyWith(questions: List<Question>.from(state.questions)..add(q)),
+  );
   void updateQuestion(int index, Question q) {
     if (index < 0 || index >= state.questions.length) return;
     final updated = List<Question>.from(state.questions);
     updated[index] = q;
     emit(state.copyWith(questions: updated));
   }
+
+  //PARA ASOCIAR LA IMAGENNNNN
+  void setQuestionMedia(int index, String mediaId) {
+    if (index < 0 || index >= state.questions.length) return;
+
+    final q = state.questions[index];
+    final updatedQ = Question(
+      text: q.text,
+      title: q.title,
+      mediaId: mediaId,
+      type: q.type,
+      points: q.points,
+      timeLimitSeconds: q.timeLimitSeconds,
+      answer: q.answer,
+    );
+
+    updateQuestion(index, updatedQ);
+  }
+
   void removeQuestion(int index) {
     if (index < 0 || index >= state.questions.length) return;
     final updated = List<Question>.from(state.questions)..removeAt(index);
@@ -113,6 +146,7 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
     );
     updateQuestion(qIndex, updatedQ);
   }
+
   void updateAnswer(int qIndex, int aIndex, Answer a) {
     if (qIndex < 0 || qIndex >= state.questions.length) return;
     final q = state.questions[qIndex];
@@ -130,6 +164,7 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
     );
     updateQuestion(qIndex, updatedQ);
   }
+
   void removeAnswer(int qIndex, int aIndex) {
     if (qIndex < 0 || qIndex >= state.questions.length) return;
     final q = state.questions[qIndex];
@@ -162,25 +197,37 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
         id,
         state.authorId,
         state.title,
-        state.description,
+        'djjeju', //state.description,
         state.coverImageId,
         state.visibility,
-        'draft',
+        'publish',
         state.themeId,
         state.questions,
         const <Answer>[],
       );
       if (result == null) {
-        emit(state.copyWith(status: EditorStatus.error, errorMessage: 'Error inesperado: resultado nulo.'));
+        emit(
+          state.copyWith(
+            status: EditorStatus.error,
+            errorMessage: 'Error inesperado: resultado nulo.',
+          ),
+        );
         return;
       }
       if (result.isSuccessful()) {
         emit(state.copyWith(status: EditorStatus.saved));
       } else {
-        emit(state.copyWith(status: EditorStatus.error, errorMessage: result.getError().toString()));
+        emit(
+          state.copyWith(
+            status: EditorStatus.error,
+            errorMessage: result.getError().toString(),
+          ),
+        );
       }
     } catch (e) {
-      emit(state.copyWith(status: EditorStatus.error, errorMessage: e.toString()));
+      emit(
+        state.copyWith(status: EditorStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
@@ -190,7 +237,12 @@ class KahootEditorCubit extends Cubit<KahootEditorState> {
     if (result.isSuccessful()) {
       emit(state.copyWith(status: EditorStatus.saved));
     } else {
-      emit(state.copyWith(status: EditorStatus.error, errorMessage: result.getError().toString()));
+      emit(
+        state.copyWith(
+          status: EditorStatus.error,
+          errorMessage: result.getError().toString(),
+        ),
+      );
     }
   }
 }
