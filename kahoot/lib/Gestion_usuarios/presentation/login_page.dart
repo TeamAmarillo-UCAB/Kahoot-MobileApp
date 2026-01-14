@@ -13,6 +13,8 @@ import '../../Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 import '../../main.dart';
 import '../../core/auth_state.dart';
 import '../../config/api_config.dart';
+import '../../config/backend_selector_widget.dart';
+import 'package:dio/dio.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -36,8 +38,15 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final datasource = UserDatasourceImpl();
-    datasource.dio.options.baseUrl = ApiConfig().baseUrl.trim();
-    print('Login datasource baseUrl: ' + datasource.dio.options.baseUrl);
+    datasource.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          options.baseUrl = ApiConfig().baseUrl.trim();
+          print("Saliendo petición hacia: ${options.baseUrl}"); // Para depurar
+          return handler.next(options);
+        },
+      ),
+    );
     final repository = UserRepositoryImpl(datasource: datasource);
 
     return MultiBlocProvider(
@@ -282,6 +291,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      const Center(child: BackendSelector()),
                     ],
                   ),
                 ),
