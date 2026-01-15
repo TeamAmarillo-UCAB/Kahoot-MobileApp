@@ -64,14 +64,20 @@ class UserDatasourceImpl implements UserDatasource {
   @override
   Future<void> updateUser(User user) async {
     final body = {
-      'email': user.email,
       'username': user.name,
-      'password': user.password,
+      'email': user.email,
     };
-    await dio.put(
-      '/profile',
+    final String? token = AuthState.token.value;
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer ' + token;
+    } else {
+      print('Advertencia: token ausente al solicitar PATCH /user/profile');
+    }
+    await dio.patch(
+      '/user/profile',
       data: body,
-      options: Options(headers: {'Content-Type': 'application/json'}),
+      options: Options(headers: headers),
     );
   }
 
@@ -93,6 +99,57 @@ class UserDatasourceImpl implements UserDatasource {
       return User.fromJson(response.data);
     } else {
       return null;
+    }
+  }
+
+  @override
+  Future<User?> getUserProfile() async {
+    try {
+      final String? token = AuthState.token.value;
+      final headers = <String, String>{'Content-Type': 'application/json'};
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer ' + token;
+      } else {
+        print('Advertencia: token ausente al solicitar /user/profile');
+      }
+      final response = await dio.get(
+        '/user/profile',
+        options: Options(headers: headers),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          final Map<String, dynamic> userJson =
+              (data['user'] is Map<String, dynamic>) ? data['user'] as Map<String, dynamic> : <String, dynamic>{};
+          final Map<String, dynamic> detailsJson =
+              (data['userProfileDetails'] is Map<String, dynamic>) ? data['userProfileDetails'] as Map<String, dynamic> : <String, dynamic>{};
+
+          final String email = (userJson['email'] as String?) ?? '';
+          final String username = (userJson['username'] as String?) ?? '';
+          final String name = (detailsJson['name'] as String?) ?? '';
+
+          // Persistir en AuthState para otras vistas que lean estos valores
+          AuthState.email.value = email;
+          AuthState.username.value = username;
+
+          return User(name: name, email: email, password: '');
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      print('DioException GET '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/user/profile: ' + e.message.toString());
+      if (e.response != null) {
+        try {
+          print('Error response (status ${e.response!.statusCode}): ' + jsonEncode(e.response!.data));
+        } catch (_) {
+          print('Error response (status ${e.response!.statusCode}): ' + e.response!.data.toString());
+        }
+      }
+      rethrow;
+    } catch (e) {
+      print('Error GET '+ (dio.options.baseUrl.isNotEmpty ? dio.options.baseUrl : '(sin baseUrl)') + '/user/profile: ' + e.toString());
+      rethrow;
     }
   }
 

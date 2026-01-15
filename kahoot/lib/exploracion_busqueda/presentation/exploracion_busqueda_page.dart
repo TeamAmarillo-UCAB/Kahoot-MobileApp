@@ -7,6 +7,7 @@ import '../domain/entities/category.dart';
 import '../../core/result.dart';
 import '../application/usecases/get_kahoots_by_category_usecase.dart';
 import '../../Creacion_edicion_quices/domain/entities/kahoot.dart';
+import '../../core/widgets/gradient_button.dart';
 
 class ExploracionBusquedaPage extends StatefulWidget {
   const ExploracionBusquedaPage({Key? key}) : super(key: key);
@@ -67,7 +68,10 @@ class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
                         controller: _searchController,
                         focusNode: _searchFocus,
                         onTap: () => setState(() => _showCategories = true),
-                        onChanged: (_) => setState(() => _showCategories = true),
+                        onChanged: (value) {
+                          // While typing, keep categories visible until one is selected
+                          setState(() => _showCategories = true);
+                        },
                         style: const TextStyle(color: Colors.white),
                         cursorColor: headerYellow,
                         decoration: InputDecoration(
@@ -356,13 +360,14 @@ class _ResultKahootCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color cardYellow = Color(0xFFF2C147);
+    // Tono cálido inspirado en el diseño adjunto
+    const Color cardYellow = Color(0xFFF6C64D);
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
-          colors: [cardYellow, Color(0xFFE2B548)],
+          colors: [cardYellow, Color(0xFFEEA63A)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -436,17 +441,19 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color cardBrown = Color(0xFF5C3A0C);
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: cardBrown,
-        foregroundColor: Colors.white,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return GradientButton(
+      onTap: onPressed,
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 0.2,
+        ),
       ),
-      onPressed: onPressed,
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 }
