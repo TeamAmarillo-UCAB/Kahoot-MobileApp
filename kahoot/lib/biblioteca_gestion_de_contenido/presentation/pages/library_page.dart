@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'kahoots_library_loader.dart';
 import '../../../../Grupos/presentation/pages/my_groups_page.dart';
-
+import '../../../Informes/presentation/pages/my_results_page.dart';
 class BibliotecaPage extends StatelessWidget {
   const BibliotecaPage({Key? key}) : super(key: key);
 
@@ -33,6 +33,15 @@ class BibliotecaPage extends StatelessWidget {
                         topIcon: Icons.person_outline,
                         bottomIcon: Icons.bar_chart,
                         navigateTop: true,
+                        // Navegación limpia hacia MyResultsPage
+                        // La página se encarga de crear su propio BLoC
+                        onTapBottom: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MyResultsPage(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
