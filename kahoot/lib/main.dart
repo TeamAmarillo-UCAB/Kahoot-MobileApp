@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kahoot/Juego_en_vivo/presentation/pages/common/join_game_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/home/home_page.dart';
 import 'Gestion_usuarios/presentation/login_page.dart';
 import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
@@ -91,14 +92,12 @@ class _MainShellState extends State<MainShell> {
     final pages = [
       HomePage(showFooter: false), // 0
       const ExploracionBusquedaPage(), // 1
-      CreateKahootPage(), // 2
-      BibliotecaPage(), // 3
+      JoinGamePage(), //2
+      CreateKahootPage(), // 3
+      BibliotecaPage(), // 4
     ];
 
-    final body = IndexedStack(
-      index: _index,
-      children: pages,
-    );
+    final body = IndexedStack(index: _index, children: pages);
 
     return Scaffold(
       backgroundColor: bgBrown,
@@ -128,24 +127,26 @@ class _MainShellState extends State<MainShell> {
             iconSize: 28,
             onTap: () => setState(() => _index = 1),
           ),
-          const _BottomNavItem(
+          _BottomNavItem(
             icon: Icons.group_add_outlined,
             label: 'Unirse',
+            selected: _index == 2,
             iconSize: 28,
+            onTap: () => setState(() => _index = 2),
           ),
           _BottomNavItem(
             icon: Icons.add_box,
             label: 'Crear',
             iconSize: 30,
-            selected: _index == 2,
-            onTap: () => setState(() => _index = 2),
+            selected: _index == 3,
+            onTap: () => setState(() => _index = 3),
           ),
           _BottomNavItem(
             icon: Icons.library_books,
             label: 'Biblioteca',
-            selected: _index == 3,
+            selected: _index == 4,
             iconSize: 28,
-            onTap: () => setState(() => _index = 3),
+            onTap: () => setState(() => _index = 4),
           ),
         ],
       ),
@@ -178,13 +179,22 @@ class _BottomNavItemState extends State<_BottomNavItem> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.selected ? Colors.brown : _MainShellState.iconDarkYellow;
+    final color = widget.selected
+        ? Colors.brown
+        : _MainShellState.iconDarkYellow;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(widget.icon, color: color, size: widget.iconSize),
         const SizedBox(height: 2),
-        Text(widget.label, style: TextStyle(color: color, fontWeight: widget.selected ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
+        Text(
+          widget.label,
+          style: TextStyle(
+            color: color,
+            fontWeight: widget.selected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
     final child = Transform.translate(

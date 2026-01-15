@@ -9,6 +9,7 @@ import '../../bloc/live_game_state.dart';
 import 'host_question_page.dart';
 import 'host_results_page.dart';
 import 'host_podium_page.dart';
+import '../../..../../../../core/auth_state.dart';
 
 class HostLobbyView extends StatefulWidget {
   final String kahootId;
@@ -20,6 +21,7 @@ class HostLobbyView extends StatefulWidget {
 
 class _HostLobbyViewState extends State<HostLobbyView> {
   late final LiveGameBloc _bloc;
+  final token = AuthState.token.value;
 
   @override
   void initState() {
@@ -28,8 +30,7 @@ class _HostLobbyViewState extends State<HostLobbyView> {
       BaseOptions(
         baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
         headers: {
-          'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDAxOTg3LCJleHAiOjE3NjgwMDkxODd9.XKlHgj81-ZP0FH6qANSELlzX6VUaBhLFEwzXrfIURj4',
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
       ),

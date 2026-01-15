@@ -10,6 +10,7 @@ import '../../application/usecases/next_game_phase.dart';
 import '../../application/usecases/submit_live_answer.dart';
 import 'live_game_event.dart';
 import 'live_game_state.dart';
+import '../../../core/auth_state.dart';
 
 class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
   final LiveGameRepository repository;
@@ -23,6 +24,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
   late final SubmitLiveAnswer submitAnswerUc;
 
   StreamSubscription? _gameStateSubscription;
+  //TOKEN
+  final token = AuthState.token.value;
 
   LiveGameBloc({required this.repository}) : super(LiveGameBlocState()) {
     createSessionUc = CreateLiveSession(repository);
@@ -77,7 +80,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       pin: event.pin,
       role: 'PLAYER',
       nickname: '',
-      jwt: "20936913-0c59-4ee4-ad35-634ef24d7d3d",
+      jwt: token ?? '',
+      //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI5MTAzLCJleHAiOjE3NjgwMzYzMDN9.zsatti9umbcbl7Ebr5c6ILlZ1UpjrxrtsyMWkzm5djc",
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -120,7 +124,8 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
           pin: sessionPin,
           role: 'HOST',
           nickname: 'Host',
-          jwt: "7abc6fed-665e-463d-b54d-8d78c1397e6f",
+          jwt: token ?? '',
+          // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI5MDU4LCJleHAiOjE3NjgwMzYyNTh9.oUezyojXVpHKh9y3PIh0TGyPGgbF7scvEZkKRcY2mSE",
         );
 
         await Future.delayed(const Duration(milliseconds: 500));

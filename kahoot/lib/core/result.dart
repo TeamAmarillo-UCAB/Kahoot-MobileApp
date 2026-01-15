@@ -3,8 +3,6 @@ class Result<T> {
   final Exception? _error;
   final bool _isSuccess;
 
-
-
   const Result._(this._value, this._error, this._isSuccess);
 
   static Result<void> voidSuccess() => Result._(null, null, true);
