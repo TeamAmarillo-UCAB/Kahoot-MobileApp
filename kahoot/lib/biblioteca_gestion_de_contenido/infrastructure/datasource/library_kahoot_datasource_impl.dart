@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../../Creacion_edicion_quices/domain/entities/question.dart';
 import '../../../Creacion_edicion_quices/domain/entities/answer.dart';
+import '../../../Creacion_edicion_quices/domain/entities/category.dart';
 import '../../domain/datasource/library_datasource.dart';
 import '../../../core/auth_state.dart';
 
@@ -21,6 +22,42 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
         },
       ),
     );
+  }
+
+  @override
+  Future<List<Category>> getCategory() async {
+    final token = AuthState.token.value;
+    final headers = {'Content-Type': 'application/json'};
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    final Response res = await dio.get(
+      '/explore/categories',
+      options: Options(headers: headers),
+    );
+    final data = res.data;
+    List<dynamic> list;
+    if (data is List) {
+      list = data;
+    } else if (data is Map<String, dynamic>) {
+      final candidates = ['categories', 'items', 'content', 'data', 'results'];
+      final foundKey = candidates.firstWhere(
+        (k) => data[k] is List,
+        orElse: () => '',
+      );
+      list = foundKey.isNotEmpty ? (data[foundKey] as List) : const [];
+    } else {
+      list = const [];
+    }
+    return list.map((raw) {
+      if (raw is String) {
+        return Category(nombre: raw);
+      }
+      if (raw is Map<String, dynamic>) {
+        return Category.fromJson(raw);
+      }
+      return Category(nombre: raw.toString());
+    }).toList();
   }
 
   @override
@@ -89,6 +126,7 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
             }).toList(),
           );
         }).toList();
+        final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
         return Kahoot(
           kahootId: id,
           authorId: (m['authorId'] as String?) ?? '',
@@ -97,7 +135,7 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
           visibility: KahootVisibilityX.fromString((m['visibility'] as String?) ?? 'private'),
           question: questions,
           image: (m['coverImageId'] as String?) ?? (m['image'] as String?) ?? '',
-          theme: (m['themeId'] as String?) ?? (m['theme'] as String?) ?? '',
+          theme: themeValue,
         );
       }).toList();
     }
@@ -207,10 +245,6 @@ class LibraryKahootDatasourceImpl implements LibraryDatasource {
       'themeId': 'd67b732b-020b-4776-996c-98bbdaa7c263',
       'questions': question.map((q) {
         final qType = _mapType(q.type);
-        final answersSnapshot = q.answer.map((a) => {
-          'text': a.text.isNotEmpty ? a.text : null,
-          'isCorrect': a.isCorrect,
-        }).toList();
         return {
           'text': q.text.isNotEmpty ? q.text : q.title,
           'mediaId': q.mediaId.isNotEmpty ? q.mediaId : null,

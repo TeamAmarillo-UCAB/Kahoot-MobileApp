@@ -79,4 +79,16 @@ class UserRepositoryImpl implements UserRepository {
 			return Result.makeError(Exception(e));
 		}
 	}
+
+	@override
+	Future<Result<User?>> getUserProfile() async {
+		try {
+			final user = await datasource.getUserProfile();
+			return Result.success(user);
+		} catch (e, stackTrace) {
+			print('Error getting user profile: ' + e.toString());
+			print('Stacktrace: ' + stackTrace.toString());
+			return Result.makeError(Exception(e));
+		}
+	}
 }

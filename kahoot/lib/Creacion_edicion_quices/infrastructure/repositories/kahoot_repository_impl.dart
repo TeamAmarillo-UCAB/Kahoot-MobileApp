@@ -3,7 +3,7 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
-import '../../domain/entities/theme.dart';
+import '../../domain/entities/category.dart';
 import '../../../core/result.dart';
 
 class KahootRepositoryImpl implements KahootRepository {
@@ -106,16 +106,15 @@ class KahootRepositoryImpl implements KahootRepository {
   }
 
   @override
-  Future<List<KahootTheme>> getThemes() async {
-    final maps = await datasource.getThemes();
-    return maps
-        .map(
-          (m) => KahootTheme(
-            assetId: m['assetId'] ?? '',
-            url: m['url'] ?? '',
-            name: m['name'] ?? '',
-          ),
-        )
-        .toList();
+  Future<Result<List<Category>>> getCategory() async {
+    try {
+      final categories = await datasource.getCategory();
+      return Result.success(categories);
+    } catch (e, stackTrace) {
+      print("Error fetching categories: $e");
+      print("Stacktrace: $stackTrace");
+      return Result.makeError(Exception(e));
+    }
   }
+
 }

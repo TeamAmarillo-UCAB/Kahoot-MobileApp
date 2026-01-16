@@ -107,6 +107,29 @@ class UserEditorCubit extends Cubit<UserEditorState> {
     }
   }
 
+  // Actualiza perfil con solo username y email (orden: username, luego email)
+  Future<void> updateUser(String username, String email) async {
+    try {
+      emit(state.copyWith(status: UserEditorStatus.saving, errorMessage: null));
+      if (username.trim().isEmpty || email.trim().isEmpty) {
+        throw Exception('Username y email son requeridos.');
+      }
+      final user = User(
+        email: email.trim(),
+        name: username.trim(),
+        password: '',
+      );
+      final result = await updateUserUseCase(user);
+      if (result.isSuccessful()) {
+        emit(state.copyWith(status: UserEditorStatus.saved));
+      } else {
+        emit(state.copyWith(status: UserEditorStatus.error, errorMessage: result.getError().toString()));
+      }
+    } catch (e) {
+      emit(state.copyWith(status: UserEditorStatus.error, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> login() async {
     try {
       emit(state.copyWith(status: UserEditorStatus.saving, errorMessage: null));

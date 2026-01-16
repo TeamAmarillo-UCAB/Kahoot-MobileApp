@@ -1,7 +1,7 @@
 import '../entities/question.dart';
 import '../entities/answer.dart';
 import '../entities/kahoot.dart';
-import '../entities/theme.dart';
+import '../entities/category.dart';
 import '../../../core/result.dart';
 
 abstract class KahootRepository {
@@ -22,5 +22,5 @@ abstract class KahootRepository {
   Future<Result<List<Kahoot>>> getAllKahoots();
   Future<Result<List<Kahoot>>> getKahootsByAuthor(String authorId);
   Future<Result<Kahoot?>> getKahootByKahootId(String kahootId);
-  Future<List<KahootTheme>> getThemes();
+  Future<Result<List<Category>>> getCategory();
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings_page.dart';
+import 'update_profile_page.dart';
 import '../../../main.dart';
 import '../../../core/auth_state.dart';
 
@@ -22,8 +23,6 @@ class PostLoginPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: const [
               _Header(),
-              SizedBox(height: 20),
-              _ProfilesRow(),
               SizedBox(height: 20),
               _MenuCards(),
               SizedBox(height: 16),
@@ -67,7 +66,26 @@ class _Header extends StatelessWidget {
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.edit, color: Colors.brown),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      opaque: false,
+                      barrierDismissible: true,
+                      barrierColor: PostLoginPage.bgBrown.withOpacity(0.65),
+                      pageBuilder: (_, __, ___) => const UpdateProfilePage(),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        final curve = Curves.easeOut;
+                        return FadeTransition(
+                          opacity: animation.drive(CurveTween(curve: curve)),
+                          child: ScaleTransition(
+                            scale: animation.drive(Tween(begin: 0.98, end: 1.0).chain(CurveTween(curve: curve))),
+                            child: child,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.settings, color: Colors.brown),
@@ -126,42 +144,7 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _ProfilesRow extends StatelessWidget {
-  const _ProfilesRow();
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: const [
-        _KidsTile(),
-      ],
-    );
-  }
-}
-
-class _KidsTile extends StatelessWidget {
-  const _KidsTile();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.black,
-            border: Border.all(color: PostLoginPage.headerYellow, width: 3),
-          ),
-          alignment: Alignment.center,
-          child: const Text('kids', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 8),
-        const Text('Añadir niño', style: TextStyle(color: Colors.white)),
-      ],
-    );
-  }
-}
+// Se eliminó la fila de perfiles/"Añadir niño" según solicitud
 
 class _MenuCards extends StatelessWidget {
   const _MenuCards();

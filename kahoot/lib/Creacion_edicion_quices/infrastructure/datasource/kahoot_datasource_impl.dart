@@ -5,6 +5,7 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
+import '../../domain/entities/category.dart';
 import '../../../core/auth_state.dart';
 
 class KahootDatasourceImpl implements KahootDatasource {
@@ -106,13 +107,14 @@ class KahootDatasourceImpl implements KahootDatasource {
     // Debug: log payload to help diagnose 500s
     // ignore: avoid_print
     print('POST /kahoots payload: ' + jsonEncode(body));
-
+    final tokenCreate = AuthState.token.value;
+    final createHeaders = {
+      'Content-Type': 'application/json',
+      if (tokenCreate != null && tokenCreate.isNotEmpty) 'Authorization': 'Bearer ' + tokenCreate,
+    };
     final Response res = await dio.request(
       '/kahoots',
-      options: Options(
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-      ),
+      options: Options(method: 'POST', headers: createHeaders),
       data: body,
     );
     // Mostrar respuesta del endpoint para ver el objeto creado o mensajes
@@ -310,10 +312,15 @@ class KahootDatasourceImpl implements KahootDatasource {
     // ignore: avoid_print
     print('PUT /kahoots/' + kahootId + ' payload: ' + jsonEncode(body));
 
+    final tokenUpdate = AuthState.token.value;
+    final updateHeaders = {
+      'Content-Type': 'application/json',
+      if (tokenUpdate != null && tokenUpdate.isNotEmpty) 'Authorization': 'Bearer ' + tokenUpdate,
+    };
     final Response res = await dio.put(
       '/kahoots/$kahootId',
       data: body,
-      options: Options(headers: {'Content-Type': 'application/json'}),
+      options: Options(headers: updateHeaders),
     );
     // Mostrar respuesta del endpoint para validar el update
     try {
@@ -331,22 +338,30 @@ class KahootDatasourceImpl implements KahootDatasource {
 
   @override
   Future<void> deleteKahoot(String id) async {
+    final tokenDelete = AuthState.token.value;
+    final deleteHeaders = {
+      'Content-Type': 'application/json',
+      if (tokenDelete != null && tokenDelete.isNotEmpty) 'Authorization': 'Bearer ' + tokenDelete,
+    };
     await dio.delete(
       '/kahoots/$id',
-      options: Options(headers: {'Content-Type': 'application/json'}),
+      options: Options(headers: deleteHeaders),
     );
   }
 
   @override
   Future<List<Kahoot>> getAllKahoots() async {
     try {
+      final tokenAll = AuthState.token.value;
+      final allHeaders = {
+        'Content-Type': 'application/json',
+        if (tokenAll != null && tokenAll.isNotEmpty) 'Authorization': 'Bearer ' + tokenAll,
+      };
       final response = await dio.get(
         '/kahoots',
         options: Options(
-          headers: {'Content-Type': 'application/json'},
-          validateStatus: (status) =>
-              status != null &&
-              ((status >= 200 && status < 300) || status == 404),
+          headers: allHeaders,
+          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -390,6 +405,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           );
         }).toList();
 
+        final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
         return Kahoot(
           kahootId: '',
           authorId: '',
@@ -400,7 +416,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           ),
           question: questions,
           image: (m['coverImageId'] as String?) ?? '',
-          theme: (m['themeId'] as String?) ?? '',
+          theme: themeValue,
         );
       }).toList();
     } on DioException catch (e) {
@@ -410,14 +426,17 @@ class KahootDatasourceImpl implements KahootDatasource {
 
   Future<List<Kahoot>> getKahootsByAuthor(String userId) async {
     try {
+      final tokenByAuthor = AuthState.token.value;
+      final byAuthorHeaders = {
+        'Content-Type': 'application/json',
+        if (tokenByAuthor != null && tokenByAuthor.isNotEmpty) 'Authorization': 'Bearer ' + tokenByAuthor,
+      };
       final response = await dio.get(
         '/kahoots/userId',
         queryParameters: {'userId': userId},
         options: Options(
-          headers: {'Content-Type': 'application/json'},
-          validateStatus: (status) =>
-              status != null &&
-              ((status >= 200 && status < 300) || status == 404),
+          headers: byAuthorHeaders,
+          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -461,6 +480,7 @@ class KahootDatasourceImpl implements KahootDatasource {
             }).toList(),
           );
         }).toList();
+        final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
         return Kahoot(
           kahootId: (m['kahootId'] as String?) ?? (m['id'] as String? ?? ''),
           authorId: (m['authorId'] as String?) ?? '',
@@ -471,7 +491,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           ),
           question: questions,
           image: (m['coverImageId'] as String?) ?? '',
-          theme: (m['themeId'] as String?) ?? '',
+          theme: themeValue,
         );
       }).toList();
     } on DioException catch (e) {
@@ -481,13 +501,16 @@ class KahootDatasourceImpl implements KahootDatasource {
 
   Future<Kahoot?> getKahootByKahootId(String kahootId) async {
     try {
+      final tokenById = AuthState.token.value;
+      final byIdHeaders = {
+        'Content-Type': 'application/json',
+        if (tokenById != null && tokenById.isNotEmpty) 'Authorization': 'Bearer ' + tokenById,
+      };
       final response = await dio.get(
         '/kahoots/$kahootId',
         options: Options(
-          headers: {'Content-Type': 'application/json'},
-          validateStatus: (status) =>
-              status != null &&
-              ((status >= 200 && status < 300) || status == 404),
+          headers: byIdHeaders,
+          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -516,6 +539,7 @@ class KahootDatasourceImpl implements KahootDatasource {
           }).toList(),
         );
       }).toList();
+      final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
       return Kahoot(
         kahootId: (m['kahootId'] as String?) ?? (m['id'] as String? ?? ''),
         authorId: (m['authorId'] as String?) ?? '',
@@ -526,8 +550,54 @@ class KahootDatasourceImpl implements KahootDatasource {
         ),
         question: questions,
         image: (m['coverImageId'] as String?) ?? '',
-        theme: (m['themeId'] as String?) ?? '',
+        theme: themeValue,
       );
+    } on DioException catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<List<Category>> getCategory() async {
+    try {
+      final token = AuthState.token.value;
+      final headers = {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer ' + token,
+      };
+      final response = await dio.get(
+        '/explore/categories',
+        options: Options(
+          headers: headers,
+          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
+        ),
+      );
+      if (response.statusCode == 404) {
+        return [];
+      }
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map<String, dynamic>) {
+        final candidates = ['categories', 'items', 'content', 'data', 'results'];
+        final foundKey = candidates.firstWhere(
+          (k) => data[k] is List,
+          orElse: () => '',
+        );
+        list = foundKey.isNotEmpty ? (data[foundKey] as List) : const [];
+      } else {
+        list = const [];
+      }
+      return list.map((raw) {
+        if (raw is String) {
+          return Category(nombre: raw);
+        }
+        if (raw is Map<String, dynamic>) {
+          return Category.fromJson(raw);
+        }
+        return Category(nombre: raw.toString());
+      }).toList();
     } on DioException catch (e) {
       throw e;
     }

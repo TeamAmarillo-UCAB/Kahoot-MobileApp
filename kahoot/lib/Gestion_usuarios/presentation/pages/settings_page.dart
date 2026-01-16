@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile_configuration.dart';
+import '../login_page.dart';
+import '../../../core/auth_state.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -42,7 +44,19 @@ class _SettingsPageState extends State<SettingsPage> {
           }),
           _MenuTile('Configuración de privacidad'),
           _MenuTile('Eliminar cuenta'),
-          _MenuTile('Cerrar sesión'),
+          _MenuTile('Cerrar sesión', onTap: () async {
+            // Limpiar estado de autenticación para remover Authorization
+            AuthState.token.value = null;
+            AuthState.isLoggedIn.value = false;
+            AuthState.email.value = null;
+            AuthState.username.value = null;
+            // Navegar a login y limpiar el stack
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+              (route) => false,
+            );
+          }),
           const SizedBox(height: 16),
           _SectionTitle('General'),
           _MenuTile('Idioma'),
