@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/usecases/kahoot/create_kahoot.dart';
 import '../../application/usecases/kahoot/update_kahoot.dart';
+import '../../application/usecases/kahoot/get_category_usecase.dart';
 import '../../infrastructure/datasource/kahoot_datasource_impl.dart';
 import '../../infrastructure/repositories/kahoot_repository_impl.dart';
 import '../../presentation/blocs/kahoot_editor_cubit.dart';
+import '../../presentation/blocs/kahoot_list_cubit.dart';
 import '../pages/create/add_question_modal.dart';
 import '../pages/create/quiz_editor_page.dart';
 import '../pages/create/true_false_editor_page.dart';
@@ -13,6 +15,7 @@ import '../../../main.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
 import '../../domain/entities/kahoot.dart';
+import '../../domain/entities/category.dart';
 
 import '../../../../Contenido_Multimedia/presentation/pages/media_resource_selector.dart';
 import '../../../core/widgets/gradient_button.dart';
@@ -30,12 +33,15 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
-    final TextEditingController _themeController = TextEditingController();
+    // Estado para categorías
+    List<Category> _categories = const [];
+    String? _selectedCategory;
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
   late final CreateKahoot _createKahoot;
   late final UpdateKahoot _updateKahoot;
+  late final GetCategory _getCategory;
   late final KahootEditorCubit _editorCubit;
 
   @override
@@ -49,6 +55,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     _repository = KahootRepositoryImpl(datasource: _datasource);
     _createKahoot = CreateKahoot(_repository);
     _updateKahoot = UpdateKahoot(_repository);
+    _getCategory = GetCategory(_repository);
     _editorCubit = KahootEditorCubit(
       createKahootUseCase: _createKahoot,
       updateKahootUseCase: _updateKahoot,
@@ -61,7 +68,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       visibility = k.visibility == KahootVisibility.private
           ? 'private'
           : 'public';
-      _themeController.text = k.theme;
+      _selectedCategory = k.theme.isNotEmpty ? k.theme : null;
       _editorCubit
         ..setAuthor(k.authorId)
         ..setTitle(k.title)
@@ -73,14 +80,28 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
         _editorCubit.addQuestion(q);
       }
     }
+    // Cargar categorías iniciales
+    _loadCategories();
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _themeController.dispose(); // Dispose of the theme controller
     _editorCubit.close();
     super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    final res = await _getCategory.call();
+    if (res.isSuccessful()) {
+      setState(() {
+        _categories = res.getValue();
+        if (_selectedCategory == null && _categories.isNotEmpty) {
+          _selectedCategory = _categories.first.nombre;
+          _editorCubit.setTheme(_selectedCategory!.trim());
+        }
+      });
+    }
   }
 
   Question? _mapResultToQuestion(Map result) {
@@ -193,7 +214,7 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 _editorCubit
                   ..setTitle(title)
                   ..setVisibility(visibilityValue)
-                  ..setTheme(_themeController.text.trim());
+                  ..setTheme((_selectedCategory ?? '').trim());
 
                 if (isEditing) {
                   final kahootToUpdate = _buildKahootFromState(
@@ -271,20 +292,35 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    controller: _themeController,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: headerYellow,
-                      hintText: 'Categoría/Tema',
+                      hintText: 'Categoría',
                       hintStyle: const TextStyle(color: Colors.black54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                     ),
+                    items: _categories
+                        .map(
+                          (c) => DropdownMenuItem<String>(
+                            value: c.nombre,
+                            child: Text(c.nombre),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (value) {
-                      _editorCubit.setTheme(value.trim());
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                      final selected = (value ?? '').trim();
+                      _editorCubit.setTheme(selected);
+                      try {
+                        context.read<KahootListCubit>().selectCategory(selected);
+                      } catch (_) {}
                     },
                   ),
                 ),

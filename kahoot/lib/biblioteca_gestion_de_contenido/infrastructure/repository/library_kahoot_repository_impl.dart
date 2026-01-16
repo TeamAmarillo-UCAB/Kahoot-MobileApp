@@ -4,6 +4,7 @@ import '../../../core/result.dart';
 import '../../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../../Creacion_edicion_quices/domain/entities/question.dart';
 import '../../../Creacion_edicion_quices/domain/entities/answer.dart';
+import '../../../Creacion_edicion_quices/domain/entities/category.dart';
 
 class LibraryKahootRepositoryImpl implements KahootRepository {
 	final LibraryDatasource datasource;
@@ -79,4 +80,16 @@ class LibraryKahootRepositoryImpl implements KahootRepository {
       return Result.makeError(Exception(e));
     }
   }
+
+	@override
+	Future<Result<List<Category>>> getCategory() async {
+		try {
+			final list = await datasource.getCategory();
+			return Result.success(list);
+		} catch (e, st) {
+			print('Error getCategory: ' + e.toString());
+			print('Stack: ' + st.toString());
+			return Result.makeError(Exception(e));
+		}
+	}
 }

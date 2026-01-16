@@ -8,6 +8,8 @@ import '../../../../Creacion_edicion_quices/presentation/blocs/kahoot_editor_cub
 import '../../infrastructure/datasource/library_kahoot_datasource_impl.dart';
 import '../../infrastructure/repository/library_kahoot_repository_impl.dart';
 import '../../../../Creacion_edicion_quices/presentation/pages/create/add_question_modal.dart';
+import '../../application/get_category_usecase.dart';
+import '../../../../Creacion_edicion_quices/domain/entities/category.dart';
 import 'library_quiz_editor_page.dart';
 import 'library_true_false_editor_page.dart';
 import 'library_short_answer_editor_page.dart';
@@ -31,7 +33,9 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
   String visibility = 'private';
   final List<String> visibilityOptions = ['private', 'public'];
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _themeController = TextEditingController();
+  // Categorías
+  List<Category> _categories = const [];
+  String? _selectedCategory;
   bool _loading = true;
 
   late final KahootDatasourceImpl _ds;
@@ -41,6 +45,7 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
   late final KahootEditorCubit _editorCubit;
   late final LibraryKahootDatasourceImpl _libDs;
   late final LibraryKahootRepositoryImpl _libRepo;
+  late final GetCategoryUseCase _getCategory;
 
   @override
   void initState() {
@@ -57,11 +62,12 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
     // Datasource/Repo de biblioteca para actualizar kahoots de la librería
     _libDs = LibraryKahootDatasourceImpl()..dio.options.baseUrl = apiBaseUrl.trim();
     _libRepo = LibraryKahootRepositoryImpl(datasource: _libDs);
+    _getCategory = GetCategoryUseCase(repository: _libRepo);
 
     final k = widget.initialKahoot;
     _titleController.text = k.title;
     visibility = k.visibility == KahootVisibility.private ? 'private' : 'public';
-    _themeController.text = k.theme;
+    _selectedCategory = k.theme.isNotEmpty ? k.theme : null;
     _editorCubit
       ..setAuthor(k.authorId)
       ..setTitle(k.title)
@@ -74,6 +80,30 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
     }
     // Cargar detalles completos por ID desde la API
     _loadFullDetails();
+    // Cargar categorías para dropdown
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final res = await _getCategory.call();
+    if (res.isSuccessful()) {
+      setState(() {
+        _categories = res.getValue();
+        final names = _categories
+            .map((c) => (c.nombre).trim())
+            .where((s) => s.isNotEmpty)
+            .toSet()
+            .toList();
+        if (_selectedCategory != null && !names.contains(_selectedCategory)) {
+          _selectedCategory = names.isNotEmpty ? names.first : null;
+        } else if (_selectedCategory == null && names.isNotEmpty) {
+          _selectedCategory = names.first;
+        }
+        if (_selectedCategory != null) {
+          _editorCubit.setTheme(_selectedCategory!.trim());
+        }
+      });
+    }
   }
 
   Future<void> _loadFullDetails() async {
@@ -92,7 +122,7 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
         // Actualizar metadatos visibles
         setState(() {
           _titleController.text = full.title;
-          _themeController.text = full.theme;
+          _selectedCategory = full.theme.isNotEmpty ? full.theme : _selectedCategory;
           visibility = full.visibility == KahootVisibility.private ? 'private' : 'public';
           _loading = false;
         });
@@ -114,7 +144,6 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
   @override
   void dispose() {
     _titleController.dispose();
-    _themeController.dispose();
     _editorCubit.close();
     
     super.dispose();
@@ -208,7 +237,7 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
                   _editorCubit
                     ..setTitle(title)
                     ..setVisibility(visibility)
-                    ..setTheme(_themeController.text.trim());
+                    ..setTheme((_selectedCategory ?? '').trim());
                   final isEditing = true;
                   if (isEditing) {
                     final s = _editorCubit.state;
@@ -273,19 +302,36 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
                   const SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TextField(
-                      controller: _themeController,
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCategory,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: headerYellow,
-                        hintText: 'Categoría/Tema',
+                        hintText: 'Categoría',
                         hintStyle: const TextStyle(color: Colors.black54),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      onChanged: (value) => _editorCubit.setTheme(value.trim()),
+                          items: (() {
+                          final set = _categories
+                            .map((c) => c.nombre.trim())
+                            .where((s) => s.isNotEmpty)
+                            .toSet();
+                          final sel = (_selectedCategory ?? '').trim();
+                          if (sel.isNotEmpty) set.add(sel);
+                          return set
+                            .map((name) => DropdownMenuItem<String>(value: name, child: Text(name)))
+                            .toList();
+                          })(),
+                      onChanged: (value) {
+                        final v = (value ?? '').trim();
+                        setState(() {
+                          _selectedCategory = v.isNotEmpty ? v : null;
+                        });
+                        _editorCubit.setTheme(v);
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -3,6 +3,7 @@ import '../../domain/datasouce/kahoot_datasource.dart';
 import '../../domain/entities/kahoot.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/answer.dart';
+import '../../domain/entities/category.dart';
 import '../../../core/result.dart';
 
 
@@ -78,6 +79,18 @@ class KahootRepositoryImpl implements KahootRepository{
       return Result.success(kahoot);
     } catch (e, stackTrace) {
       print("Error fetching kahoot by id: $e");
+      print("Stacktrace: $stackTrace");
+      return Result.makeError(Exception(e));
+    }
+  }
+
+  @override
+  Future<Result<List<Category>>> getCategory() async {
+    try {
+      final categories = await datasource.getCategory();
+      return Result.success(categories);
+    } catch (e, stackTrace) {
+      print("Error fetching categories: $e");
       print("Stacktrace: $stackTrace");
       return Result.makeError(Exception(e));
     }
