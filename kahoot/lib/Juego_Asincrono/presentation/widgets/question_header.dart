@@ -41,13 +41,12 @@ class QuestionHeader extends StatelessWidget {
     }
 
     return Container(
-      height: 60, // Altura fija para el header
+      height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      color: Colors.black12, // Fondo semitransparente oscuro general
+      color: Colors.black12,
       child: Stack(
-        alignment: Alignment.centerLeft, // Alineación por defecto para hijos del stack
+        alignment: Alignment.centerLeft,
         children: [
-          // 1. Número de pregunta (Anclado a la izquierda)
           Container(
             width: 35,
             height: 35,
@@ -66,34 +65,37 @@ class QuestionHeader extends StatelessWidget {
             ),
           ),
 
-          // 2. Contenido Central (Icono + Texto en marco blanco)
           Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white, // Fondo blanco
-                borderRadius: BorderRadius.circular(25), // Bordes muy redondeados
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min, // Se ajusta al contenido
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Icono
                   Image.asset(
-                    iconPath, 
-                    width: 26, 
+                    iconPath,
+                    width: 26,
                     height: 26,
                     // Si falla, icono morado de respaldo
-                    errorBuilder: (_,__,___) => const Icon(Icons.category, color: Colors.black87, size: 26),
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.category,
+                      color: Colors.black87,
+                      size: 26,
+                    ),
                   ),
 
                   const SizedBox(width: 10),
 
-                  // Texto (Ahora en color morado para contraste sobre blanco)
+                  // Texto
                   Text(
                     typeText,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
-                      color: Colors.black87, // Color morado
+                      color: Colors.black87,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

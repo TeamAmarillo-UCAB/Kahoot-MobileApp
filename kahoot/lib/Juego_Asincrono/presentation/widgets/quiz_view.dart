@@ -253,7 +253,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
 
                     const SizedBox(height: 10),
 
-                    // 3. Imagen (Modificada para usar la URL directa de Cloudinary)
+                    //Imagen (Modificada para usar la URL directa de Cloudinary)
                     if (slide.mediaId != null && slide.mediaId!.isNotEmpty)
                       Expanded(
                         flex: 3,

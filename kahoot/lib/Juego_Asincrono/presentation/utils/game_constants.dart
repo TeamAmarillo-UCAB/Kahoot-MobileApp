@@ -31,24 +31,21 @@ class GameColors {
   static const Color wrongRed = Color(0xFFFF3355);
   static const Color mainYellow = Color.fromARGB(255, 198, 240, 30);
 
-  // Nuevo color Amber para la app/timer
   static const Color amberTheme = Color(0xFFFFC107);
 
   static const List<Color> optionColors = [red, blue, yellow, green];
 
-  // Usamos iconos rellenos (rounded/sharp) para simular el look sólido
   static const List<IconData> optionIcons = [
-    Icons.change_history, // Triángulo (Se renderizará solido o grueso)
+    Icons.change_history, // Triángulo
     Icons.diamond, // Rombo
-    Icons.circle, // Círculo (Relleno)
-    Icons.square, // Cuadrado (Relleno)
+    Icons.circle, // Círculo
+    Icons.square, // Cuadrado
   ];
 }
 
 class GameTextStyles {
-  // Asegúrate de tener la fuente Montserrat en tu pubspec.yaml o usa esta configuración
   static const TextStyle montserrat = TextStyle(
-    fontFamily: 'Montserrat', // Si no carga, usará la default
+    fontFamily: 'Montserrat',
     fontWeight: FontWeight.w600,
   );
 

@@ -59,8 +59,7 @@ class OptionTitle extends StatelessWidget {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: Image.network(
-                          option
-                              .mediaId!, // Usamos la URL directa de Cloudinary
+                          option.mediaId!,
                           fit: BoxFit.cover,
                           width: double.infinity,
                           errorBuilder: (context, error, stackTrace) =>

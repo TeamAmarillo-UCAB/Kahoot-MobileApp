@@ -81,10 +81,10 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     });
 
     _socket!.onDisconnect((data) {
-      print('🔌 [DATASOURCE] Socket Desconectado: $data');
+      print('[DATASOURCE] Socket Desconectado: $data');
     });
 
-    // Eventos que escucha eel servidor
+    // Eventos que escucha el servidor
     final serverEvents = [
       'player_connected_to_session',
       'question_started',

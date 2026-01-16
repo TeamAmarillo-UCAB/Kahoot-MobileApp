@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 
-// --- Infraestructura y Dominio ---
 import '../../infrastructure/datasource/game_datasource_impl.dart';
 import '../../infrastructure/repositories/game_repository_impl.dart';
 import '../../application/usecases/start_attempt.dart';
@@ -11,12 +10,10 @@ import '../../application/usecases/submit_answer.dart';
 import '../../application/usecases/get_summary.dart';
 import '../../application/usecases/get_attempt_status.dart';
 
-// --- Componentes del BLoC ---
 import '../blocs/game_bloc.dart';
 import '../blocs/game_state.dart';
 import '../blocs/game_event.dart';
 
-// --- Widgets y Utils ---
 import '../widgets/quiz_view.dart';
 import '../widgets/feedback_view.dart';
 import 'game_summary_page.dart';
@@ -40,20 +37,18 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // 1. Configuración de Infraestructura (Igual que en Home anteriormente)
     final dio = Dio(BaseOptions(baseUrl: ApiConfig().baseUrl));
     final datasource = GameDatasourceImpl(dio: dio);
     final repository = GameRepositoryImpl(datasource: datasource);
 
-    // 2. Inicialización del BLoC con sus Casos de Uso
     _bloc = GameBloc(
       startAttempt: StartAttempt(repository),
       submitAnswer: SubmitAnswer(repository),
       getGameSummary: GetSummary(repository),
       getAttemptStatus: GetAttemptStatus(repository),
-    )..add(OnStartGame(widget.kahootId)); // Disparamos el inicio del juego
+    )..add(OnStartGame(widget.kahootId));
 
-    // 3. Fondo aleatorio
+    // Fondo aleatorio
     final bgs = [
       GameAssets.bgBlue,
       GameAssets.bgPink,
@@ -65,7 +60,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _bloc.close(); // Muy importante cerrar el bloc al salir
+    _bloc.close();
     super.dispose();
   }
 
@@ -112,7 +107,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // Proveemos el bloc a todo el árbol de la página
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
