@@ -10,7 +10,6 @@ class ChatbotPage extends StatefulWidget {
 }
 
 class _ChatbotPageState extends State<ChatbotPage> {
-  // API KEY NO DOXEARMEEEE
   final apiKey = dotenv.env['GEMINI_API_KEY'];
 
   late final GenerativeModel _model;
@@ -20,15 +19,25 @@ class _ChatbotPageState extends State<ChatbotPage> {
   bool _cargando = false;
   final List<MensajeBubble> _mensajes = [];
 
-  // Colores de tu tema Kahoot
   final Color bgBrown = const Color(0xFF3A240C);
   final Color headerYellow = const Color(0xFFF2C147);
 
   @override
   void initState() {
     super.initState();
-    print(apiKey);
-    _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey!);
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash',
+      apiKey: apiKey!,
+      systemInstruction: Content.system(
+        'Eres el Asistente K, una IA de apoyo emocional dentro de una aplicación de quizzes educativos estilo Kahoot. '
+        'Tu objetivo principal es motivar, calmar y animar a los estudiantes, especialmente cuando se sienten frustrados con las preguntas. '
+        'Reglas estrictas: '
+        '1. Habla siempre en español. '
+        '2. Sé extremadamente amable, empático y cariñoso. '
+        '3. PROHIBIDO usar formato Markdown: nunca uses asteriscos (*), negritas, cursivas ni bloques de código. Escribe solo texto plano limpio. '
+        '4. Usa emojis ocasionalmente para ser más amigable.',
+      ),
+    );
     _chat = _model.startChat();
   }
 
@@ -54,7 +63,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
       _scrollAbajo();
     } catch (e) {
       setState(() {
-        _mensajes.add(MensajeBubble(texto: "Error: $e", esUsuario: false));
+        _mensajes.add(
+          MensajeBubble(
+            texto:
+                "Ocurrió un error de conexión, pero estoy aquí para intentarlo de nuevo contigo.",
+            esUsuario: false,
+          ),
+        );
         _cargando = false;
       });
     }
@@ -75,9 +90,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgBrown, // Fondo marrón
+      backgroundColor: bgBrown,
       appBar: AppBar(
-        backgroundColor: headerYellow, // Cabecera amarilla
+        backgroundColor: headerYellow,
         title: const Text(
           'Asistente K!',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -105,7 +120,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   child: TextField(
                     controller: _textController,
                     decoration: InputDecoration(
-                      hintText: 'Pregunta sobre un quiz...',
+                      hintText: 'Cuéntame cómo te sientes...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
