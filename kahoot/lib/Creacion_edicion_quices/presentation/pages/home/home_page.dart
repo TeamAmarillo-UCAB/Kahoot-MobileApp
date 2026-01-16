@@ -10,6 +10,7 @@ import '../../../../Juego_en_vivo/presentation/pages/common/join_game_page.dart'
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import '../../../../Grupos/presentation/pages/my_groups_page.dart';
+import '../../../../IA/chatBot.dart';
 
 class HomePage extends StatefulWidget {
   final bool showFooter;
@@ -93,6 +94,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgBrown,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: headerYellow,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        onPressed: () {
+          // Navegar a pantalla de bot
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ChatbotPage()));
+        },
+        child: const Icon(
+          Icons.smart_toy_outlined, // Icono de Robot
+          color: bgBrown,
+          size: 32,
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [

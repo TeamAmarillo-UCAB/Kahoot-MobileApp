@@ -14,8 +14,10 @@
         "file_picker",
         "flutter",
         "flutter_bloc",
+        "flutter_dotenv",
         "freezed_annotation",
         "google_fonts",
+        "google_generative_ai",
         "http",
         "intl",
         "json_annotation",
@@ -54,6 +56,20 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "flutter_dotenv",
+      "version": "5.2.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "google_generative_ai",
+      "version": "0.4.7",
+      "dependencies": [
+        "http"
       ]
     },
     {
