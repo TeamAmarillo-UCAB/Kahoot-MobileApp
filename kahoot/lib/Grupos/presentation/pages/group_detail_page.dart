@@ -7,6 +7,7 @@ import '../bloc/group_detail/group_detail_state.dart';
 import '../../domain/entities/group.dart';
 import 'invite_success_dialog.dart';
 import 'group_leaderboard_page.dart';
+import '../../../Juego_Asincrono/presentation/pages/game_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final Group group;
@@ -230,6 +231,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: ListTile(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            GamePage(kahootId: quiz.quizId),
+                                      ),
+                                    );
+                                  },
                                   contentPadding: const EdgeInsets.all(12),
                                   leading: Container(
                                     padding: const EdgeInsets.all(10),
@@ -242,9 +251,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                       color: Colors.black,
                                     ),
                                   ),
-                                  title: Text(
-                                    quiz.quizId,
-                                    style: const TextStyle(
+                                  title: const Text(
+                                    "Kahoot",
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -309,21 +318,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                   ),
                                 ),
                                 subtitle: Text(member.role),
-                                trailing: member.role != 'member'
-                                    ? IconButton(
-                                        icon: Icon(
-                                          Icons.remove_circle_outline,
-                                          color: Colors.red.shade400,
-                                        ),
-                                        onPressed: () {
-                                          context.read<GroupDetailBloc>().add(
-                                            RemoveMemberEvent(
-                                              memberId: member.userId,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : null,
                               ),
                             );
                           },
@@ -341,8 +335,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     final nameController = TextEditingController(text: group.name);
     final descController = TextEditingController(text: group.description);
 
+    final groupDetailBloc = context.read<GroupDetailBloc>();
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -358,6 +355,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               TextField(
                 controller: nameController,
                 cursorColor: Colors.amber,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del grupo',
                   labelStyle: TextStyle(color: Colors.grey),
@@ -370,6 +368,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               TextField(
                 controller: descController,
                 cursorColor: Colors.amber,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
                   labelStyle: TextStyle(color: Colors.grey),
@@ -390,12 +389,22 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ),
             ElevatedButton(
               onPressed: () {
+                if (nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("El nombre no puede estar vacío"),
+                    ),
+                  );
+                  return;
+                }
+
                 Navigator.pop(dialogContext);
-                context.read<GroupDetailBloc>().add(
+
+                groupDetailBloc.add(
                   EditGroupEvent(
                     groupId: group.id,
-                    name: nameController.text,
-                    description: descController.text,
+                    name: nameController.text.trim(),
+                    description: descController.text.trim(),
                   ),
                 );
               },
