@@ -35,7 +35,6 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
   String visibility = 'private';
   final List<String> visibilityOptions = ['private', 'public'];
   final TextEditingController _titleController = TextEditingController();
-  // Categorías
   List<Category> _categories = const [];
   String? _selectedCategory;
   bool _loading = true;
@@ -62,7 +61,6 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
       updateKahootUseCase: _updateKahoot,
       initialAuthorId: widget.initialKahoot.authorId,
     );
-    // Datasource/Repo de biblioteca para actualizar kahoots de la librería
     _libDs = LibraryKahootDatasourceImpl()
       ..dio.options.baseUrl = ApiConfig().baseUrl.trim();
     _libRepo = LibraryKahootRepositoryImpl(datasource: _libDs);
@@ -70,7 +68,9 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
 
     final k = widget.initialKahoot;
     _titleController.text = k.title;
-    visibility = k.visibility == KahootVisibility.private ? 'private' : 'public';
+    visibility = k.visibility == KahootVisibility.private
+        ? 'private'
+        : 'public';
     _selectedCategory = k.theme.isNotEmpty ? k.theme : null;
     _editorCubit
       ..setAuthor(k.authorId)
@@ -82,9 +82,7 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
     for (final q in k.question) {
       _editorCubit.addQuestion(q);
     }
-    // Cargar detalles completos por ID desde la API
     _loadFullDetails();
-    // Cargar categorías para dropdown
     _loadCategories();
   }
 
@@ -115,7 +113,6 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
       final full = await _ds.getKahootByKahootId(widget.initialKahoot.kahootId);
       if (!mounted) return;
       if (full != null) {
-        // Reemplazar preguntas con las obtenidas por ID
         final len = _editorCubit.state.questions.length;
         for (int i = len - 1; i >= 0; i--) {
           _editorCubit.removeQuestion(i);
@@ -123,11 +120,14 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
         for (final q in full.question) {
           _editorCubit.addQuestion(q);
         }
-        // Actualizar metadatos visibles
         setState(() {
           _titleController.text = full.title;
-          _selectedCategory = full.theme.isNotEmpty ? full.theme : _selectedCategory;
-          visibility = full.visibility == KahootVisibility.private ? 'private' : 'public';
+          _selectedCategory = full.theme.isNotEmpty
+              ? full.theme
+              : _selectedCategory;
+          visibility = full.visibility == KahootVisibility.private
+              ? 'private'
+              : 'public';
           _loading = false;
         });
         _editorCubit
@@ -180,7 +180,6 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
           qType = QuestionType.true_false;
           break;
         case 'single':
-          // Map 'single' to short answer editor
           qType = QuestionType.short_answer;
           break;
         case 'multiple':
@@ -213,55 +212,32 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
     const headerYellow = Color(0xFFF2C147);
     const cardDark = Color(0xFF444444);
     return Scaffold(
-        backgroundColor: bgBrown,
-        appBar: AppBar(
-          backgroundColor: headerYellow,
-          elevation: 0,
-          title: const Text('Editar Kahoot', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.brown),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: GradientButton(
-                onTap: () async {
-                  final title = _titleController.text.trim();
-                  if (title.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('El título es requerido.')),
-                    );
-                    return;
-                  }
-                  if (_editorCubit.state.questions.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Debes añadir al menos una pregunta.')),
-                    );
-                    return;
-                  }
-                  _editorCubit
-                    ..setTitle(title)
-                    ..setVisibility(visibility)
-                    ..setTheme((_selectedCategory ?? '').trim());
-                  final isEditing = true;
-                  if (isEditing) {
-                    final s = _editorCubit.state;
-                    await _libRepo.updateMyKahoot(
-                      widget.initialKahoot.kahootId,
-                      s.title,
-                      s.description,
-                      s.coverImageId,
-                      s.visibility,
-                      'published',
-                      s.themeId,
-                      s.questions,
-                      const <Answer>[],
-                    );
-                  }
-                  // Feedback simple tras update
-                  if (!mounted) return;
+      backgroundColor: bgBrown,
+      appBar: AppBar(
+        backgroundColor: headerYellow,
+        elevation: 0,
+        title: const Text(
+          'Editar Kahoot',
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.brown),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: GradientButton(
+              onTap: () async {
+                final title = _titleController.text.trim();
+                if (title.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El título es requerido.')),
+                  );
+                  return;
+                }
+                if (_editorCubit.state.questions.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Debes añadir al menos una pregunta.'),
@@ -272,23 +248,21 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
                 _editorCubit
                   ..setTitle(title)
                   ..setVisibility(visibility)
-                  ..setTheme(_themeController.text.trim());
-                final isEditing = true;
-                if (isEditing) {
-                  final s = _editorCubit.state;
-                  await _libRepo.updateMyKahoot(
-                    widget.initialKahoot.kahootId,
-                    s.title,
-                    s.description,
-                    s.coverImageId,
-                    s.visibility,
-                    'published',
-                    s.themeId,
-                    s.questions,
-                    const <Answer>[],
-                  );
-                }
-                // Feedback simple tras update
+                  ..setTheme((_selectedCategory ?? '').trim());
+
+                final s = _editorCubit.state;
+                await _libRepo.updateMyKahoot(
+                  widget.initialKahoot.kahootId,
+                  s.title,
+                  s.description,
+                  s.coverImageId,
+                  s.visibility,
+                  'published',
+                  s.themeId,
+                  s.questions,
+                  const <Answer>[],
+                );
+
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Kahoot actualizado')),
@@ -344,57 +318,75 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: headerYellow,
-                        hintText: 'Categoría',
-                        hintStyle: const TextStyle(color: Colors.black54),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: headerYellow,
+                            hintText: 'Categoría',
+                            hintStyle: const TextStyle(color: Colors.black54),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          items: (() {
+                            final set = _categories
+                                .map((c) => c.nombre.trim())
+                                .where((s) => s.isNotEmpty)
+                                .toSet();
+                            final sel = (_selectedCategory ?? '').trim();
+                            if (sel.isNotEmpty) set.add(sel);
+                            return set
+                                .map(
+                                  (name) => DropdownMenuItem<String>(
+                                    value: name,
+                                    child: Text(name),
+                                  ),
+                                )
+                                .toList();
+                          })(),
+                          onChanged: (value) {
+                            final v = (value ?? '').trim();
+                            setState(() {
+                              _selectedCategory = v.isNotEmpty ? v : null;
+                            });
+                            _editorCubit.setTheme(v);
+                          },
                         ),
                       ),
-                          items: (() {
-                          final set = _categories
-                            .map((c) => c.nombre.trim())
-                            .where((s) => s.isNotEmpty)
-                            .toSet();
-                          final sel = (_selectedCategory ?? '').trim();
-                          if (sel.isNotEmpty) set.add(sel);
-                          return set
-                            .map((name) => DropdownMenuItem<String>(value: name, child: Text(name)))
-                            .toList();
-                          })(),
-                      onChanged: (value) {
-                        final v = (value ?? '').trim();
-                        setState(() {
-                          _selectedCategory = v.isNotEmpty ? v : null;
-                        });
-                        _editorCubit.setTheme(v);
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: DropdownButtonFormField<String>(
-                      value: visibility,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: headerYellow,
-                        hintText: 'Visible para',
-                        hintStyle: const TextStyle(color: Colors.black54),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: DropdownButtonFormField<String>(
+                          value: visibility,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: headerYellow,
+                            hintText: 'Visible para',
+                            hintStyle: const TextStyle(color: Colors.black54),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          items: visibilityOptions
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                visibility = val;
+                              });
+                            }
+                          },
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -553,7 +545,9 @@ class _LibraryKahootEditorPageState extends State<LibraryKahootEditorPage> {
   }
 
   Kahoot _buildKahootFromState(Kahoot original) {
-    final vis = KahootVisibilityX.fromString(_editorCubit.state.visibility);
+    final vis = _editorCubit.state.visibility == 'private'
+        ? KahootVisibility.private
+        : KahootVisibility.public;
     return Kahoot(
       kahootId: original.kahootId,
       authorId: _editorCubit.state.authorId,

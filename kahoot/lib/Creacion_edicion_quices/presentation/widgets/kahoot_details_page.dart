@@ -36,9 +36,9 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   final List<String> visibilityOptions = ['private', 'public'];
   int questionsCount = 0;
   final TextEditingController _titleController = TextEditingController();
-    // Estado para categorías
-    List<Category> _categories = const [];
-    String? _selectedCategory;
+  // Estado para categorías
+  List<Category> _categories = const [];
+  String? _selectedCategory;
 
   late final KahootDatasourceImpl _datasource;
   late final KahootRepositoryImpl _repository;
@@ -46,11 +46,6 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
   late final UpdateKahoot _updateKahoot;
   late final GetCategory _getCategory;
   late final KahootEditorCubit _editorCubit;
-
-  late final GetKahootThemes _getThemes;
-  List<entity.KahootTheme> _availableThemes = [];
-  String? _selectedThemeUrl;
-  bool _isLoadingThemes = true;
 
   @override
   void initState() {
@@ -72,9 +67,6 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
       initialAuthorId: 'author123',
     );
 
-    _getThemes = GetKahootThemes(_repository);
-    _loadThemes();
-
     final k = widget.initialKahoot;
     if (k != null) {
       _titleController.text = k.title;
@@ -95,21 +87,6 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
     }
     // Cargar categorías iniciales
     _loadCategories();
-  }
-
-  Future<void> _loadThemes() async {
-    try {
-      final themes = await _getThemes.execute();
-      setState(() {
-        _availableThemes = themes;
-        _isLoadingThemes = false;
-
-        if (widget.initialKahoot != null && _selectedThemeId == null) {}
-      });
-    } catch (e) {
-      setState(() => _isLoadingThemes = false);
-      debugPrint('Error cargando temas: $e');
-    }
   }
 
   @override
@@ -361,71 +338,15 @@ class _KahootDetailsPageState extends State<KahootDetailsPage> {
                       final selected = (value ?? '').trim();
                       _editorCubit.setTheme(selected);
                       try {
-                        context.read<KahootListCubit>().selectCategory(selected);
+                        context.read<KahootListCubit>().selectCategory(
+                          selected,
+                        );
                       } catch (_) {}
                     },
                   ),
                 ),
                 const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _isLoadingThemes
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      : DropdownButtonFormField<String>(
-                          value: _selectedThemeId,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: headerYellow,
-                            labelText: 'Tema',
-                            labelStyle: const TextStyle(
-                              color: Colors.brown,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          dropdownColor: cardDark,
-                          items: _availableThemes.map((
-                            entity.KahootTheme theme,
-                          ) {
-                            return DropdownMenuItem<String>(
-                              value: theme.assetId,
-                              child: Row(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Image.network(
-                                      theme.url,
-                                      width: 40,
-                                      height: 25,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          const Icon(Icons.palette, size: 20),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    theme.name,
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (newId) {
-                            if (newId != null) {
-                              setState(() => _selectedThemeId = newId);
-                              _editorCubit.setTheme(newId);
-                            }
-                          },
-                        ),
-                ),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 16)),
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

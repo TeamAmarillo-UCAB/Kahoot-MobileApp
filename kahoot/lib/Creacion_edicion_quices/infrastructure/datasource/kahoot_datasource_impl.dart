@@ -55,7 +55,7 @@ class KahootDatasourceImpl implements KahootDatasource {
       'visibility': visibility,
       'status': status,
       'category': theme,
-      'themeId': '3ef13730-7081-4c9d-881a-d3755c408272',
+      'themeId': '',
       // 'themeId': theme.isEmpty ? null : theme,
       'questions': question.map((q) {
         final String qt = (q.title.isNotEmpty ? q.title : q.text);
@@ -110,7 +110,8 @@ class KahootDatasourceImpl implements KahootDatasource {
     final tokenCreate = AuthState.token.value;
     final createHeaders = {
       'Content-Type': 'application/json',
-      if (tokenCreate != null && tokenCreate.isNotEmpty) 'Authorization': 'Bearer ' + tokenCreate,
+      if (tokenCreate != null && tokenCreate.isNotEmpty)
+        'Authorization': 'Bearer ' + tokenCreate,
     };
     final Response res = await dio.request(
       '/kahoots',
@@ -125,21 +126,25 @@ class KahootDatasourceImpl implements KahootDatasource {
       );
       if (res.data is Map<String, dynamic>) {
         final map = res.data as Map<String, dynamic>;
-        lastCreatedKahootId = (map['kahootId'] as String?) ?? (map['id'] as String?);
+        lastCreatedKahootId =
+            (map['kahootId'] as String?) ?? (map['id'] as String?);
         // Persist UI snapshot locally keyed by backend id
         final String keyId = (lastCreatedKahootId ?? kahootId);
         if (keyId.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
           final snapshot = {
-            'questions': question.map((q) => {
-              'type': _mapQuestionTypeV2(q.type),
-              'title': q.title.isNotEmpty ? q.title : q.text,
-              'time': q.timeLimitSeconds,
-              'answers': q.answer.map((a) => {
-                'text': a.text,
-                'isCorrect': a.isCorrect,
-              }).toList(),
-            }).toList(),
+            'questions': question
+                .map(
+                  (q) => {
+                    'type': _mapQuestionTypeV2(q.type),
+                    'title': q.title.isNotEmpty ? q.title : q.text,
+                    'time': q.timeLimitSeconds,
+                    'answers': q.answer
+                        .map((a) => {'text': a.text, 'isCorrect': a.isCorrect})
+                        .toList(),
+                  },
+                )
+                .toList(),
           };
           await prefs.setString('uiState:' + keyId, jsonEncode(snapshot));
         }
@@ -315,7 +320,8 @@ class KahootDatasourceImpl implements KahootDatasource {
     final tokenUpdate = AuthState.token.value;
     final updateHeaders = {
       'Content-Type': 'application/json',
-      if (tokenUpdate != null && tokenUpdate.isNotEmpty) 'Authorization': 'Bearer ' + tokenUpdate,
+      if (tokenUpdate != null && tokenUpdate.isNotEmpty)
+        'Authorization': 'Bearer ' + tokenUpdate,
     };
     final Response res = await dio.put(
       '/kahoots/$kahootId',
@@ -341,12 +347,10 @@ class KahootDatasourceImpl implements KahootDatasource {
     final tokenDelete = AuthState.token.value;
     final deleteHeaders = {
       'Content-Type': 'application/json',
-      if (tokenDelete != null && tokenDelete.isNotEmpty) 'Authorization': 'Bearer ' + tokenDelete,
+      if (tokenDelete != null && tokenDelete.isNotEmpty)
+        'Authorization': 'Bearer ' + tokenDelete,
     };
-    await dio.delete(
-      '/kahoots/$id',
-      options: Options(headers: deleteHeaders),
-    );
+    await dio.delete('/kahoots/$id', options: Options(headers: deleteHeaders));
   }
 
   @override
@@ -355,13 +359,16 @@ class KahootDatasourceImpl implements KahootDatasource {
       final tokenAll = AuthState.token.value;
       final allHeaders = {
         'Content-Type': 'application/json',
-        if (tokenAll != null && tokenAll.isNotEmpty) 'Authorization': 'Bearer ' + tokenAll,
+        if (tokenAll != null && tokenAll.isNotEmpty)
+          'Authorization': 'Bearer ' + tokenAll,
       };
       final response = await dio.get(
         '/kahoots',
         options: Options(
           headers: allHeaders,
-          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -405,7 +412,10 @@ class KahootDatasourceImpl implements KahootDatasource {
           );
         }).toList();
 
-        final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
+        final String themeValue =
+            ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId'])
+                as String?) ??
+            '';
         return Kahoot(
           kahootId: '',
           authorId: '',
@@ -429,14 +439,17 @@ class KahootDatasourceImpl implements KahootDatasource {
       final tokenByAuthor = AuthState.token.value;
       final byAuthorHeaders = {
         'Content-Type': 'application/json',
-        if (tokenByAuthor != null && tokenByAuthor.isNotEmpty) 'Authorization': 'Bearer ' + tokenByAuthor,
+        if (tokenByAuthor != null && tokenByAuthor.isNotEmpty)
+          'Authorization': 'Bearer ' + tokenByAuthor,
       };
       final response = await dio.get(
         '/kahoots/userId',
         queryParameters: {'userId': userId},
         options: Options(
           headers: byAuthorHeaders,
-          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -466,7 +479,21 @@ class KahootDatasourceImpl implements KahootDatasource {
             text: (qm['text'] as String?) ?? '',
             title: (qm['text'] as String?) ?? '',
             mediaId: (qm['mediaId'] as String?) ?? '',
-            type: (() { final raw = (qm['questionType'] as String?) ?? (qm['type'] as String?) ?? 'single'; final v = raw.toLowerCase().replaceAll(' ', '_'); if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz') return QuestionType.quiz_multiple; if (v == 'single' || v == 'quiz_single') return QuestionType.quiz_single; if (v == 'true_false' || v == 'true_or_false') return QuestionType.true_false; if (v == 'short_answer') return QuestionType.short_answer; return QuestionType.quiz_single; })(),
+            type: (() {
+              final raw =
+                  (qm['questionType'] as String?) ??
+                  (qm['type'] as String?) ??
+                  'single';
+              final v = raw.toLowerCase().replaceAll(' ', '_');
+              if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz')
+                return QuestionType.quiz_multiple;
+              if (v == 'single' || v == 'quiz_single')
+                return QuestionType.quiz_single;
+              if (v == 'true_false' || v == 'true_or_false')
+                return QuestionType.true_false;
+              if (v == 'short_answer') return QuestionType.short_answer;
+              return QuestionType.quiz_single;
+            })(),
             points: (qm['points'] as int?) ?? 0,
             timeLimitSeconds: (qm['timeLimit'] as int?) ?? 0,
             answer: answersRaw.map((a) {
@@ -480,7 +507,10 @@ class KahootDatasourceImpl implements KahootDatasource {
             }).toList(),
           );
         }).toList();
-        final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
+        final String themeValue =
+            ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId'])
+                as String?) ??
+            '';
         return Kahoot(
           kahootId: (m['kahootId'] as String?) ?? (m['id'] as String? ?? ''),
           authorId: (m['authorId'] as String?) ?? '',
@@ -504,13 +534,16 @@ class KahootDatasourceImpl implements KahootDatasource {
       final tokenById = AuthState.token.value;
       final byIdHeaders = {
         'Content-Type': 'application/json',
-        if (tokenById != null && tokenById.isNotEmpty) 'Authorization': 'Bearer ' + tokenById,
+        if (tokenById != null && tokenById.isNotEmpty)
+          'Authorization': 'Bearer ' + tokenById,
       };
       final response = await dio.get(
         '/kahoots/$kahootId',
         options: Options(
           headers: byIdHeaders,
-          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -525,7 +558,21 @@ class KahootDatasourceImpl implements KahootDatasource {
           text: (qm['text'] as String?) ?? '',
           title: (qm['text'] as String?) ?? '',
           mediaId: (qm['mediaId'] as String?) ?? '',
-          type: (() { final raw = (qm['questionType'] as String?) ?? (qm['type'] as String?) ?? 'single'; final v = raw.toLowerCase().replaceAll(' ', '_'); if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz') return QuestionType.quiz_multiple; if (v == 'single' || v == 'quiz_single') return QuestionType.quiz_single; if (v == 'true_false' || v == 'true_or_false') return QuestionType.true_false; if (v == 'short_answer') return QuestionType.short_answer; return QuestionType.quiz_single; })(),
+          type: (() {
+            final raw =
+                (qm['questionType'] as String?) ??
+                (qm['type'] as String?) ??
+                'single';
+            final v = raw.toLowerCase().replaceAll(' ', '_');
+            if (v == 'multiple' || v == 'quiz_multiple' || v == 'quiz')
+              return QuestionType.quiz_multiple;
+            if (v == 'single' || v == 'quiz_single')
+              return QuestionType.quiz_single;
+            if (v == 'true_false' || v == 'true_or_false')
+              return QuestionType.true_false;
+            if (v == 'short_answer') return QuestionType.short_answer;
+            return QuestionType.quiz_single;
+          })(),
           points: (qm['points'] as int?) ?? 0,
           timeLimitSeconds: (qm['timeLimit'] as int?) ?? 0,
           answer: answersRaw.map((a) {
@@ -539,7 +586,10 @@ class KahootDatasourceImpl implements KahootDatasource {
           }).toList(),
         );
       }).toList();
-      final String themeValue = ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId']) as String?) ?? '';
+      final String themeValue =
+          ((m['category'] ?? m['theme'] ?? m['themeName'] ?? m['themeId'])
+              as String?) ??
+          '';
       return Kahoot(
         kahootId: (m['kahootId'] as String?) ?? (m['id'] as String? ?? ''),
         authorId: (m['authorId'] as String?) ?? '',
@@ -563,13 +613,16 @@ class KahootDatasourceImpl implements KahootDatasource {
       final token = AuthState.token.value;
       final headers = {
         'Content-Type': 'application/json',
-        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer ' + token,
+        if (token != null && token.isNotEmpty)
+          'Authorization': 'Bearer ' + token,
       };
       final response = await dio.get(
         '/explore/categories',
         options: Options(
           headers: headers,
-          validateStatus: (status) => status != null && ((status >= 200 && status < 300) || status == 404),
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 404),
         ),
       );
       if (response.statusCode == 404) {
@@ -580,7 +633,13 @@ class KahootDatasourceImpl implements KahootDatasource {
       if (data is List) {
         list = data;
       } else if (data is Map<String, dynamic>) {
-        final candidates = ['categories', 'items', 'content', 'data', 'results'];
+        final candidates = [
+          'categories',
+          'items',
+          'content',
+          'data',
+          'results',
+        ];
         final foundKey = candidates.firstWhere(
           (k) => data[k] is List,
           orElse: () => '',
