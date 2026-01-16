@@ -25,7 +25,9 @@ class KahootsLibraryPage extends StatelessWidget {
           context.read<LibraryListCubit>().load();
         } else if (state.status == DeleteKahootStatus.error) {
           final msg = state.errorMessage ?? 'Error al eliminar';
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
         }
       },
       child: Scaffold(
@@ -50,10 +52,22 @@ class KahootsLibraryPage extends StatelessWidget {
         children: [
           GradientButton(
             onTap: () => Navigator.of(context).pop(),
-            child: const Text('Volver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Volver',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           const Spacer(),
-          const Text('Mis Kahoots', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+          const Text(
+            'Mis Kahoots',
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const Spacer(),
         ],
       ),
@@ -66,7 +80,10 @@ class KahootsLibraryPage extends StatelessWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Text('No hay kahoots creados aún', style: TextStyle(color: Colors.white.withOpacity(0.85))),
+          child: Text(
+            'No hay kahoots creados aún',
+            style: TextStyle(color: Colors.white.withOpacity(0.85)),
+          ),
         ),
       );
     }
@@ -80,7 +97,7 @@ class KahootsLibraryPage extends StatelessWidget {
               crossAxisCount: cross,
               mainAxisSpacing: 18,
               crossAxisSpacing: 18,
-              childAspectRatio: 0.60,
+              childAspectRatio: 0.55,
             ),
             itemCount: data.length,
             itemBuilder: (context, index) => _AnimatedAppear(
@@ -107,7 +124,13 @@ class _KahootCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardYellow,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 6, offset: Offset(0, 2))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -121,7 +144,11 @@ class _KahootCard extends StatelessWidget {
                   final isFav = favState.favorites.contains(item.kahootId);
                   final busy = favState.loading.contains(item.kahootId);
                   return GestureDetector(
-                    onTap: busy ? null : () => context.read<FavoritesCubit>().toggle(item.kahootId),
+                    onTap: busy
+                        ? null
+                        : () => context.read<FavoritesCubit>().toggle(
+                            item.kahootId,
+                          ),
                     child: Icon(
                       isFav ? Icons.star : Icons.star_border,
                       color: isFav ? Colors.black : const Color(0xFF3A240C),
@@ -137,17 +164,30 @@ class _KahootCard extends StatelessWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.read<DeleteKahootCubit>().removeById(item.kahootId),
-                    child: const Icon(Icons.delete, size: 20, color: Color(0xFF3A240C)),
+                    onTap: () => context.read<DeleteKahootCubit>().removeById(
+                      item.kahootId,
+                    ),
+                    child: const Icon(
+                      Icons.delete,
+                      size: 20,
+                      color: Color(0xFF3A240C),
+                    ),
                   ),
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => LibraryKahootEditorPage(initialKahoot: item)),
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              LibraryKahootEditorPage(initialKahoot: item),
+                        ),
                       );
                     },
-                    child: const Icon(Icons.edit, size: 20, color: Color(0xFF3A240C)),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 20,
+                      color: Color(0xFF3A240C),
+                    ),
                   ),
                 ],
               ),
@@ -165,7 +205,8 @@ class _KahootCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
-                  child: (item.image.isNotEmpty && item.image.startsWith('http'))
+                  child:
+                      (item.image.isNotEmpty && item.image.startsWith('http'))
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: Image.network(
@@ -173,10 +214,18 @@ class _KahootCard extends StatelessWidget {
                             height: 110,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.image, color: Colors.black45, size: 40),
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.image,
+                              color: Colors.black45,
+                              size: 40,
+                            ),
                           ),
                         )
-                      : const Icon(Icons.image, color: Colors.black45, size: 40),
+                      : const Icon(
+                          Icons.image,
+                          color: Colors.black45,
+                          size: 40,
+                        ),
                 ),
                 const SizedBox(height: 12),
                 Center(
@@ -184,7 +233,11 @@ class _KahootCard extends StatelessWidget {
                     item.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -197,16 +250,24 @@ class _KahootCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Center(
                   child: GradientButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 10,
+                    ),
                     borderRadius: const BorderRadius.all(Radius.circular(16)),
                     onTap: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => LibraryKahootDetailsPage(item: item)),
+                        MaterialPageRoute(
+                          builder: (_) => LibraryKahootDetailsPage(item: item),
+                        ),
                       );
                     },
                     child: const Text(
                       'ver detalles',
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

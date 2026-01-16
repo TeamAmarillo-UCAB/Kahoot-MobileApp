@@ -8,12 +8,15 @@ import '../../core/result.dart';
 import '../application/usecases/get_kahoots_by_category_usecase.dart';
 import '../../Creacion_edicion_quices/domain/entities/kahoot.dart';
 import '../../core/widgets/gradient_button.dart';
+import '../../Juego_Asincrono/presentation/pages/game_page.dart';
+import '../../Juego_en_vivo/presentation/pages/host/host_lobby_page.dart';
 
 class ExploracionBusquedaPage extends StatefulWidget {
   const ExploracionBusquedaPage({Key? key}) : super(key: key);
 
   @override
-  State<ExploracionBusquedaPage> createState() => _ExploracionBusquedaPageState();
+  State<ExploracionBusquedaPage> createState() =>
+      _ExploracionBusquedaPageState();
 }
 
 class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
@@ -30,9 +33,10 @@ class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
   late final GetCategoriesUseCase _getCategories = GetCategoriesUseCase(
     repository: ExploreRepositoryImpl(datasource: ExploreDatasourceImpl()),
   );
-  late final GetKahootsByCategoryUseCase _getKahootsByCategory = GetKahootsByCategoryUseCase(
-    repository: ExploreRepositoryImpl(datasource: ExploreDatasourceImpl()),
-  );
+  late final GetKahootsByCategoryUseCase _getKahootsByCategory =
+      GetKahootsByCategoryUseCase(
+        repository: ExploreRepositoryImpl(datasource: ExploreDatasourceImpl()),
+      );
 
   bool _showCategories = false;
   String? _selectedCategory;
@@ -75,11 +79,18 @@ class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
                         style: const TextStyle(color: Colors.white),
                         cursorColor: headerYellow,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search, color: headerYellow),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: headerYellow,
+                          ),
                           hintText: 'Buscar un kahoot...',
-                          hintStyle: TextStyle(color: headerYellow.withOpacity(0.7)),
+                          hintStyle: TextStyle(
+                            color: headerYellow.withOpacity(0.7),
+                          ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -91,8 +102,11 @@ class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
                         _searchFocus.unfocus();
                         setState(() => _showCategories = false);
                       },
-                      child: const Text('Cancelar', style: TextStyle(color: headerYellow)),
-                    )
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: headerYellow),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -117,83 +131,95 @@ class _ExploracionBusquedaPageState extends State<ExploracionBusquedaPage> {
                         },
                       )
                     : (_resultsFuture != null
-                        ? FutureBuilder<Result<List<Kahoot>>>(
-                            future: _resultsFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState != ConnectionState.done) {
-                                return const Center(child: CircularProgressIndicator());
-                              }
-                              final r = snapshot.data;
-                              List<Kahoot> items = const [];
-                              if (r != null && r.isSuccessful()) {
-                                items = r.getValue();
-                              }
-                              if (items.isEmpty) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24.0),
-                                    child: Text(
-                                      _selectedCategory == null
-                                          ? 'Sin resultados'
-                                          : 'Sin resultados para "'+(_selectedCategory!)+'"',
-                                      style: const TextStyle(color: Colors.white70),
-                                      textAlign: TextAlign.center,
+                          ? FutureBuilder<Result<List<Kahoot>>>(
+                              future: _resultsFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState !=
+                                    ConnectionState.done) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                final r = snapshot.data;
+                                List<Kahoot> items = const [];
+                                if (r != null && r.isSuccessful()) {
+                                  items = r.getValue();
+                                }
+                                if (items.isEmpty) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24.0),
+                                      child: Text(
+                                        _selectedCategory == null
+                                            ? 'Sin resultados'
+                                            : 'Sin resultados para "' +
+                                                  (_selectedCategory!) +
+                                                  '"',
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
+                                  );
+                                }
+                                return ListView.separated(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
                                   ),
+                                  itemCount: items.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (_, i) =>
+                                      _ResultKahootCard(k: items[i]),
                                 );
-                              }
-                              return ListView.separated(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                itemCount: items.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (_, i) => _ResultKahootCard(k: items[i]),
-                              );
-                            },
-                          )
-                        : ListView(
-                            padding: const EdgeInsets.all(24),
-                            children: [
-                              const SizedBox(height: 8),
-                              Text(
-                                '¡Explora Kahoots!',
-                                style: TextStyle(
-                                  color: textYellow,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 28,
+                              },
+                            )
+                          : ListView(
+                              padding: const EdgeInsets.all(24),
+                              children: [
+                                const SizedBox(height: 8),
+                                Text(
+                                  '¡Explora Kahoots!',
+                                  style: TextStyle(
+                                    color: textYellow,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Busca o descubre los mejores Kahoots para ti',
-                                style: TextStyle(
-                                  color: headerYellow.withOpacity(0.85),
-                                  fontSize: 16,
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Busca o descubre los mejores Kahoots para ti',
+                                  style: TextStyle(
+                                    color: headerYellow.withOpacity(0.85),
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 24),
-                              _KahootCard(
-                                title: 'Historia de la Navidad en Europa',
-                                author: 'Wikipedia_Espanol',
-                                color: cardBrown,
-                                number: 1,
-                              ),
-                              _KahootCard(
-                                title: 'Datos curiosos de Navidad',
-                                author: 'KStudio_Espanol',
-                                color: cardYellow,
-                                number: 2,
-                                textColor: bgBrown,
-                              ),
-                              _KahootCard(
-                                title: 'Adornos de Navidad',
-                                author: 'Wikipedia_Espanol',
-                                color: cardBrown,
-                                number: 3,
-                              ),
-                            ],
-                          )),
+                                const SizedBox(height: 24),
+                                _KahootCard(
+                                  title: 'Historia de la Navidad en Europa',
+                                  author: 'Wikipedia_Espanol',
+                                  color: cardBrown,
+                                  number: 1,
+                                ),
+                                _KahootCard(
+                                  title: 'Datos curiosos de Navidad',
+                                  author: 'KStudio_Espanol',
+                                  color: cardYellow,
+                                  number: 2,
+                                  textColor: bgBrown,
+                                ),
+                                _KahootCard(
+                                  title: 'Adornos de Navidad',
+                                  author: 'Wikipedia_Espanol',
+                                  color: cardBrown,
+                                  number: 3,
+                                ),
+                              ],
+                            )),
               ),
             ),
           ],
@@ -235,20 +261,43 @@ class _KahootCard extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.transparent,
-          child: Text('$number', style: TextStyle(color: textColor ?? Colors.white, fontWeight: FontWeight.bold)),
+          child: Text(
+            '$number',
+            style: TextStyle(
+              color: textColor ?? Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         title: Text(
           title,
-          style: TextStyle(color: textColor ?? Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: textColor ?? Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        // ... dentro de _KahootCard ...
         subtitle: Row(
           children: [
             Icon(Icons.verified, color: textColor ?? Colors.amber, size: 16),
             const SizedBox(width: 4),
-            Text(
-              author,
-              style: TextStyle(color: (textColor ?? Colors.white).withOpacity(0.8), fontSize: 13),
+
+            // --- AQUÍ ESTÁ EL CAMBIO ---
+            Expanded(
+              // 1. Envuelve el Text en Expanded
+              child: Text(
+                author,
+                style: TextStyle(
+                  color: (textColor ?? Colors.white).withOpacity(0.8),
+                  fontSize: 13,
+                ),
+                // 2. Agrega estas dos líneas para cortar el texto si es largo
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
+
+            // ---------------------------
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -256,10 +305,17 @@ class _KahootCard extends StatelessWidget {
                 color: (textColor ?? Colors.white).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text('Gratis', style: TextStyle(color: textColor ?? Colors.white, fontSize: 11)),
+              child: Text(
+                'Gratis',
+                style: TextStyle(
+                  color: textColor ?? Colors.white,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ],
         ),
+        // ...
         trailing: Icon(Icons.chevron_right, color: textColor ?? Colors.white54),
       ),
     );
@@ -286,7 +342,10 @@ class _CategoriesPanel extends StatelessWidget {
         }
         if (categories.isEmpty) {
           return const Center(
-            child: Text('Sin categorías', style: TextStyle(color: Colors.white70)),
+            child: Text(
+              'Sin categorías',
+              style: TextStyle(color: Colors.white70),
+            ),
           );
         }
         final palette = <Color>[
@@ -372,7 +431,11 @@ class _ResultKahootCard extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 6, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Padding(
@@ -389,22 +452,38 @@ class _ResultKahootCard extends StatelessWidget {
               ),
               clipBehavior: Clip.antiAlias,
               child: (k.image.isNotEmpty)
-                  ? Image.network(k.image, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
-                      return const Center(child: Icon(Icons.image, color: Colors.white70, size: 36));
-                    })
-                  : const Center(child: Icon(Icons.image, color: Colors.white70, size: 36)),
+                  ? Image.network(
+                      k.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) {
+                        return const Center(
+                          child: Icon(
+                            Icons.image,
+                            color: Colors.white70,
+                            size: 36,
+                          ),
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: Icon(Icons.image, color: Colors.white70, size: 36),
+                    ),
             ),
             const SizedBox(height: 12),
             // Title
             Text(
               k.title.isEmpty ? 'Kahoot sin título' : k.title,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 4),
             // Visibility
             Text(
-              'Visibilidad: ' + _visibilityLabel(k.visibility),
+              'Visibilidad: Pública',
               style: const TextStyle(color: Colors.black87, fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -415,14 +494,22 @@ class _ResultKahootCard extends StatelessWidget {
                 _ActionButton(
                   label: 'Crear sesión',
                   onPressed: () {
-                    // TODO: Hook to create live session
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => HostLobbyView(kahootId: k.kahootId),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(width: 12),
                 _ActionButton(
                   label: 'Jugar solitario',
                   onPressed: () {
-                    // TODO: Hook to solo play
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => GamePage(kahootId: k.kahootId),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -500,7 +587,11 @@ class _CategoryCardTile extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       shadows: [
-                        Shadow(color: Colors.black54, blurRadius: 2, offset: Offset(0, 1)),
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                        ),
                       ],
                     ),
                   ),

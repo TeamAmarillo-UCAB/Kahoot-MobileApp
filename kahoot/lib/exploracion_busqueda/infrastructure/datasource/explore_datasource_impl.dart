@@ -110,7 +110,7 @@ class ExploreDatasourceImpl implements ExploreDatasource {
   Future<List<Kahoot>> getKahootsByCategory(String category) async {
     final cats = category
         .split(',')
-        .map((e) => _toSpanishSlug(e))
+        .map((e) => e.trim()) //.map((e) => _toSpanishSlug(e))
         .where((e) => e.isNotEmpty)
         .join(',');
     final res = await dio.get(
@@ -122,8 +122,32 @@ class ExploreDatasourceImpl implements ExploreDatasource {
     } catch (_) {}
 
     final data = res.data;
+
+    print(res.data);
+
+    List<dynamic> fixItems(List<dynamic> rawList) {
+      return rawList.map((item) {
+        if (item is Map) {
+          final Map<String, dynamic> newItem = Map<String, dynamic>.from(item);
+
+          if (newItem.containsKey('id')) {
+            newItem['kahootId'] = newItem['id'];
+          }
+
+          // Portada
+          if (newItem.containsKey('coverImageId')) {
+            newItem['image'] = newItem['coverImageId'];
+          }
+
+          return newItem;
+        }
+        return item;
+      }).toList();
+    }
+
     if (data is List) {
-      return Kahoot.fromJsonList(data);
+      final fixedList = fixItems(data);
+      return Kahoot.fromJsonList(fixedList);
     }
     if (data is Map<String, dynamic>) {
       final list =
@@ -131,7 +155,9 @@ class ExploreDatasourceImpl implements ExploreDatasource {
           (data['items'] as List?) ??
           (data['results'] as List?) ??
           const [];
-      return Kahoot.fromJsonList(list);
+      final fixedList = fixItems(list);
+
+      return Kahoot.fromJsonList(fixedList);
     }
     return const <Kahoot>[];
   }
