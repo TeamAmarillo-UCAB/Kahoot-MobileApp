@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "501991472324",
+    "project_id": "quizzy-51687",
+    "storage_bucket": "quizzy-51687.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501991472324:android:84b0f142a2c5485d98dd91",
+        "android_client_info": {
+          "package_name": "com.example.kahoot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF490q3_BluFGChfDhQR9BOkov5rjqTuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -6,6 +6,9 @@ import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 
 /*const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
@@ -13,8 +16,30 @@ import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dar
 );*/ //host pub
 //const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzybackend.app/api'); //host priv
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await setupNotifications();
   runApp(const MyApp());
+}
+
+Future<void> setupNotifications() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  String? token = await messaging.getToken();
+  print("FCM Token para el Back: $token");
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    if (message.notification != null) {
+      print('Notificación recibida: ${message.notification!.title}');
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
