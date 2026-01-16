@@ -484,9 +484,7 @@ class _ResultKahootCard extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => HostLobbyView(
-                          kahootId: "9c734b1d-7a92-4d4f-af5d-b642ae486b72",
-                        ),
+                        builder: (_) => HostLobbyView(kahootId: k.kahootId),
                       ),
                     );
                   },
@@ -497,9 +495,7 @@ class _ResultKahootCard extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => GamePage(
-                          kahootId: "9c734b1d-7a92-4d4f-af5d-b642ae486b72",
-                        ),
+                        builder: (_) => GamePage(kahootId: k.kahootId),
                       ),
                     );
                   },
