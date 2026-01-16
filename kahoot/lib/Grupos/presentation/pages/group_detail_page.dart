@@ -7,6 +7,7 @@ import '../bloc/group_detail/group_detail_state.dart';
 import '../../domain/entities/group.dart';
 import 'invite_success_dialog.dart';
 import 'group_leaderboard_page.dart';
+import '../../../Juego_Asincrono/presentation/pages/game_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final Group group;
@@ -230,6 +231,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: ListTile(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            GamePage(kahootId: quiz.quizId),
+                                      ),
+                                    );
+                                  },
                                   contentPadding: const EdgeInsets.all(12),
                                   leading: Container(
                                     padding: const EdgeInsets.all(10),
