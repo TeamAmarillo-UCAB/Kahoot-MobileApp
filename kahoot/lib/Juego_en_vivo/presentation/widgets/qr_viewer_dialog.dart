@@ -42,7 +42,7 @@ class QRViewerDialog extends StatelessWidget {
               fontSize: 32,
               fontWeight: FontWeight.w900,
               letterSpacing: 4,
-              color: Colors.deepPurple,
+              color: Colors.amber,
             ),
           ),
         ],

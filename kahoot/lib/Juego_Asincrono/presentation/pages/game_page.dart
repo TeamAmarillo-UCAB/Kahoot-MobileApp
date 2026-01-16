@@ -142,7 +142,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                 _currentBackground,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) =>
-                    Container(color: GameColors.mainPurple),
+                    Container(color: GameColors.mainYellow),
               ),
             ),
             SafeArea(
@@ -212,7 +212,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: GameColors.mainPurple,
+                  foregroundColor: GameColors.amberTheme,
                 ),
                 onPressed: () => _bloc.add(OnStartGame(widget.kahootId)),
                 child: const Text("Reintentar"),

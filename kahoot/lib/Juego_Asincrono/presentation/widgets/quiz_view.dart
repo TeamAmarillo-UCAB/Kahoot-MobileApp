@@ -369,7 +369,7 @@ class _QuizViewState extends State<QuizView> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            "JovaniVazques",
+            "Tú",
             style: TextStyle(
               fontFamily: 'Montserrat',
               color: Colors.white,
