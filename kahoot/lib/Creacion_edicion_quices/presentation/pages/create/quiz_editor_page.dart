@@ -9,7 +9,15 @@ class QuizEditorPage extends StatefulWidget {
   final String? initialTitle;
   final List<String>? initialAnswers;
   final int? initialTime;
-  const QuizEditorPage({Key? key, this.index, this.initialTitle, this.initialAnswers, this.initialTime}) : super(key: key);
+  final String? initialMediaId;
+  const QuizEditorPage({
+    Key? key,
+    this.index,
+    this.initialTitle,
+    this.initialAnswers,
+    this.initialTime,
+    this.initialMediaId,
+  }) : super(key: key);
 
   @override
   State<QuizEditorPage> createState() => _QuizEditorPageState();
@@ -30,10 +38,13 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
   final List<int> timeOptions = [5, 10, 20, 45, 60, 90, 120, 180, 240];
   int selectedTime = 20;
 
+  String? currentMediaId;
+
   @override
   void initState() {
     super.initState();
     // Prefill if editing
+    currentMediaId = widget.initialMediaId;
     if (widget.initialTitle != null) {
       questionController.text = widget.initialTitle!;
     }
@@ -79,6 +90,7 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
       'title': questionText,
       'time': selectedTime,
       'answers': answers,
+      'mediaId': currentMediaId,
     });
   }
 
@@ -167,7 +179,13 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: GradientButton(
               onTap: _save,
-              child: const Text('Listo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Listo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -178,7 +196,13 @@ class _QuizEditorPageState extends State<QuizEditorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            const MediaResourceSelector(),
+            MediaResourceSelector(
+              onIdSelected: (mediaId) {
+                setState(() {
+                  currentMediaId = mediaId;
+                });
+              },
+            ),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -352,7 +376,10 @@ class _AnswerBox extends StatelessWidget {
             tooltip: 'Subir imagen',
             icon: const Icon(Icons.image, color: Colors.white),
             onPressed: () async {
-              final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
+              final res = await FilePicker.platform.pickFiles(
+                type: FileType.image,
+                allowMultiple: false,
+              );
               final name = res?.files.first.name;
               if (name != null) {
                 ScaffoldMessenger.of(context).showSnackBar(

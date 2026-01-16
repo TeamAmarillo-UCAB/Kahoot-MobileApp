@@ -44,17 +44,14 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
       builder: (context, child) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            // Calcular la posición X basada en el porcentaje de la barra
             final double width = constraints.maxWidth;
             final double currentPosition = width * _controller.value;
 
             return Column(
               children: [
                 Stack(
-                  clipBehavior: Clip
-                      .none, // Permite que el texto sobresalga si es necesario
+                  clipBehavior: Clip.none,
                   children: [
-                    // La barra de progreso
                     LinearProgressIndicator(
                       value: _controller.value,
                       backgroundColor: Colors.white12,
@@ -65,12 +62,9 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
                       ),
                       minHeight: 12,
                     ),
-                    // El número que "sigue" a la barra
                     Positioned(
-                      left:
-                          currentPosition -
-                          20, // Ajuste para que el texto flote sobre el final
-                      top: 15, // Posiciona justo debajo de la barra
+                      left: currentPosition - 20,
+                      top: 15,
                       child: Text(
                         '${(widget.timeLimitSeconds * _controller.value).ceil()}s',
                         style: TextStyle(
@@ -84,9 +78,7 @@ class _LiveTimerWidgetState extends State<LiveTimerWidget>
                     ),
                   ],
                 ),
-                const SizedBox(
-                  height: 25,
-                ), // Espacio para que el número no choque con la pregunta
+                const SizedBox(height: 25),
               ],
             );
           },

@@ -6,16 +6,37 @@ import '../../domain/entities/answer.dart';
 import '../../domain/entities/category.dart';
 import '../../../core/result.dart';
 
-
-class KahootRepositoryImpl implements KahootRepository{
+class KahootRepositoryImpl implements KahootRepository {
   final KahootDatasource datasource;
 
   KahootRepositoryImpl({required this.datasource});
 
   @override
-  Future<Result<void>> createKahoot(String kahootId, String authorId, String title, String description, String image, String visibility, String status, String theme, List<Question> question, List<Answer> answer) async {
+  Future<Result<void>> createKahoot(
+    String kahootId,
+    String authorId,
+    String title,
+    String description,
+    String image,
+    String visibility,
+    String status,
+    String theme,
+    List<Question> question,
+    List<Answer> answer,
+  ) async {
     try {
-      await datasource.createKahoot(kahootId, authorId, title, description, image, visibility, status, theme, question, answer);
+      await datasource.createKahoot(
+        kahootId,
+        authorId,
+        title,
+        description,
+        image,
+        visibility,
+        status,
+        theme,
+        question,
+        answer,
+      );
       return Result.voidSuccess();
     } catch (e, stackTrace) {
       print("Error creating kahoot: $e");
@@ -49,7 +70,7 @@ class KahootRepositoryImpl implements KahootRepository{
   }
 
   @override
-  Future<Result<List<Kahoot>>> getAllKahoots() async {  
+  Future<Result<List<Kahoot>>> getAllKahoots() async {
     try {
       final kahoots = await datasource.getAllKahoots();
       return Result.success(kahoots);

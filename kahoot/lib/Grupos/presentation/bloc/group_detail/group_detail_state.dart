@@ -12,6 +12,7 @@ class GroupDetailState {
   final String? invitationLink;
   final bool isDeleted;
   final String? groupId;
+  final Map<String, String> memberNames;
 
   final GroupDetail? groupDetails;
 
@@ -25,6 +26,7 @@ class GroupDetailState {
     this.isDeleted = false,
     this.groupId,
     this.groupDetails,
+    this.memberNames = const {},
   });
 
   // Estado inicial
@@ -38,6 +40,7 @@ class GroupDetailState {
     List<LeaderboardEntry>? leaderboard,
 
     String? invitationLink,
+    Map<String, String>? memberNames,
     bool clearInvitationLink = false, //Flag de borrar link
     bool? isDeleted,
     String? groupId,
@@ -53,6 +56,7 @@ class GroupDetailState {
       invitationLink: clearInvitationLink
           ? null
           : (invitationLink ?? this.invitationLink),
+      memberNames: memberNames ?? this.memberNames,
       isDeleted: isDeleted ?? this.isDeleted,
       groupId: groupId ?? this.groupId,
       groupDetails: groupDetails ?? this.groupDetails,

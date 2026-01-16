@@ -5,12 +5,14 @@ import '../../infrastructure/repositories/user_repository_impl.dart';
 import '../../application/usecases/update_user.dart';
 import '../../domain/entities/user.dart';
 import '../../../main.dart';
+import '../../../config/api_config.dart';
 
 class ProfileConfigurationPage extends StatefulWidget {
   const ProfileConfigurationPage({Key? key}) : super(key: key);
 
   @override
-  State<ProfileConfigurationPage> createState() => _ProfileConfigurationPageState();
+  State<ProfileConfigurationPage> createState() =>
+      _ProfileConfigurationPageState();
 }
 
 class _ProfileConfigurationPageState extends State<ProfileConfigurationPage> {
@@ -44,7 +46,10 @@ class _ProfileConfigurationPageState extends State<ProfileConfigurationPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Configuración de perfil', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Configuración de perfil',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -58,22 +63,41 @@ class _ProfileConfigurationPageState extends State<ProfileConfigurationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Nombre de usuario', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const Text(
+                'Nombre de usuario',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _usernameCtrl,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: headerYellow),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: headerYellow,
+                  ),
                   onPressed: _save,
-                  child: const Text('Guardar', style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Guardar',
+                    style: TextStyle(
+                      color: Colors.brown,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -86,7 +110,9 @@ class _ProfileConfigurationPageState extends State<ProfileConfigurationPage> {
   Future<void> _save() async {
     final newUsername = _usernameCtrl.text.trim();
     if (newUsername.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un nombre de usuario')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa un nombre de usuario')),
+      );
       return;
     }
     // Actualiza estado local para que PostLogin refleje el cambio de inmediato
@@ -95,15 +121,25 @@ class _ProfileConfigurationPageState extends State<ProfileConfigurationPage> {
     // Intentar persistir en backend (si está disponible)
     try {
       final ds = UserDatasourceImpl();
-      ds.dio.options.baseUrl = apiBaseUrl.trim();
+      ds.dio.options.baseUrl = ApiConfig().baseUrl.trim();
       final repo = UserRepositoryImpl(datasource: ds);
       final usecase = UpdateUser(repo);
-      final user = User(email: AuthState.email.value ?? '', name: newUsername, password: '');
+      final user = User(
+        email: AuthState.email.value ?? '',
+        name: newUsername,
+        password: '',
+      );
       await usecase(user);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
     } catch (e) {
       // Si falla, al menos el estado local quedó actualizado
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No se pudo actualizar en servidor: '+ e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo actualizar en servidor: ' + e.toString()),
+        ),
+      );
     }
   }
 }

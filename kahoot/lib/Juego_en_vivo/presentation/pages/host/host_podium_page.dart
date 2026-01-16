@@ -32,21 +32,19 @@ class HostPodiumView extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
 
-                // Lista de ganadores (Top 3) con números
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Column(
                     children: winners.take(3).toList().asMap().entries.map((
                       entry,
                     ) {
-                      final int index = entry.key; // El índice empieza en 0
+                      final int index = entry.key;
                       final dynamic player = entry.value;
 
                       final name =
                           player['nickname'] ?? player['name'] ?? 'Jugador';
                       final score = player['score'] ?? 0;
-                      final position =
-                          index + 1; // Sumamos 1 para que sea 1, 2, 3
+                      final position = index + 1;
 
                       return Card(
                         color: Colors.white.withOpacity(0.1),
@@ -56,7 +54,6 @@ class HostPodiumView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: ListTile(
-                          // REEMPLAZO: Círculo con el número de posición
                           leading: CircleAvatar(
                             backgroundColor: _getPositionColor(position),
                             radius: 15,
@@ -123,7 +120,6 @@ class HostPodiumView extends StatelessWidget {
     );
   }
 
-  // Función auxiliar para dar colores de medalla (Opcional)
   Color _getPositionColor(int position) {
     switch (position) {
       case 1:

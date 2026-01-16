@@ -7,7 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
 
-const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzy-backend-1-zpvc.onrender.com/api'); //host pub
+/*const String apiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://quizzy-backend-1-zpvc.onrender.com/api',
+);*/ //host pub
 //const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzybackend.app/api'); //host priv
 
 void main() {
@@ -46,9 +49,9 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(seconds: 4), () {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
     });
   }
 
@@ -64,7 +67,11 @@ class _SplashScreenState extends State<SplashScreen> {
             height: 120,
             errorBuilder: (_, __, ___) => const Text(
               'K!',
-              style: TextStyle(color: Colors.brown, fontSize: 64, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                color: Colors.brown,
+                fontSize: 64,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),

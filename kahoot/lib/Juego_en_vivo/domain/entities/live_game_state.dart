@@ -64,4 +64,44 @@ class LiveGameState {
       podiumData: json['finalPodium'],
     );
   }
+
+  LiveGameState copyWith({
+    String? phase,
+    LiveSlide? currentSlide,
+    List<dynamic>? players,
+    List<dynamic>? leaderboard,
+    Map<String, dynamic>? stats,
+    Map<String, dynamic>? progress,
+    bool? lastWasCorrect,
+    int? lastPointsEarned,
+    int? totalScore,
+    int? rank,
+    int? streak,
+    List<String>? correctAnswerIds,
+    String? feedbackMessage,
+    bool? isWinner,
+    bool? isPodium,
+    int? finalStreak,
+    dynamic podiumData,
+  }) {
+    return LiveGameState(
+      phase: phase ?? this.phase,
+      currentSlide: currentSlide ?? this.currentSlide,
+      players: players ?? this.players,
+      leaderboard: leaderboard ?? this.leaderboard,
+      stats: stats ?? this.stats,
+      progress: progress ?? this.progress,
+      lastWasCorrect: lastWasCorrect ?? this.lastWasCorrect,
+      lastPointsEarned: lastPointsEarned ?? this.lastPointsEarned,
+      totalScore: totalScore ?? this.totalScore,
+      rank: rank ?? this.rank,
+      streak: streak ?? this.streak,
+      correctAnswerIds: correctAnswerIds ?? this.correctAnswerIds,
+      feedbackMessage: feedbackMessage ?? this.feedbackMessage,
+      isWinner: isWinner ?? this.isWinner,
+      isPodium: isPodium ?? this.isPodium,
+      finalStreak: finalStreak ?? this.finalStreak,
+      podiumData: podiumData ?? this.podiumData,
+    );
+  }
 }

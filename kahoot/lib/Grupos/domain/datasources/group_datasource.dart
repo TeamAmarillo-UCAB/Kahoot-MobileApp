@@ -31,7 +31,7 @@ abstract class GroupDatasource {
   Future<List<GroupMember>> getGroupMembers(String userId, String groupId);
 
   /// Elimina un miembro de un grupo
-  Future<void> removeMember(String userId, String groupId, String memberId);
+  Future<void> removeMember(String groupId, String memberId);
 
   /// Transfiere el rol de administrador a otro miembro
   Future<Map<String, dynamic>> transferAdmin(

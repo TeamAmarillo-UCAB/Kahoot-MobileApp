@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+//import 'package:kahoot/main.dart';
 import '../../domain/datasources/group_datasource.dart';
 import '../../domain/entities/group.dart';
 import '../../domain/entities/group_detail.dart';
@@ -7,6 +8,7 @@ import '../../domain/entities/group_invitation.dart';
 import '../../domain/entities/assigned_quiz.dart';
 import '../../domain/entities/leaderboard_entry.dart';
 import '../../../core/auth_state.dart';
+import '../../../config/api_config.dart';
 
 class GroupDatasourceImpl implements GroupDatasource {
   final Dio dio;
@@ -14,16 +16,12 @@ class GroupDatasourceImpl implements GroupDatasource {
   GroupDatasourceImpl({Dio? dio})
     : dio =
           dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api',
-              headers: {'Content-Type': 'application/json'},
-            ),
-          ) {
+          Dio(BaseOptions(headers: {'Content-Type': 'application/json'})) {
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           final token = AuthState.token.value;
+          options.baseUrl = ApiConfig().baseUrl;
           //const String jwtToken = //HARDCODEADOOOOOOOO
           //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI0MDM5LCJleHAiOjE3NjgwMzEyMzl9._3Ks0CS4afQo0pJ1wHTjNLfk1m-A_rjH_OIXLxYG-u8";
 
@@ -89,11 +87,7 @@ class GroupDatasourceImpl implements GroupDatasource {
   }
 
   @override
-  Future<void> removeMember(
-    String userId,
-    String groupId,
-    String memberId,
-  ) async {
+  Future<void> removeMember(String groupId, String memberId) async {
     await dio.delete('/groups/$groupId/members/$memberId');
   }
 
@@ -130,6 +124,7 @@ class GroupDatasourceImpl implements GroupDatasource {
     return Group(
       id: data['groupId'],
       name: data['groupName'],
+      description: data['groupName'],
       role: data['role'],
       memberCount: 1, // Placeholder
       createdAt: DateTime.tryParse(data['joinedAt'] ?? '') ?? DateTime.now(),

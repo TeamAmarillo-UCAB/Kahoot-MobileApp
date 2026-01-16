@@ -46,7 +46,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     on<NextPhase>(_onNextPhase);
   }
 
-  // Manejador para que el Host inicie el juego
   Future<void> _onStartGame(
     StartGame event,
     Emitter<LiveGameBlocState> emit,
@@ -54,7 +53,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     print('[BLOC] Host disparando inicio de juego...');
     try {
       startLiveGameUc.call();
-      // No emitimos estado aquí, esperamos que el socket responda con "question_started"
     } catch (e) {
       print('[BLOC] Error al iniciar juego: $e');
     }
@@ -160,25 +158,57 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     Emitter<LiveGameBlocState> emit,
   ) {
     final gameData = event.gameState;
-    LiveGameStatus newStatus = state.status;
 
-    switch (gameData.phase.toUpperCase()) {
-      case 'LOBBY':
-        newStatus = LiveGameStatus.lobby;
-        break;
-      case 'QUESTION':
-        newStatus = LiveGameStatus.question;
-        break;
-      case 'RESULTS':
-        newStatus = LiveGameStatus.results;
-        break;
-      case 'PODIUM':
-      case 'END':
-        newStatus = LiveGameStatus.end;
-        break;
+    if (gameData.phase == 'SYNC') {
+      repository.sendClientReady();
+      emit(state.copyWith(status: LiveGameStatus.loading));
+      return;
     }
 
-    emit(state.copyWith(status: newStatus, gameData: gameData));
+    LiveGameStatus _mapPhaseToStatus(String phase) {
+      switch (phase.toUpperCase()) {
+        case 'LOBBY':
+          return LiveGameStatus.lobby;
+        case 'QUESTION':
+          return LiveGameStatus.question;
+        case 'RESULTS':
+          return LiveGameStatus.results;
+        case 'WAITING_RESULTS':
+          return LiveGameStatus.waitingResults;
+        case 'END':
+          return LiveGameStatus.end;
+        case 'HOST_DISCONNECTED':
+          return LiveGameStatus.hostDisconnected;
+        default:
+          return state.status;
+      }
+    }
+
+    LiveGameStatus newStatus = _mapPhaseToStatus(gameData.phase);
+
+    if (state.status == LiveGameStatus.end &&
+        newStatus == LiveGameStatus.hostDisconnected) {
+      print(
+        '[BLOC] Bloqueando transición a HostDisconnected porque estamos en el Podio.',
+      );
+      return;
+    }
+
+    final mergedGameData = gameData.copyWith(
+      currentSlide: gameData.currentSlide ?? state.gameData?.currentSlide,
+
+      totalScore: (gameData.totalScore == null || gameData.totalScore == 0)
+          ? state.gameData?.totalScore
+          : gameData.totalScore,
+      rank: (gameData.rank == null || gameData.rank == 0)
+          ? state.gameData?.rank
+          : gameData.rank,
+      streak: (gameData.streak == null || gameData.streak == 0)
+          ? state.gameData?.streak
+          : gameData.streak,
+    );
+
+    emit(state.copyWith(status: newStatus, gameData: mergedGameData));
   }
 
   @override
@@ -204,16 +234,33 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
     ScanQrCode event,
     Emitter<LiveGameBlocState> emit,
   ) async {
-    emit(state.copyWith(status: LiveGameStatus.loading));
-    final result = await getPinFromQrUc.call(event.qrToken);
-    if (result.isSuccessful()) {
-      final session = result.getValue();
-      add(InitPlayerSession(session['sessionPin'].toString()));
-    } else {
+    emit(state.copyWith(status: LiveGameStatus.loading, errorMessage: null));
+
+    try {
+      final result = await getPinFromQrUc.call(event.qrToken);
+
+      if (result.isSuccessful()) {
+        final session = result.getValue();
+        final String pinObtenido = session['sessionPin'].toString();
+
+        emit(state.copyWith(pin: pinObtenido));
+
+        add(InitPlayerSession(pinObtenido));
+      } else {
+        print("Error al validar QR: ${result.getError()}");
+
+        emit(
+          state.copyWith(
+            status: LiveGameStatus.error,
+            errorMessage: "El QR ha expirado o ya no es válido",
+          ),
+        );
+      }
+    } catch (e) {
       emit(
         state.copyWith(
           status: LiveGameStatus.error,
-          errorMessage: "QR inválido",
+          errorMessage: "Error de conexión al escanear",
         ),
       );
     }
@@ -221,7 +268,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
 
   void _onNextPhase(NextPhase event, Emitter<LiveGameBlocState> emit) {
     print('[BLOC] Solicitando siguiente fase al servidor...');
-    // Asumiendo que nextGamePhaseUc es de tipo void call()
     nextGamePhaseUc.call();
   }
 }

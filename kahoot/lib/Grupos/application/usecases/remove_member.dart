@@ -6,7 +6,7 @@ class RemoveMember {
 
   RemoveMember(this.repository);
 
-  Future<Result<void>> call(String userId, String groupId, String memberId) {
-    return repository.removeMember(userId, groupId, memberId);
+  Future<Result<void>> call(String groupId, String memberId) {
+    return repository.removeMember(groupId, memberId);
   }
 }

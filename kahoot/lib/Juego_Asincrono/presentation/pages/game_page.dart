@@ -22,6 +22,8 @@ import '../widgets/feedback_view.dart';
 import 'game_summary_page.dart';
 import '../utils/game_constants.dart';
 
+import '../../../config/api_config.dart';
+
 class GamePage extends StatefulWidget {
   final String kahootId;
   const GamePage({super.key, required this.kahootId});
@@ -39,9 +41,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     super.initState();
 
     // 1. Configuración de Infraestructura (Igual que en Home anteriormente)
-    final dio = Dio(
-      BaseOptions(baseUrl: 'https://quizzy-backend-0wh2.onrender.com/api'),
-    );
+    final dio = Dio(BaseOptions(baseUrl: ApiConfig().baseUrl));
     final datasource = GameDatasourceImpl(dio: dio);
     final repository = GameRepositoryImpl(datasource: datasource);
 
