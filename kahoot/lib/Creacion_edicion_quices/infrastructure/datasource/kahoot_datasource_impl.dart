@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:kahoot/config/api_config.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/datasouce/kahoot_datasource.dart';
@@ -47,6 +48,18 @@ class KahootDatasourceImpl implements KahootDatasource {
       throw Exception('La visibilidad no puede ser pública cuando el estado es "draft".');
     }*/
 
+    //THEME POR DEFECTO
+    String defaultThemeId = '3ef13730-7081-4c9d-881a-d3755c408272';
+
+    if (ApiConfig().baseUrl == 'https://quizzy-backend-1-zpvc.onrender.com/api')
+      defaultThemeId = '3ef13730-7081-4c9d-881a-d3755c408272';
+
+    if (ApiConfig().baseUrl == 'https://backcomun-mzvy.onrender.com')
+      defaultThemeId = '343b3fec-35fe-47e9-b950-4af6fef2c5e5';
+
+    if (ApiConfig().baseUrl == 'https://quizzy-backend.app/api')
+      defaultThemeId = '3ef13730-7081-4c9d-881a-d3755c408272';
+
     // Build body following backend contract; map empty strings to nulls where applicable
     Map<String, dynamic> body = {
       'title': title,
@@ -55,7 +68,7 @@ class KahootDatasourceImpl implements KahootDatasource {
       'visibility': visibility,
       'status': status,
       'category': theme,
-      'themeId': '3ef13730-7081-4c9d-881a-d3755c408272',
+      'themeId': defaultThemeId,
       'questions': question.map((q) {
         final String qt = (q.title.isNotEmpty ? q.title : q.text);
         final String qMedia = q.mediaId;
