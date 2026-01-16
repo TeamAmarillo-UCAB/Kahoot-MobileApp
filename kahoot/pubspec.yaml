@@ -63,6 +63,10 @@ dependencies:
   #Épica 10
   intl: ^0.19.0
 
+  #IA
+  google_generative_ai: ^0.4.7
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -85,6 +89,7 @@ flutter:
     - assets/nombre.png
     - assets/letra.png
     - assets/images/game/
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

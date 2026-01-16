@@ -6,6 +6,7 @@ import 'exploracion_busqueda/presentation/exploracion_busqueda_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'biblioteca_gestion_de_contenido/presentation/pages/library_page.dart';
 import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /*const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
@@ -13,7 +14,8 @@ import 'Creacion_edicion_quices/presentation/pages/create/create_kahoot_page.dar
 );*/ //host pub
 //const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://quizzybackend.app/api'); //host priv
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
