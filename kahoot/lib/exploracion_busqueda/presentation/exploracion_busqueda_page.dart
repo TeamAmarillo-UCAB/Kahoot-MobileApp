@@ -276,17 +276,28 @@ class _KahootCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
+        // ... dentro de _KahootCard ...
         subtitle: Row(
           children: [
             Icon(Icons.verified, color: textColor ?? Colors.amber, size: 16),
             const SizedBox(width: 4),
-            Text(
-              author,
-              style: TextStyle(
-                color: (textColor ?? Colors.white).withOpacity(0.8),
-                fontSize: 13,
+
+            // --- AQUÍ ESTÁ EL CAMBIO ---
+            Expanded(
+              // 1. Envuelve el Text en Expanded
+              child: Text(
+                author,
+                style: TextStyle(
+                  color: (textColor ?? Colors.white).withOpacity(0.8),
+                  fontSize: 13,
+                ),
+                // 2. Agrega estas dos líneas para cortar el texto si es largo
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
+
+            // ---------------------------
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -304,6 +315,7 @@ class _KahootCard extends StatelessWidget {
             ),
           ],
         ),
+        // ...
         trailing: Icon(Icons.chevron_right, color: textColor ?? Colors.white54),
       ),
     );
