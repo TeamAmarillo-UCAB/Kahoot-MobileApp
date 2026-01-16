@@ -471,7 +471,7 @@ class _ResultKahootCard extends StatelessWidget {
             const SizedBox(height: 4),
             // Visibility
             Text(
-              'Visibilidad: ' + _visibilityLabel(k.visibility),
+              'Visibilidad: Pública',
               style: const TextStyle(color: Colors.black87, fontSize: 13),
             ),
             const SizedBox(height: 12),
