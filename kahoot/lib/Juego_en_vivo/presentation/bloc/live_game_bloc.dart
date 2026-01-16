@@ -79,7 +79,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
       role: 'PLAYER',
       nickname: '',
       jwt: token ?? '',
-      //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjdhYmM2ZmVkLTY2NWUtNDYzZC1iNTRkLThkNzhjMTM5N2U2ZiIsImVtYWlsIjoibmNhcmxvc0BleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI5MTAzLCJleHAiOjE3NjgwMzYzMDN9.zsatti9umbcbl7Ebr5c6ILlZ1UpjrxrtsyMWkzm5djc",
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -123,7 +122,6 @@ class LiveGameBloc extends Bloc<LiveGameEvent, LiveGameBlocState> {
           role: 'HOST',
           nickname: 'Host',
           jwt: token ?? '',
-          // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDI5MDU4LCJleHAiOjE3NjgwMzYyNTh9.oUezyojXVpHKh9y3PIh0TGyPGgbF7scvEZkKRcY2mSE",
         );
 
         await Future.delayed(const Duration(milliseconds: 500));

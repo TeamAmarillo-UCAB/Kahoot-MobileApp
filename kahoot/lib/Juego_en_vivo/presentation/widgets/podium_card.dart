@@ -28,7 +28,7 @@ class PodiumCard extends StatelessWidget {
           nickname,
           style: TextStyle(
             fontWeight: isCurrentUser ? FontWeight.w900 : FontWeight.bold,
-            color: isCurrentUser ? Colors.deepPurple : Colors.black87,
+            color: isCurrentUser ? Colors.amber : Colors.black87,
           ),
           overflow: TextOverflow.ellipsis,
         ),

@@ -9,7 +9,7 @@ class GameSummaryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, // TRANSPARENTE para ver el fondo original
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -20,15 +20,21 @@ class GameSummaryPage extends StatelessWidget {
                 "Resultados",
                 style: TextStyle(
                   fontFamily: 'Montserrat',
-                  color: Colors.white, 
-                  fontSize: 36, 
+                  color: Colors.white,
+                  fontSize: 36,
                   fontWeight: FontWeight.w900,
-                  shadows: [Shadow(color: Colors.black45, offset: Offset(2,2), blurRadius: 5)]
+                  shadows: [
+                    Shadow(
+                      color: Colors.black45,
+                      offset: Offset(2, 2),
+                      blurRadius: 5,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 30),
-              
-              // Trofeo animado (Scale)
+
+              // Trofeo
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
                 duration: const Duration(seconds: 1),
@@ -39,32 +45,46 @@ class GameSummaryPage extends StatelessWidget {
                 child: Image.asset(
                   GameAssets.iconTrophy,
                   height: 180,
-                  errorBuilder: (_,__,___) => const Icon(Icons.emoji_events, size: 150, color: GameColors.yellow),
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.emoji_events,
+                    size: 150,
+                    color: GameColors.yellow,
+                  ),
                 ),
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Tarjeta de Puntuación
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: GameColors.amberTheme,
                   borderRadius: BorderRadius.circular(15),
-                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0,5))]
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Text(
-                      "Puntaje Final", 
-                      style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)
+                      "Puntaje Final",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       "${summary.totalScore}",
                       style: const TextStyle(
-                        fontSize: 48, 
-                        fontWeight: FontWeight.w900, 
-                        color: Colors.black87
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black87,
                       ),
                     ),
                   ],
@@ -72,38 +92,52 @@ class GameSummaryPage extends StatelessWidget {
               ),
 
               const SizedBox(height: 20),
-              
-              // Estadísticas (Correctas / Precisión)
+
+              // Estadísticas
               Row(
                 children: [
-                  Expanded(child: _statBox("Correctas", "${summary.correctAnswers}", GameColors.green)),
+                  Expanded(
+                    child: _statBox(
+                      "Correctas",
+                      "${summary.correctAnswers}",
+                      GameColors.green,
+                    ),
+                  ),
                   const SizedBox(width: 15),
-                  Expanded(child: _statBox("Precisión", "${summary.accuracy.toInt()}%", GameColors.blue)),
+                  Expanded(
+                    child: _statBox(
+                      "Precisión",
+                      "${summary.accuracy.toInt()}%",
+                      GameColors.blue,
+                    ),
+                  ),
                 ],
               ),
-              
+
               const Spacer(),
-              
-              // Botón Salir (Estilo Amber)
+
+              // Botón Salir
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: GameColors.amberTheme, // COLOR AMBER
+                    backgroundColor: GameColors.amberTheme,
                     foregroundColor: Colors.white,
                     elevation: 5,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(), 
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text(
-                    "VOLVER AL INICIO", 
+                    "VOLVER AL INICIO",
                     style: TextStyle(
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold, 
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       fontFamily: 'Montserrat',
-                      color: Colors.black87
-                    )
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
               ),
@@ -118,15 +152,25 @@ class GameSummaryPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15),
       decoration: BoxDecoration(
-        color: Colors.black54, // Semitransparente oscuro
+        color: Colors.black54,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white24)
+        border: Border.all(color: Colors.white24),
       ),
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+          ),
           const SizedBox(height: 5),
-          Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

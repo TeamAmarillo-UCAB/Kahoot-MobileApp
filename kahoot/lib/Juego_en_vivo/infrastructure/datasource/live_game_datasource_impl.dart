@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../../domain/datasource/live_game_datasource.dart';
 import '../../domain/entities/live_session.dart';
+import '../../../config/api_config.dart';
 
 class LiveGameDatasourceImpl implements LiveGameDatasource {
   final Dio dio;
@@ -41,8 +42,21 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
       '[DATASOURCE] Intentando conectar a socket como ${role.toUpperCase()}...',
     );
 
+    String WSURL = '';
+
+    if (ApiConfig().baseUrl == 'https://quizzy-backend-1-zpvc.onrender.com/api')
+      WSURL = 'wss://quizzy-backend-1-zpvc.onrender.com/multiplayer-sessions';
+
+    if (ApiConfig().baseUrl == 'https://backcomun-mzvy.onrender.com')
+      WSURL = 'wss://backcomun-mzvy.onrender.com/multiplayer-sessions';
+
+    if (ApiConfig().baseUrl == 'https://quizzy-backend.app/api')
+      WSURL = 'wss://quizzy-backend.app/multiplayer-sessions';
+
+    print(WSURL);
+
     _socket = io.io(
-      'wss://quizzy-backend-0wh2.onrender.com/multiplayer-sessions',
+      WSURL,
       io.OptionBuilder()
           .setTransports(['websocket'])
           // IMPORTANTE: Configuración del websocket
@@ -67,10 +81,10 @@ class LiveGameDatasourceImpl implements LiveGameDatasource {
     });
 
     _socket!.onDisconnect((data) {
-      print('🔌 [DATASOURCE] Socket Desconectado: $data');
+      print('[DATASOURCE] Socket Desconectado: $data');
     });
 
-    // Eventos que escucha eel servidor
+    // Eventos que escucha el servidor
     final serverEvents = [
       'player_connected_to_session',
       'question_started',

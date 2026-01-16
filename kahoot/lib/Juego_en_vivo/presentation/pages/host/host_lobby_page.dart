@@ -98,7 +98,7 @@ class _HostLobbyViewState extends State<HostLobbyView> {
                         state.pin!,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 60,
+                          fontSize: 35,
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(blurRadius: 10, color: Colors.black45),

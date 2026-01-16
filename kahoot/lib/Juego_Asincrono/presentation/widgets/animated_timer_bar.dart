@@ -9,16 +9,14 @@ class AnimatedTimerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 12, // Un poco más alto
-      decoration: BoxDecoration(
-        color: Colors.black12,
-      ),
+      height: 12,
+      decoration: BoxDecoration(color: Colors.black12),
       child: FractionallySizedBox(
         alignment: Alignment.centerLeft,
         widthFactor: progress.clamp(0.0, 1.0),
         child: Container(
           decoration: const BoxDecoration(
-            color: GameColors.amberTheme, 
+            color: GameColors.amberTheme,
             borderRadius: BorderRadius.horizontal(right: Radius.circular(5)),
           ),
         ),

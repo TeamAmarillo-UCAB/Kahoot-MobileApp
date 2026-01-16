@@ -86,7 +86,7 @@ class _JoinGamePageState extends State<JoinGamePage> {
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
-        backgroundColor: const Color(0xFF46178F),
+        backgroundColor: Colors.amber,
         body: BlocListener<LiveGameBloc, LiveGameBlocState>(
           listener: (context, state) {
             if (state.pin != null && _pinController.text != state.pin) {
