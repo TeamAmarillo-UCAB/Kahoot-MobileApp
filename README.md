@@ -8,7 +8,7 @@ La aplicación fue desarrollada siguiendo patrones de diseño y arquitecturas qu
 
 Sigue la Arquitectura Hexagonal; formada por 3 capas: dominio, aplicación e infraestructura, utiliza Puertos y Adaptadores con Inversión de Dependencias (favoreciendo el Principio SOLID DIP). Introducida por primera vez en el 2005 por Alistair Cockburn, permite que el código se almacene en capas dentro de la aplicación, de manera que se pueda aislar la lógica de dominio (lógica de negocio), la lógica de aplicación (casos de uso) y detalles de infraestructura (detalles técnicos). 
 
-ZONA EN CONSTRUCCIÓN: Seguimos haciendo el diagrama de la Arquitectura Hexagonal :P
+![Arquitectura](kahoot/assets/DiagramaArqHex.jpeg)
 
 # ¿Cómo pruebo el proyecto?
 
@@ -20,4 +20,6 @@ flutter pub get
 2) Para correr el proyecto:
 flutter run
 
-#Diviértete y sigue aprendiendo!!
+3) Agrega un .env con tu APIKEY de Gemini para usar la IA (es sorpresa, descúbrela!)
+
+# Diviértete y sigue aprendiendo!!
